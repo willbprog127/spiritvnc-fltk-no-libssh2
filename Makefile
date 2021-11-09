@@ -1,7 +1,7 @@
 CC       =	c++
 CFLAGS   =	-O2 -Wall -Wunused -lpthread `fltk-config --use-images --cxxflags --ldflags` \
 			--std=c++11 \
-			`pkg-config --cflags --libs libvncclient libvncserver libssh2`
+			`pkg-config --cflags --libs libvncclient libvncserver`
 DEBUGFLGS=	-g -O0
 BINDIR   = /usr/local/bin
 TARGET   =	spiritvnc-fltk
