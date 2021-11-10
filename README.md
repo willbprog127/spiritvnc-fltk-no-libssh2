@@ -6,6 +6,8 @@ connected viewers.
 
 _(OpenIndiana was previously supported, but changes to their packages has caused some problems.  Please contact me if you need SpiritVNC - FLTK working on OI)_
 
+__macOS users:__ Because this version of SpiritVNC - FLTK uses the shell command `pkill` to clean up ssh connections after use, macOS seems to have a problem with this command and freezes.  I am working on a solution, but if you are able to use Linux instead, that would be the ideal workaround.
+
 2016-2021 Will Brokenbourgh
 https://www.pismotek.com/brainout/
 
