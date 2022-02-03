@@ -65,7 +65,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/select.h>
-#include <libssh2.h>
 #include <stdlib.h>
 #include <signal.h>
 
