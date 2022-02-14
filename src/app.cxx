@@ -1,6 +1,6 @@
 /*
  * app.cxx - part of SpiritVNC - FLTK
- * 2016-2021 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -2009,6 +2009,7 @@ void svHandleThreadConnection (void * data)
           itm->icon = app->iconDisconnectedBigError;
         else
           itm->icon = app->iconNoConnect;
+        
         svHandleListItemIconChange(NULL);
 
         if (itm->isListener == true)
@@ -2076,27 +2077,6 @@ void svHandleThreadCursorChange (void * notUsed)
         app->mainWin->cursor(FL_CURSOR_DEFAULT);
 
     Fl::unlock();
-}
-
-
-void svHandlePKill (void * itmData)
-{
-    HostItem * itm = static_cast<HostItem *>(itmData);
-
-    if (itm == NULL)
-        return;
-
-    std::string sshKillCommand;
-    int sshKillResult = -1;
-
-    if (itm->sshCommandLine == "")
-        return;
-
-    sshKillCommand = "pkill --full \"" + itm->sshCommandLine + "\"";
-    //printf("%s\n", sshKillCommand.c_str());
-    sshKillResult = system(sshKillCommand.c_str());
-    (void)sshKillResult;
-    //printf("Result: %i\n", sshKillResult);
 }
 
 

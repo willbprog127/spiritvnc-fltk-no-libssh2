@@ -1,6 +1,6 @@
 /*
  * app.h - part of SpiritVNC - FLTK
- * 2016-2021 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -262,6 +262,7 @@ private:
 
 /* forward function declarations */
 void svCloseChildWindow (Fl_Widget *, void *);
+void svCloseSSHConnection (void *);
 void svConfigCreateNew ();
 void svConfigReadCreateHostList ();
 void svConfigWrite ();
@@ -270,7 +271,6 @@ void svCreateAppIcons (bool fromAppOptions = false);
 std::string svConvertBooleanToString (bool);
 bool svConvertStringToBoolean (const std::string&);
 void svCreateGUI ();
-void * svCreateSSHConnection(void *);
 void svDebugLog (const std::string&);
 void svDeleteItem (int);
 void svDeselectAllItems ();
@@ -283,7 +283,6 @@ void svHandleLocalClipboard (int, void *);
 void svHandleHostListButtons (Fl_Widget *, void *);
 void svHandleHostListEvents (Fl_Widget *, void *);
 void svHandleMainWindowEvents (Fl_Widget *, void *);
-void svHandlePKill (void *);
 void svPositionWidgets ();
 void svHandleListItemIconChange (void * notUsed);
 void svHandleThreadConnection (void *);

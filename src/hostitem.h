@@ -1,6 +1,6 @@
 /*
  * hostitem.h - part of SpiritVNC - FLTK
- * 2016-2021 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -85,8 +85,8 @@ public:
         hasEnded(false),
         icon(NULL),
         lastErrorMessage(""),
-        sshCommandLine(""),
-        sshWaitTime(5)
+        sshWaitTime(5),
+        sshCmdStream(NULL)
     {}
 
     std::string name;
@@ -128,8 +128,8 @@ public:
     bool hasEnded;
     Fl_Image * icon;
     std::string lastErrorMessage;
-    std::string sshCommandLine;
     int sshWaitTime;
+    FILE * sshCmdStream;
 };
 
 #endif

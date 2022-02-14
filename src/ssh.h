@@ -1,6 +1,6 @@
 /*
  * ssh.h - part of SpiritVNC - FLTK
- * 2016-2021 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -35,7 +35,7 @@
 #ifndef SSH_H
 #define SSH_H
 
-//void sshExec(const char * cmd);
-void * svCreateSSHConnection (void *);
+void svCloseSSHConnection (void *);
+void svCreateSSHConnection (void *);
 
 #endif

@@ -1,6 +1,6 @@
 /*
  * vnc.cxx - part of SpiritVNC - FLTK
- * 2016-2021 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -166,7 +166,7 @@ void VncObject::createVNCObject (HostItem * itm)
                 itm->hasError = true;
 
                 svLogToFile("ERROR - Could not open the private SSH key file");
-                svMessageWindow("Could not open the private SSH key "
+                svMessageWindow("Error: Could not open the private SSH key "
                   "file for '" + itm->name + "' - " + itm->hostAddress);
 
                 if (vnc->vncClient != NULL)
@@ -184,9 +184,11 @@ void VncObject::createVNCObject (HostItem * itm)
             svDebugLog("svCreateVNCObject - Creating and running threadSSH");
 
             // create, launch and detach call to create our ssh connection
-            int sshResult = pthread_create(&itm->threadSSH, NULL, svCreateSSHConnection, itm);
+            //int sshResult = pthread_create(&itm->threadSSH, NULL, svCreateSSHConnection, itm);
+            svCreateSSHConnection(itm);
 
-            if (sshResult != 0)
+            //if (sshResult != 0)
+            if (itm->sshReady == false)
             {
                 svLogToFile("ERROR - Couldn't create SSH thread for '" + itm->name +
                   "' - " + itm->hostAddress);
@@ -222,8 +224,7 @@ void VncObject::createVNCObject (HostItem * itm)
                 itm->isConnecting = false;
                 itm->hasCouldntConnect = true;
 
-                if (itm->sshCommandLine != "")
-                    svHandlePKill(itm);
+                svCloseSSHConnection(itm);
 
                 svHandleThreadConnection(itm);
 
@@ -235,9 +236,7 @@ void VncObject::createVNCObject (HostItem * itm)
         svDebugLog("svCreateVNCObject - Creating and running itm->threadRFB");
 
         // create, launch and detach call to create our vnc connection
-        int rfbResult = pthread_create(&itm->threadRFB, NULL, VncObject::initVNCConnection, itm);
-
-        if (rfbResult != 0)
+        if (pthread_create(&itm->threadRFB, NULL, VncObject::initVNCConnection, itm) != 0)
         {
             svLogToFile("ERROR - Couldn't create RFB thread for '" + itm->name +
                   "' - " + itm->hostAddress);
@@ -350,16 +349,6 @@ void VncObject::endViewer ()
             itm->threadRFBRunning = false;
         }
 
-        // tell ssh to clean up if a ssh/vnc connection
-        if (itm->hostType == 's')
-        {
-            itm->sshReady = false;
-
-            if (itm->sshCommandLine != "")
-                svHandlePKill(itm);
-            //Fl::awake(svHandlePKill, itm);
-        }
-
         itm->isConnected = false;
         itm->isConnecting = false;
         itm->hasDisconnectRequest = false;
@@ -367,6 +356,14 @@ void VncObject::endViewer ()
 
         // clean up the client
         rfbClientCleanup(vncClient);
+        
+        // tell ssh to clean up if a ssh/vnc connection
+        if (itm->hostType == 's')
+        {
+            itm->sshReady = false;
+
+            svCloseSSHConnection(itm);
+        }        
     }
 }
 

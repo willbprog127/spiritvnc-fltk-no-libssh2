@@ -1,6 +1,6 @@
 /*
  * ssh.cxx - part of SpiritVNC - FLTK
- * 2016-2021 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -34,84 +34,73 @@
 
 #include "app.h"
 #include "hostitem.h"
-#include "ssh.h"
-
-#include <pthread.h>
 
 
-//#include <array>
+/* close and clean up ssh connection */
+void svCloseSSHConnection (void * itmData)
+{
+    HostItem * itm = static_cast<HostItem *>(itmData);
 
+    if (itm == NULL || itm->sshCmdStream == NULL)
+        return;
 
-//void sshExec(const char * cmd, HostItem * itm)
-//{
-    //char buffer[128];
+    int sshKillResult = -1;
+    
+    fprintf(itm->sshCmdStream, "%s\n", "exit");    
+    fflush(itm->sshCmdStream);  
+    
+    sshKillResult = pclose(itm->sshCmdStream);
 
-    //FILE * pipe = popen(cmd, "r");
-
-    //if (!pipe) //throw std::runtime_error("popen() failed!");
-        //return;
-
-    //while (fgets(buffer, sizeof buffer, pipe) != NULL)
-    //{
-        //itm->sshCommandOutput.append(buffer);
-    //}
-
-    //pclose(pipe);
-
-    //return;
-//}
+    (void)sshKillResult;
+}
 
 
 /* create ssh session and ssh forwarding */
-/* (this is called as a thread because it blocks) */
-void * svCreateSSHConnection (void * data)
+void svCreateSSHConnection (void * data)
 {
-    pthread_detach(pthread_self());
-
+    std::string sshCommandLine;
     std::string strError;
 
     HostItem * itm = static_cast<HostItem *>(data);
 
     if (itm == NULL)
-        return SV_RET_VOID;
+        return;
 
-    std::string sshCheck = "which " + app->sshCommand + " > /dev/null";
+    std::string sshCheck = "which " + app->sshCommand + "5 > /dev/null";
 
     // first check to see if the ssh command is working
     if (system(sshCheck.c_str()) != 0)
     {
         fl_beep(FL_BEEP_DEFAULT);
-        svMessageWindow("Error: The SSH command doesn't work.\n\nCheck that the SSH client "
-            "is installed", "SpiritVNC - FLTK");
+        svMessageWindow("Error: This connection requires SSH and \nthe SSH command isn't working."
+            "\n\nCheck that the SSH client program is installed", "SpiritVNC - FLTK");
 
         svLogToFile("SSH command not working for connection '"
             + itm->name + "' - " + itm->hostAddress);
+            
+        itm->lastErrorMessage = "SSH command not working";
 
         itm->sshReady = false;
         itm->hasError = true;
 
-        return SV_RET_VOID;
+        return;
     }
 
     // build the command string for our system() call
-    itm->sshCommandLine = app->sshCommand + " " + itm->sshUser + "@" + itm->hostAddress + " -N" +
+    sshCommandLine = app->sshCommand + " " + itm->sshUser + "@" + itm->hostAddress + " -t" + " -t" + //" -N" +
         " -p " + itm->sshPort +
         " -L " + std::to_string(itm->sshLocalPort) + ":127.0.0.1:" + itm->vncPort +
         " -i " + itm->sshKeyPrivate;
 
-    // (over-)optimistically declare that ssh is ready
-    itm->sshReady = true;
-
     // call the system's ssh client, if available
-    if (system(itm->sshCommandLine.c_str()) != -1)
-    {
-        svLogToFile("SSH connection disconnected normally from '"
-            + itm->name + "' - " + itm->hostAddress);
-
-        itm->sshReady = false;
-    }
+    itm->sshCmdStream = popen(sshCommandLine.c_str(), "w");
+    
+    if (itm->sshCmdStream != NULL)
+        // ssh started okay
+        itm->sshReady = true;
     else
     {
+        // something -- happened
         svLogToFile("SSH connection disconnected abnormally from '"
             + itm->name + "' - " + itm->hostAddress);
 
@@ -119,5 +108,5 @@ void * svCreateSSHConnection (void * data)
         itm->hasError = true;
     }
 
-    return SV_RET_VOID;
+    return;
 }
