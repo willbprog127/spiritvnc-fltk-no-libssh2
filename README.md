@@ -1,12 +1,12 @@
 __SpiritVNC - FLTK__
 
-SpiritVNC - FLTK is an FLTK-based multi-view VNC client for most Linux distros.  SpiritVNC features VNC-through-SSH, reverse (listening) VNC connections and timed scanning of connected viewers.  SpiritVNC - FLTK may run on other Unix-like systems using X11, but due to problems with macOS, FreeBSD and the `pkill` command, Linux is the only _officially_ supported OS at the moment.
+SpiritVNC - FLTK is an FLTK-based multi-view VNC client for most Linux distros, macOS and FreeBSD.  SpiritVNC features VNC-through-SSH, reverse (listening) VNC connections and timed scanning of connected viewers.  SpiritVNC - FLTK may run on other Unix-like systems using X11, as well.
 
 _(OpenIndiana was previously supported, but changes to their packages has caused some problems.  Please contact me if you need SpiritVNC - FLTK working on OI)_
 
-__macOS users:__ Because this version of SpiritVNC - FLTK uses the shell command `pkill` to clean up ssh connections after use, macOS seems to have a problem with this command and freezes.  It seems to be an interaction with threads and I can't figure it out right now.
+__Now working on macOS again!__ :smile:
 
-2016-2021 Will Brokenbourgh
+2016-2022 Will Brokenbourgh
 https://www.pismotek.com/brainout/
 
 To God be the glory! :-D :heart:
