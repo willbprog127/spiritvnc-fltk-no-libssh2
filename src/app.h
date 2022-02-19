@@ -164,7 +164,6 @@ public:
 
         // set up config file path and file
 
-
         // for macOS / OS X
 		#if defined __APPLE__
         configPath = "/Users/" + userName + "/.spiritvnc/";
@@ -288,11 +287,9 @@ void svHandleListItemIconChange (void * notUsed);
 void svHandleThreadConnection (void *);
 void svHandleThreadCursorChange (void * notUsed);
 void svInsertEmptyItem ();
-int svItemNumFromItm (HostItem *);
-int svItemNumFromVnc (VncObject *);
-HostItem * svItmFromVnc (VncObject *);
+int svItemNumFromItm (const HostItem *);
+HostItem * svItmFromVnc (const VncObject *);
 void svItmOptionsChoosePrvKeyBtnCallback (Fl_Widget *, void *);
-void svItmOptionsChoosePubKeyBtnCallback (Fl_Widget *, void *);
 void svItmOptionsRadioButtonsCallback (Fl_Widget *, void *);
 void svListeningModeBegin ();
 void svListeningModeEnd ();

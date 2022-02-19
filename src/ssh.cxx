@@ -46,7 +46,7 @@ void svCloseSSHConnection (void * itmData)
 
     int sshKillResult = -1;
     
-    fprintf(itm->sshCmdStream, "%s\n", "exit");    
+    fprintf(itm->sshCmdStream, "%s\r\n", "exit");    
     fflush(itm->sshCmdStream);  
     
     sshKillResult = pclose(itm->sshCmdStream);
@@ -59,7 +59,6 @@ void svCloseSSHConnection (void * itmData)
 void svCreateSSHConnection (void * data)
 {
     std::string sshCommandLine;
-    std::string strError;
 
     HostItem * itm = static_cast<HostItem *>(data);
 

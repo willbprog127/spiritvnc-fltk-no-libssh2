@@ -385,10 +385,6 @@ void svConfigReadCreateHostList ()
                 if (strProp == "sshport")
                     itm->sshPort = strVal;
 
-                //// ssh key public file path
-                //if (strProp == "sshkeypublic")
-                    //itm->sshKeyPublic = strVal;
-
                 // ssh key private file path
                 if (strProp == "sshkeyprivate")
                     itm->sshKeyPrivate = strVal;
@@ -801,43 +797,36 @@ void svCreateGUI ()
 
     app->btnListAdd = new Fl_Button(0, 0, nBtnSize, nBtnSize);
     app->btnListAdd->clear_visible_focus();
-    app->btnListAdd->user_data(SV_LIST_BTN_ADD);
     app->btnListAdd->callback(svHandleHostListButtons);
 
     app->btnListDelete = new Fl_Button(0, 0, nBtnSize, nBtnSize);
     app->btnListDelete->clear_visible_focus();
-    app->btnListDelete->user_data(SV_LIST_BTN_DEL);
     app->btnListDelete->callback(svHandleHostListButtons);
 
     //--
     app->btnListUp = new Fl_Button(0, 0, nBtnSize, nBtnSize);
     app->btnListUp->clear_visible_focus();
-    app->btnListUp->user_data(SV_LIST_BTN_UP);
     app->btnListUp->callback(svHandleHostListButtons);
 
     app->btnListDown = new Fl_Button(0, 0, nBtnSize, nBtnSize);
     app->btnListDown->clear_visible_focus();
-    app->btnListDown->user_data(SV_LIST_BTN_DOWN);
     app->btnListDown->callback(svHandleHostListButtons);
 
     app->btnListScan = new Fl_Button(0, 0, nBtnSize, nBtnSize);
     app->btnListScan->clear_visible_focus();
-    app->btnListScan->user_data(SV_LIST_BTN_SCAN);
     app->btnListScan->callback(svHandleHostListButtons);
 
     app->btnListListen = new Fl_Button(0, 0, nBtnSize, nBtnSize);
     app->btnListListen->clear_visible_focus();
-    app->btnListListen->user_data(SV_LIST_BTN_LISTEN);
     app->btnListListen->callback(svHandleHostListButtons);
 
     app->btnListHelp = new Fl_Button(0, 0, nBtnSize, nBtnSize);
     app->btnListHelp->clear_visible_focus();
-    app->btnListHelp->user_data(SV_LIST_BTN_HELP);
+    app->btnListHelp->user_data(app->btnListHelp);
     app->btnListHelp->callback(svHandleHostListButtons);
 
     app->btnListOptions = new Fl_Button(0, 0, nBtnSize, nBtnSize);
     app->btnListOptions->clear_visible_focus();
-    app->btnListOptions->user_data(SV_LIST_BTN_OPTS);
     app->btnListOptions->callback(svHandleHostListButtons);
 
     app->packButtons->end();
@@ -1014,7 +1003,7 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void * data)
 
     if (childWindow == NULL || btn == NULL)
     {
-        childWindow->hide();
+        //childWindow->hide();
         app->childWindowVisible = false;
         app->childWindowBeingDisplayed = NULL;
         return;
@@ -1135,7 +1124,7 @@ void svHandleF8Buttons (Fl_Widget * widget, void * data)
 
     if (childWindow == NULL || widget == NULL)
     {
-        childWindow->hide();
+        //childWindow->hide();
         app->childWindowVisible = false;
         app->childWindowBeingDisplayed = NULL;
         return;
@@ -1212,12 +1201,6 @@ void svHandleHostListButtons (Fl_Widget * button, void * data)
     if (btn == NULL)
         return;
 
-    // get the widget's name through user_data()
-    const char * strName = static_cast<char *>(btn->user_data());
-
-    if (strName == NULL)
-        return;
-
     bool isSeparator;
 
     int nListVal = app->hostList->value();
@@ -1228,11 +1211,11 @@ void svHandleHostListButtons (Fl_Widget * button, void * data)
         isSeparator = false;
 
     // add new item button
-    if (strcmp(strName, SV_LIST_BTN_ADD) == 0)
+    if (btn == app->btnListAdd)
         svShowItemOptions(NULL);
 
     // delete current item button
-    if (strcmp(strName, SV_LIST_BTN_DEL) == 0 && isSeparator == false)
+    if (btn == app->btnListDelete && isSeparator == false)
     {
         fl_message_hotspot(0);
         fl_message_title("SpiritVNC - Delete Item");
@@ -1245,15 +1228,15 @@ void svHandleHostListButtons (Fl_Widget * button, void * data)
     }
 
     // show app options
-    if (strcmp(strName, SV_LIST_BTN_OPTS) == 0)
+    if (btn == app->btnListOptions)
         svShowAppOptions();
 
     // show About / Help
-    if (strcmp(strName, SV_LIST_BTN_HELP) == 0)
+    if (btn == app->btnListHelp)
         svShowAboutHelp();
 
     // move item up button
-    if (strcmp(strName, SV_LIST_BTN_UP) == 0 && isSeparator == false)
+    if (btn == app->btnListUp && isSeparator == false)
     {
         if (nListVal > 1)
         {
@@ -1264,7 +1247,7 @@ void svHandleHostListButtons (Fl_Widget * button, void * data)
     }
 
     // move item down button
-    if (strcmp(strName, SV_LIST_BTN_DOWN) == 0 && isSeparator == false)
+    if (btn == app->btnListDown && isSeparator == false)
     {
         if (nListVal < app->hostList->size())
         {
@@ -1275,7 +1258,7 @@ void svHandleHostListButtons (Fl_Widget * button, void * data)
     }
 
     // list item scan button
-    if (strcmp(strName, SV_LIST_BTN_SCAN) == 0)
+    if (btn == app->btnListScan)
     {
         // stop scan if already running
         if (app->scanIsRunning == true)
@@ -1296,7 +1279,7 @@ void svHandleHostListButtons (Fl_Widget * button, void * data)
     }
 
     // create a listening vnc object
-    if (strcmp(strName, SV_LIST_BTN_LISTEN) == 0)
+    if (btn == app->btnListListen)
     {
         HostItem * itm = NULL;
         VncObject * vnc = NULL;
@@ -1344,7 +1327,7 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
 
     static bool menuUp;
 
-    int nF12Flags;
+    //int nF12Flags;
 
     // *** DO *NOT* CHECK vnc FOR NULL HERE!!! ***
     // *** IT'S OKAY IF vnc IS NULL AT THIS POINT!!! ***
@@ -1389,6 +1372,8 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
     // right-click
     if (Fl::event_button() == FL_RIGHT_MOUSE)
     {
+        int nF12Flags;
+        
         if (app->childWindowVisible == true)
             return;
 
@@ -1421,7 +1406,7 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
             // include any error message in menu
             int nFlags = FL_MENU_INVISIBLE;
             char strError[FL_PATH_MAX] = {0};
-
+            
             strncat(strError, itm->lastErrorMessage.c_str(), FL_PATH_MAX - 1);
 
             // enable / disable error message in menu
@@ -1586,7 +1571,6 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void * data)
 
     if (itm == NULL || childWindow == NULL || btn == NULL)
     {
-        childWindow->hide();
         app->childWindowVisible = false;
         app->childWindowBeingDisplayed = NULL;
         app->itmBeingEdited = NULL;
@@ -1772,9 +1756,6 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void * data)
 
                 if (strName == SV_ITM_SSH_PORT)
                     itm->sshPort = static_cast<SVInput *>(wid)->value();
-
-                //if (strName == SV_ITM_SSH_PUB_KEY)
-                    //itm->sshKeyPublic = static_cast<SVInput *>(wid)->value();
 
                 if (strName == SV_ITM_SSH_PRV_KEY)
                     itm->sshKeyPrivate = static_cast<SVInput *>(wid)->value();
@@ -2107,7 +2088,7 @@ void svInsertEmptyItem ()
 
 
 /* return hostlist item (integer) that owns host item 'im' */
-int svItemNumFromItm (HostItem * im)
+int svItemNumFromItm (const HostItem * im)
 {
     HostItem * itm = NULL;
 
@@ -2133,37 +2114,8 @@ int svItemNumFromItm (HostItem * im)
 }
 
 
-/* return hostlist item (integer) that owns vnc object 'v' */
-int svItemNumFromVnc (VncObject * v)
-{
-    HostItem * itm = NULL;
-    VncObject * vnc = NULL;
-
-    Fl::lock();
-
-    for (int i = 0; i <= app->hostList->size(); i ++)
-    {
-        itm = static_cast<HostItem *>(app->hostList->data(i));
-
-        if (itm != NULL)
-        {
-            vnc = static_cast<VncObject *>(itm->vnc);
-            if (vnc != NULL && v == vnc)
-            {
-                Fl::unlock();
-                return i;
-            }
-        }
-    }
-
-    Fl::unlock();
-
-    return 0;
-}
-
-
 /* return hostlist itm (HostItem) that owns vnc object 'v' */
-HostItem * svItmFromVnc (VncObject * v)
+HostItem * svItmFromVnc (const VncObject * v)
 {
     HostItem * itm = NULL;
 
@@ -2209,29 +2161,6 @@ void svItmOptionsChoosePrvKeyBtnCallback (Fl_Widget * button, void * data)
         return;
 
     inPrvKey->value(strFilename);
-}
-
-
-/* handle itm option window choose pubkey button presses */
-void svItmOptionsChoosePubKeyBtnCallback (Fl_Widget * button, void * data)
-{
-    SVInput * inPubKey = static_cast<SVInput *>(data);
-    (void) button;
-
-    if (inPubKey == NULL)
-        return;
-
-    char strHome[FL_PATH_MAX] = {0};
-
-    fl_filename_expand(strHome, sizeof(strHome), "$HOME");
-
-    const char * strFilename = fl_file_chooser("SpiritVNC - Please choose a public key file...",
-            "*", strHome, 0);
-
-    if (strFilename == NULL)
-        return;
-
-    inPubKey->value(strFilename);
 }
 
 
@@ -2545,8 +2474,7 @@ void svShowAboutHelp ()
         "<li>To change application options, click the settings button (looks like three control sliders)</li>"
         "<li>To perform remote actions, press F8 when a remote host is being displayed</li></ul>"
         "<hr>"
-        "<p><center>Many thanks to the <em>FLTK</em>, <em>libvncserver</em> and"
-            " <em>libssh2</em>"
+        "<p><center>Many thanks to the <em>FLTK</em> and <em>libvncserver</em>"
         " projects for their libraries and example code.</center></p>"
         "<p><center>&nbsp;If you have any questions, need to report a bug or have suggestions, please"
         " <a href='https://www.pismotek.com/brainout/content/spiritvnc.php'>visit the SpiritVNC page</a>"
@@ -3147,21 +3075,6 @@ void svShowItemOptions (HostItem * im)
     if (app->showTooltips == true)
         inSSHPort->tooltip("The remote host's port number");
 
-    //// ssh public key full path (if used)
-    //SVInput * inSSHPubKey = new SVInput(nXPos, nYPos += nYStep,
-        //300, 28, "SSH public key (if any) ");
-    //inSSHPubKey->value(itm->sshKeyPublic.c_str());
-    //inSSHPubKey->user_data(SV_ITM_SSH_PUB_KEY);
-    //if (app->showTooltips == true)
-        //inSSHPubKey->tooltip("The SSH public key file location (usually not necessary"
-            //" when using a SSH password");
-
-    //// button to select ssh public key
-    //Fl_Button * btnShowPubKeyChooser = new Fl_Button(nXPos + 300 + 2, nYPos + 4, 20, 20, "...");
-    //btnShowPubKeyChooser->callback(svItmOptionsChoosePubKeyBtnCallback, inSSHPubKey);
-    //if (app->showTooltips == true)
-        //btnShowPubKeyChooser->tooltip("Click to choose a SSH public key file");
-
     // ssh private key full path (if used)
     SVInput * inSSHPrvKey = new SVInput(nXPos, nYPos += nYStep,
         300, 28, "SSH private key (if any) ");
@@ -3229,8 +3142,6 @@ void svShowItemOptions (HostItem * im)
         inSSHName->deactivate();
         inSSHPassword->deactivate();
         inSSHPort->deactivate();
-        //inSSHPubKey->deactivate();
-        //btnShowPubKeyChooser->deactivate();
         inSSHPrvKey->deactivate();
         btnShowPrvKeyChooser->deactivate();
         btnDel->deactivate();
@@ -3248,8 +3159,6 @@ void svShowItemOptions (HostItem * im)
         inSSHName->activate();
         inSSHPassword->activate();
         inSSHPort->activate();
-        //inSSHPubKey->activate();
-        //btnShowPubKeyChooser->activate();
         inSSHPrvKey->activate();
         btnShowPrvKeyChooser->activate();
         btnDel->activate();

@@ -90,7 +90,7 @@ void VncObject::createVNCObject (HostItem * itm)
         // create new vnc viewer
         itm->vnc = new VncObject();
 
-        if (itm->vnc == NULL)
+        if (itm->vnc == NULL || itm->vnc->vncClient == NULL)
         {
             fl_beep(FL_BEEP_DEFAULT);
             return;
@@ -135,7 +135,6 @@ void VncObject::createVNCObject (HostItem * itm)
         // set up vnc compression and quality levels
         vnc->vncClient->appData.compressLevel = itm->compressLevel;
         vnc->vncClient->appData.qualityLevel = itm->qualityLevel;
-
         vnc->vncClient->appData.encodingsString = strdup("tight copyrect hextile");
 
         itm->vncAddressAndPort = itm->hostAddress + ":" + itm->vncPort;
@@ -151,6 +150,7 @@ void VncObject::createVNCObject (HostItem * itm)
         Fl::awake(svHandleListItemIconChange);
 
         // ############  SSH CONNECTION ###############################################
+        
         // we connect to this host with vnc through ssh
         if (itm->hostType == 's')
         {
@@ -169,8 +169,8 @@ void VncObject::createVNCObject (HostItem * itm)
                 svMessageWindow("Error: Could not open the private SSH key "
                   "file for '" + itm->name + "' - " + itm->hostAddress);
 
-                if (vnc->vncClient != NULL)
-                    VncObject::endAndDeleteViewer(&vnc);
+                //if (vnc->vncClient != NULL)
+                VncObject::endAndDeleteViewer(&vnc);
 
                 svHandleThreadConnection(itm);
 
@@ -194,7 +194,8 @@ void VncObject::createVNCObject (HostItem * itm)
                   "' - " + itm->hostAddress);
                 itm->isConnecting = false;
                 itm->hasCouldntConnect = true;
-                itm->hasError = true;
+                itm->hasError = true;                
+                itm->lastErrorMessage = "Unable to make SSH connection";
 
                 if (vnc != NULL && vnc->vncClient != NULL)
                     VncObject::endAndDeleteViewer(&vnc);
@@ -223,7 +224,7 @@ void VncObject::createVNCObject (HostItem * itm)
             {
                 itm->isConnecting = false;
                 itm->hasCouldntConnect = true;
-
+                
                 svCloseSSHConnection(itm);
 
                 svHandleThreadConnection(itm);
@@ -598,8 +599,10 @@ void * VncObject::initVNCConnection (void * data)
     // this function blocks, that's why this function runs as a thread
     if (rfbInitClient(vnc->vncClient, &nNumOfParams, strParams) == false)
     {
-        VncObject::parseErrorMessages(itm, strerror(errno));
-
+        int errNum = errno;
+        
+        VncObject::parseErrorMessages(itm, strerror(errNum));
+        
         itm->isConnected = false;
         itm->isConnecting = false;
         itm->hasCouldntConnect = true;
@@ -630,7 +633,7 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
     if (itm == NULL || strMessageIn == NULL)
       return;
 
-    // formate for log file
+    // format for log file
     snprintf(strMsg, FL_PATH_MAX, "[Error] '%s' - %s: %s", itm->name.c_str(),
       itm->hostAddress.c_str(), strMessageIn);
 
@@ -644,10 +647,23 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
 
     // 'fix up' for possible bad / missing password
     if (strMessage.find("Resource temporarily unavailable") != std::string::npos)
+    {
       itm->lastErrorMessage = "Bad / missing password or Resource temporarily unavailable";
-    else
-      itm->lastErrorMessage = strMessage;
+      return;
+    }
 
+    // fix dumb Operation now in progress error
+    if (strMessage.find("Operation now in progress") != std::string::npos)
+    {
+        if (itm->hostType == 's' && itm->sshReady == false)
+            itm->lastErrorMessage = "Unable to connect to host's SSH server";
+        else
+            itm->lastErrorMessage = "Unable to connect to VNC server";
+        
+        return;
+    }
+    
+    itm->lastErrorMessage = strMessage;
 }
 
 
@@ -891,7 +907,7 @@ void VncViewer::draw ()
     rfbClient * cl = vnc->vncClient;
     HostItem * itm = static_cast<HostItem *>(vnc->itm);
 
-    if (cl == NULL || itm == NULL || cl->frameBuffer == NULL)
+    if (itm == NULL || cl->frameBuffer == NULL)
         return;
 
     int nBytesPerPixel = cl->format.bitsPerPixel / 8;
@@ -1030,7 +1046,6 @@ int VncViewer::handle (int event)
             {
                 nButtonMask |= rfbButton1Mask;
                 SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
-                //SendIncrementalFramebufferUpdateRequest(vnc->vncClient);
                 app->scanIsRunning = false;
                 return 1;
             }
@@ -1039,7 +1054,6 @@ int VncViewer::handle (int event)
             {
                 nButtonMask |= rfbButton3Mask;
                 SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
-                //SendIncrementalFramebufferUpdateRequest(vnc->vncClient);
                 app->scanIsRunning = false;
                 return 1;
             }
@@ -1095,7 +1109,6 @@ int VncViewer::handle (int event)
 
         case FL_MOVE:
             SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
-            //SendIncrementalFramebufferUpdateRequest(vnc->vncClient);
             return 1;
             break;
 
@@ -1142,10 +1155,11 @@ int VncViewer::handle (int event)
         case FL_PASTE:
             {
             int intClipLen = Fl::event_length();
-            char strClipText[intClipLen];
 
             if (intClipLen > 0)
             {
+              char strClipText[intClipLen];
+              
               strncpy(strClipText, Fl::event_text(), intClipLen);
 
               // send clipboard text to remote server

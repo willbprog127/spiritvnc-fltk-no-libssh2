@@ -62,8 +62,8 @@ public:
         vnc(NULL),
         threadRFB(0),
         threadRFBRunning(false),
-        threadSSH(0),
-        threadLoop(0),
+        //threadSSH(0),
+        //threadLoop(0),
         sshReady(false),
         vncAddressAndPort(""),
         f12Macro(""),
@@ -104,8 +104,8 @@ public:
     VncObject * vnc;
     pthread_t threadRFB;
     bool threadRFBRunning;
-    pthread_t threadSSH;
-    pthread_t threadLoop;
+    //pthread_t threadSSH;
+    //pthread_t threadLoop;
     bool sshReady;
     std::string vncAddressAndPort;
     std::string f12Macro;

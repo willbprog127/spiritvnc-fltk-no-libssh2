@@ -40,8 +40,7 @@
 
 #define SV_CURRENT_YEAR "2022"
 
-#define SV_CONNECTION_TIMEOUT_SECS 30
-#15
+#define SV_CONNECTION_TIMEOUT_SECS  30
 #define SV_ONE_SECOND               1.00
 #define SV_PROP_LINE_MAX            4096
 #define SV_APP_FONT_SIZE            14
@@ -49,16 +48,6 @@
 
 // return type for threads
 #define SV_RET_VOID         static_cast<void *>(NULL)
-
-// host list button constants
-#define SV_LIST_BTN_ADD     const_cast<char *>("btnListAdd")
-#define SV_LIST_BTN_DEL     const_cast<char *>("btnListDel")
-#define SV_LIST_BTN_UP      const_cast<char *>("btnListUp")
-#define SV_LIST_BTN_DOWN    const_cast<char *>("btnListDown")
-#define SV_LIST_BTN_SCAN    const_cast<char *>("btnListScan")
-#define SV_LIST_BTN_LISTEN  const_cast<char *>("btnListListen")
-#define SV_LIST_BTN_HELP    const_cast<char *>("btnListHelp")
-#define SV_LIST_BTN_OPTS    const_cast<char *>("btnListOptions")
 
 // app options constants
 #define SV_OPTS_SCN_TIMEOUT     const_cast<char *>("spinScanTimeout")
