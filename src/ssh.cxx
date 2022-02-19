@@ -66,7 +66,7 @@ void svCreateSSHConnection (void * data)
     if (itm == NULL)
         return;
 
-    std::string sshCheck = "which " + app->sshCommand + "5 > /dev/null";
+    std::string sshCheck = "which " + app->sshCommand + " > /dev/null";
 
     // first check to see if the ssh command is working
     if (system(sshCheck.c_str()) != 0)
