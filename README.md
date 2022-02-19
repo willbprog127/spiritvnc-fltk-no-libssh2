@@ -6,6 +6,10 @@ _(OpenIndiana was previously supported, but changes to their packages has caused
 
 __Now working on macOS again!__ :smile:
 
+__A note about NOT using libssh2__ - Because of recent issues with libssh2, I was forced to develop this non-libssh2 version of SpiritVNC - FLTK.  This version uses the system's built-in or readily-installed SSH client.  Most Linux distros, recent macOS releases and BSDs have the `ssh` command ready for use.  If not, it usually can be installed easily enough.  You can even install a SSH client on Windows 10 and higher.
+
+Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
+
 2016-2022 Will Brokenbourgh
 https://www.pismotek.com/brainout/
 
