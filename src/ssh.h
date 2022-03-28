@@ -36,6 +36,7 @@
 #define SSH_H
 
 void svCloseSSHConnection (void *);
+void * svSSHCloseHelper (void *);
 void svCreateSSHConnection (void *);
 
 #endif

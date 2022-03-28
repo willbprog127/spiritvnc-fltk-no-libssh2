@@ -36,6 +36,29 @@
 #include "hostitem.h"
 
 
+void * svSSHCloseHelper (void * itmData)
+{
+    // detach this thread
+    pthread_detach(pthread_self());
+
+    HostItem * itm = static_cast<HostItem *>(itmData);
+
+    if (itm == NULL || itm->sshCmdStream == NULL)
+        return SV_RET_VOID;
+
+    int sshKillResult = -1;
+
+    fprintf(itm->sshCmdStream, "%s\r\n", "exit");
+    fflush(itm->sshCmdStream);
+
+    sshKillResult = pclose(itm->sshCmdStream);
+
+    (void)sshKillResult;
+
+    return SV_RET_VOID;
+}
+
+
 /* close and clean up ssh connection */
 void svCloseSSHConnection (void * itmData)
 {
@@ -44,14 +67,19 @@ void svCloseSSHConnection (void * itmData)
     if (itm == NULL || itm->sshCmdStream == NULL)
         return;
 
-    int sshKillResult = -1;
-    
-    fprintf(itm->sshCmdStream, "%s\r\n", "exit");    
-    fflush(itm->sshCmdStream);  
-    
-    sshKillResult = pclose(itm->sshCmdStream);
+    // create, launch and detach call to create our vnc connection
+    if (pthread_create(&itm->sshCloseThread, NULL, svSSHCloseHelper, itm) != 0)
+    {
+        svLogToFile("ERROR - Couldn't create SSH closer thread for '" + itm->name +
+              "' - " + itm->hostAddress);
+        itm->isConnecting = false;
+        itm->hasCouldntConnect = true;
+        itm->hasError = true;
 
-    (void)sshKillResult;
+        svHandleThreadConnection(itm);
+
+        return;
+    }
 }
 
 
@@ -76,7 +104,7 @@ void svCreateSSHConnection (void * data)
 
         svLogToFile("SSH command not working for connection '"
             + itm->name + "' - " + itm->hostAddress);
-            
+
         itm->lastErrorMessage = "SSH command not working";
 
         itm->sshReady = false;
@@ -93,7 +121,7 @@ void svCreateSSHConnection (void * data)
 
     // call the system's ssh client, if available
     itm->sshCmdStream = popen(sshCommandLine.c_str(), "w");
-    
+
     if (itm->sshCmdStream != NULL)
         // ssh started okay
         itm->sshReady = true;

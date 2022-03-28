@@ -86,7 +86,8 @@ public:
         icon(NULL),
         lastErrorMessage(""),
         sshWaitTime(5),
-        sshCmdStream(NULL)
+        sshCmdStream(NULL),
+        sshCloseThread(0)
     {}
 
     std::string name;
@@ -130,6 +131,7 @@ public:
     std::string lastErrorMessage;
     int sshWaitTime;
     FILE * sshCmdStream;
+    pthread_t sshCloseThread;
 };
 
 #endif
