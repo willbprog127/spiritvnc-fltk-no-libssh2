@@ -150,7 +150,7 @@ void VncObject::createVNCObject (HostItem * itm)
         Fl::awake(svHandleListItemIconChange);
 
         // ############  SSH CONNECTION ###############################################
-        
+
         // we connect to this host with vnc through ssh
         if (itm->hostType == 's')
         {
@@ -194,7 +194,7 @@ void VncObject::createVNCObject (HostItem * itm)
                   "' - " + itm->hostAddress);
                 itm->isConnecting = false;
                 itm->hasCouldntConnect = true;
-                itm->hasError = true;                
+                itm->hasError = true;
                 itm->lastErrorMessage = "Unable to make SSH connection";
 
                 if (vnc != NULL && vnc->vncClient != NULL)
@@ -224,8 +224,6 @@ void VncObject::createVNCObject (HostItem * itm)
             {
                 itm->isConnecting = false;
                 itm->hasCouldntConnect = true;
-                
-                svCloseSSHConnection(itm);
 
                 svHandleThreadConnection(itm);
 
@@ -357,14 +355,14 @@ void VncObject::endViewer ()
 
         // clean up the client
         rfbClientCleanup(vncClient);
-        
+
         // tell ssh to clean up if a ssh/vnc connection
         if (itm->hostType == 's')
         {
             itm->sshReady = false;
 
             svCloseSSHConnection(itm);
-        }        
+        }
     }
 }
 
@@ -600,9 +598,9 @@ void * VncObject::initVNCConnection (void * data)
     if (rfbInitClient(vnc->vncClient, &nNumOfParams, strParams) == false)
     {
         int errNum = errno;
-        
+
         VncObject::parseErrorMessages(itm, strerror(errNum));
-        
+
         itm->isConnected = false;
         itm->isConnecting = false;
         itm->hasCouldntConnect = true;
@@ -659,10 +657,10 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
             itm->lastErrorMessage = "Unable to connect to host's SSH server";
         else
             itm->lastErrorMessage = "Unable to connect to VNC server";
-        
+
         return;
     }
-    
+
     itm->lastErrorMessage = strMessage;
 }
 
@@ -1159,7 +1157,7 @@ int VncViewer::handle (int event)
             if (intClipLen > 0)
             {
               char strClipText[intClipLen];
-              
+
               strncpy(strClipText, Fl::event_text(), intClipLen);
 
               // send clipboard text to remote server
