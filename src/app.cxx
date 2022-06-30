@@ -1373,7 +1373,7 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
     if (Fl::event_button() == FL_RIGHT_MOUSE)
     {
         int nF12Flags;
-        
+
         if (app->childWindowVisible == true)
             return;
 
@@ -1406,7 +1406,7 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
             // include any error message in menu
             int nFlags = FL_MENU_INVISIBLE;
             char strError[FL_PATH_MAX] = {0};
-            
+
             strncat(strError, itm->lastErrorMessage.c_str(), FL_PATH_MAX - 1);
 
             // enable / disable error message in menu
@@ -1963,9 +1963,18 @@ void svHandleThreadConnection (void * data)
             vnc->setObjectVisible();
         }
 
-        // create another listening viewer
+        // append desktop name to this listener and create another listening viewer
         if (itm->isListener == true)
         {
+            // add remote desktop's name to this Listening item
+            int nListeningItem = svItemNumFromItm(itm);
+
+            std::string strHostViewName = "Listening - ";
+            strHostViewName.append(vnc->vncClient->desktopName);
+
+            app->hostList->text(nListeningItem, strHostViewName.c_str());
+
+            // (try to) create another listener
             svDebugLog("svConnectionWatcher - Creating Listener object");
 
             VncObject::createVNCListener();
@@ -1990,7 +1999,7 @@ void svHandleThreadConnection (void * data)
           itm->icon = app->iconDisconnectedBigError;
         else
           itm->icon = app->iconNoConnect;
-        
+
         svHandleListItemIconChange(NULL);
 
         if (itm->isListener == true)

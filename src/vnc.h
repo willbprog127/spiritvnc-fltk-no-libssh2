@@ -58,6 +58,8 @@ public:
         nCursorXHot(0),
         nCursorYHot(0),
         inactiveSeconds(0),
+        nLastScrollX(0),
+        nLastScrollY(0),
         centeredX(0),
         centeredY(0)
     {
@@ -88,6 +90,8 @@ public:
     int nCursorXHot;
     int nCursorYHot;
     int inactiveSeconds;
+    int nLastScrollX;
+    int nLastScrollY;
     int centeredX;
     int centeredY;
 

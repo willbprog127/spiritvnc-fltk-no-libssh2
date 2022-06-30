@@ -40,6 +40,7 @@
 #include "vnc.h"
 #include "consts_enums.h"
 
+// forward declaration of VncObject
 class VncObject;
 
 /* host item class */

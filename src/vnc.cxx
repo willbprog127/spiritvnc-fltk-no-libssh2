@@ -815,9 +815,11 @@ void VncObject::setObjectVisible ()
                 static_cast<int>(static_cast<float>(app->vncViewer->w()) / dRatio));
     }
 
-    app->scroller->scroll_to(0, 0);
+    //app->scroller->scroll_to(0, 0);
 
     svResizeScroller();
+
+    app->scroller->scroll_to(nLastScrollX, nLastScrollY);
 
     // viewer centering (only if not zooming)
     if (itm->scaling == 's' || (itm->scaling == 'f' && fitsScroller() == true))
@@ -917,11 +919,14 @@ void VncViewer::draw ()
     // 's'croll or 'f'it + real size scale mode geometry
     if (itm->scaling == 's' || (itm->scaling == 'f' && vnc->fitsScroller() == true))
     {
+        vnc->nLastScrollX = app->scroller->xposition();
+        vnc->nLastScrollY = app->scroller->yposition();
+
         // draw that vnc host!
         fl_draw_image(
             cl->frameBuffer,
-            app->scroller->x() - app->scroller->xposition(),
-            app->scroller->y() - app->scroller->yposition(),
+            app->scroller->x() - vnc->nLastScrollX,
+            app->scroller->y() - vnc->nLastScrollY,
             cl->width,
             cl->height,
             nBytesPerPixel,
