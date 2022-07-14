@@ -55,6 +55,12 @@ $ gmake [debug]
 $ sudo gmake install
 ```
 - - -
+__Usage__
+(this section is 'under construction')
+`$ ./spiritvnc-fltk`
+
+* You can only have 65,500 VNC connections in the host-list
+- - -
 
 __Hey!__
 
