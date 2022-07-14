@@ -56,6 +56,7 @@ $ sudo gmake install
 ```
 - - -
 __Usage__
+
 (this section is 'under construction')
 `$ ./spiritvnc-fltk`
 
