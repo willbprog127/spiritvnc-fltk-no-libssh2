@@ -61,7 +61,7 @@ __Usage__
 
 `$ ./spiritvnc-fltk`
 
-* You can only have 65,500 connection entries in the host-list (should be more than enough!)
+* You can only have 65,000 connection entries in the host-list (should be more than enough!)
 - - -
 
 __Hey!__
