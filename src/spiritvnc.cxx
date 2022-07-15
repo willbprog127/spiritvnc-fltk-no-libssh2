@@ -4,11 +4,13 @@
  *
  * To God be the glory!  In Jesus name! :-D
  *
- * I don't use 'shortcuts' when checking for NULL or 0 because I want
- * new programmers to better understand what's going on in the code
+ * I don't typically use 'shortcuts' when checking for NULL or 0
+ * i.e.: if (variable) or if (!variable)
+ * because I want people to better understand what's
+ * going on in the code
  *
- * Some code comes from examples provided by the libssh2 and
- * libvncserver projects
+ * Some code comes from examples provided by the
+ * libvncserver project
  *
  */
 
@@ -56,95 +58,95 @@ AppVars * app = new AppVars();
 /* main program */
 int main (int argc, char **argv)
 {
-    // tells FLTK we're a multithreaded app
-    Fl::lock();
+  // tells FLTK we're a multithreaded app
+  Fl::lock();
 
-    // set graphics / display options
-    Fl::visual(FL_DOUBLE | FL_RGB);
+  // set graphics / display options
+  Fl::visual(FL_DOUBLE | FL_RGB);
 
-    // create program UI
-    svCreateGUI();
+  // create program UI
+  svCreateGUI();
 
-    // read config file, set app options and populate host list
-    svConfigReadCreateHostList();
+  // read config file, set app options and populate host list
+  svConfigReadCreateHostList();
 
-    // set or unset main window tooltips to user preference
-    svSetUnsetMainWindowTooltips();
+  // set or unset main window tooltips to user preference
+  svSetUnsetMainWindowTooltips();
 
-    // add default empty host list item if no items added from config file
-    if (app->hostList->size() == 0)
-    {
-        svInsertEmptyItem();
-        app->hostList->size(170, 0);
-    }
+  // add default empty host list item if no items added from config file
+  if (app->hostList->size() == 0)
+  {
+    svInsertEmptyItem();
+    app->hostList->size(170, 0);
+  }
 
-    // set app icons
-    svCreateAppIcons();
+  // set app icons
+  svCreateAppIcons();
 
-    // manually trigger misc events callback
-    svPositionWidgets();
+  // manually trigger misc events callback
+  svPositionWidgets();
 
-    // set window's icon on Linux and FreeBSD
-    #ifndef __APPLE__
-    // needed if display has not been previously opened
-    fl_open_display();
+  // set window's icon on Linux and FreeBSD
+  #ifndef __APPLE__
+  // needed if display has not been previously opened
+  fl_open_display();
 
-    Pixmap pm;
-    Pixmap mask;
-    XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display),
-        (char **)pmSpiritvnc_xpm, &pm, &mask, NULL);
+  Pixmap pm;
+  Pixmap mask;
+  XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display),
+      (char **)pmSpiritvnc_xpm, &pm, &mask, NULL);
 
-    app->mainWin->icon(reinterpret_cast<void *>(pm));
-    #endif
+  app->mainWin->icon(reinterpret_cast<void *>(pm));
+  #endif
 
-    app->mainWin->end();
-    app->mainWin->show(argc, argv);
+  app->mainWin->end();
+  app->mainWin->show(argc, argv);
 
-    // read in the current window hints, then modify them to allow icon transparency
-    // Thanks Ian MacArthur!
-    #ifndef __APPLE__
-    XWMHints * hints = XGetWMHints(fl_display, fl_xid(app->mainWin));
-    // ensure transparency mask is enabled for the XPM icon
-    hints->flags |= IconMaskHint;
-    // set the transparency mask
-    hints->icon_mask = mask;
-    XSetWMHints(fl_display, fl_xid(app->mainWin), hints);
-    XFree(hints);
-    #endif
+  // read in the current window hints, then modify them to allow icon transparency
+  // Thanks Ian MacArthur!
+  #ifndef __APPLE__
+  XWMHints * hints = XGetWMHints(fl_display, fl_xid(app->mainWin));
+  // ensure transparency mask is enabled for the XPM icon
+  hints->flags |= IconMaskHint;
+  // set the transparency mask
+  hints->icon_mask = mask;
+  XSetWMHints(fl_display, fl_xid(app->mainWin), hints);
+  XFree(hints);
+  #endif
 
-    Fl::focus(app->hostList);
-    app->hostList->take_focus();
+  Fl::focus(app->hostList);
+  app->hostList->take_focus();
 
-    // ignore SIGPIPE from libvncclient socket calls
-    signal(SIGPIPE, SIG_IGN);
+  // ignore SIGPIPE from libvncclient socket calls
+  signal(SIGPIPE, SIG_IGN);
 
-    // start up the connection 'supervisor' timer callback
-    // do NOT change the interval of this timer
-    // because program logic expects this to always be
-    // near 1 second
-    Fl::add_timeout(SV_ONE_SECOND, svConnectionWatcher);
+  // start up the connection 'supervisor' timer callback
+  // do NOT change the interval of this timer
+  // because program logic expects this to always be
+  // near 1 second
+  Fl::add_timeout(SV_ONE_SECOND, svConnectionWatcher);
 
-    // start watching the clipboard
-    Fl::add_clipboard_notify(svHandleLocalClipboard);
+  // start watching the clipboard
+  Fl::add_clipboard_notify(svHandleLocalClipboard);
 
-    svResizeScroller();
+  svResizeScroller();
 
-    // restore main window saved position and size on
-    // Mac OS X / macOS immediately
-    #ifdef __APPLE__
-    svRestoreWindowSizePosition(NULL);
-    #endif
+  // restore main window saved position and size on
+  // Mac OS X / macOS immediately
+  #ifdef __APPLE__
+  svRestoreWindowSizePosition(NULL);
+  #endif
 
-    Fl::redraw();
-    Fl::wait();
+  Fl::redraw();
+  Fl::wait();
 
-    // restore main window saved postition and size
-    #ifndef __APPLE__
-    // x11 window managers usually need delayed repositioning
-    Fl::add_timeout(0.7, svRestoreWindowSizePosition);
-    #endif
+  // restore main window saved postition and size
+  #ifndef __APPLE__
+  // x11 window managers usually need delayed repositioning
+  Fl::add_timeout(0.7, svRestoreWindowSizePosition);
+  #endif
 
-    VncObject::masterMessageLoop();
+  VncObject::masterMessageLoop();
 
-    return Fl::run();
+  return Fl::run();
 }

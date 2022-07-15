@@ -47,92 +47,92 @@ class VncObject;
 class HostItem
 {
 public:
-    HostItem () :
-        name(""),
-        group(""),
-        hostAddress(""),
-        vncPort(""),
-        sshPort(""),
-        sshUser(""),
-        sshPass(""),
-        sshKeyPublic(""),
-        sshKeyPrivate(""),
-        sshLocalPort(0),
-        vncPassword(""),
-        hostType('v'),
-        vnc(NULL),
-        threadRFB(0),
-        threadRFBRunning(false),
-        //threadSSH(0),
-        //threadLoop(0),
-        sshReady(false),
-        vncAddressAndPort(""),
-        f12Macro(""),
-        scaling('f'),
-        scalingFast(false),
-        showRemoteCursor(false),
-        compressLevel(5),
-        qualityLevel(5),
-        ignoreInactive(false),
-        centerX(false),
-        centerY(false),
-        isListener(false),
-        isConnecting(false),
-        isConnected(false),
-        isWaitingForShow(false),
-        hasCouldntConnect(false),
-        hasError(false),
-        hasDisconnectRequest(false),
-        hasEnded(false),
-        icon(NULL),
-        lastErrorMessage(""),
-        sshWaitTime(5),
-        sshCmdStream(NULL),
-        sshCloseThread(0)
-    {}
+  HostItem () :
+    name(""),
+    group(""),
+    hostAddress(""),
+    vncPort(""),
+    sshPort(""),
+    sshUser(""),
+    sshPass(""),
+    // sshKeyPublic(""),
+    sshKeyPrivate(""),
+    sshLocalPort(0),
+    vncPassword(""),
+    hostType('v'),
+    vnc(NULL),
+    threadRFB(0),
+    threadRFBRunning(false),
+    //threadSSH(0),
+    //threadLoop(0),
+    sshReady(false),
+    vncAddressAndPort(""),
+    f12Macro(""),
+    scaling('f'),
+    scalingFast(false),
+    showRemoteCursor(false),
+    compressLevel(5),
+    qualityLevel(5),
+    ignoreInactive(false),
+    centerX(false),
+    centerY(false),
+    isListener(false),
+    isConnecting(false),
+    isConnected(false),
+    isWaitingForShow(false),
+    hasCouldntConnect(false),
+    hasError(false),
+    hasDisconnectRequest(false),
+    hasEnded(false),
+    icon(NULL),
+    lastErrorMessage(""),
+    sshWaitTime(5),
+    sshCmdStream(NULL),
+    sshCloseThread(0)
+  {}
 
-    std::string name;
-    std::string group;
-    std::string hostAddress;
-    std::string vncPort;
-    std::string sshPort;
-    std::string sshUser;
-    std::string sshPass;
-    std::string sshKeyPublic;
-    std::string sshKeyPrivate;
-    int sshLocalPort;
-    std::string vncPassword;
-    char hostType;
-    VncObject * vnc;
-    pthread_t threadRFB;
-    bool threadRFBRunning;
-    //pthread_t threadSSH;
-    //pthread_t threadLoop;
-    bool sshReady;
-    std::string vncAddressAndPort;
-    std::string f12Macro;
-    char scaling;
-    bool scalingFast;
-    bool showRemoteCursor;
-    int compressLevel;
-    int qualityLevel;
-    bool ignoreInactive;
-    bool centerX;
-    bool centerY;
-    //
-    bool isListener;
-    bool isConnecting;
-    bool isConnected;
-    bool isWaitingForShow;
-    bool hasCouldntConnect;
-    bool hasError;
-    bool hasDisconnectRequest;
-    bool hasEnded;
-    Fl_Image * icon;
-    std::string lastErrorMessage;
-    int sshWaitTime;
-    FILE * sshCmdStream;
-    pthread_t sshCloseThread;
+  std::string name;
+  std::string group;
+  std::string hostAddress;
+  std::string vncPort;
+  std::string sshPort;
+  std::string sshUser;
+  std::string sshPass;
+  // std::string sshKeyPublic;
+  std::string sshKeyPrivate;
+  int sshLocalPort;
+  std::string vncPassword;
+  char hostType;
+  VncObject * vnc;
+  pthread_t threadRFB;
+  bool threadRFBRunning;
+  //pthread_t threadSSH;
+  //pthread_t threadLoop;
+  bool sshReady;
+  std::string vncAddressAndPort;
+  std::string f12Macro;
+  char scaling;
+  bool scalingFast;
+  bool showRemoteCursor;
+  int compressLevel;
+  int qualityLevel;
+  bool ignoreInactive;
+  bool centerX;
+  bool centerY;
+  //
+  bool isListener;
+  bool isConnecting;
+  bool isConnected;
+  bool isWaitingForShow;
+  bool hasCouldntConnect;
+  bool hasError;
+  bool hasDisconnectRequest;
+  bool hasEnded;
+  Fl_Image * icon;
+  std::string lastErrorMessage;
+  int sshWaitTime;
+  FILE * sshCmdStream;
+  pthread_t sshCloseThread;
 };
 
 #endif

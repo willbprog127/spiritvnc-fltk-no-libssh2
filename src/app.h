@@ -80,160 +80,160 @@
 class AppVars
 {
 public:
-    AppVars() :
-        mainWin(NULL),
-        hostList(NULL),
-        scroller(NULL),
-        vncViewer(NULL),
-        iconDisconnected(NULL),
-        iconDisconnectedError(NULL),
-        iconDisconnectedBigError(NULL),
-        iconConnected(NULL),
-        iconNoConnect(NULL),
-        iconConnecting(NULL),
-        libVncVncPointer((void *)"VncObject"),
-        userName(""),
-        configPath(""),
-        configPathAndFile(""),
-        nConnectionTimeout(SV_CONNECTION_TIMEOUT_SECS),
-        nViewersWaiting(0),
-        verboseLogging(false),
-        colorBlindIcons(false),
-        shuttingDown(false),
-        childWindowVisible(false),
-        btnListAdd(NULL),
-        btnListDelete(NULL),
-        btnListHelp(NULL),
-        btnListOptions(NULL),
-        btnListUp(NULL),
-        btnListDown(NULL),
-        btnListListen(NULL),
-        btnListScan(NULL),
-        childWindowBeingDisplayed(NULL),
-        itmBeingEdited(NULL),
-        scanIsRunning(false),
-        nCurrentScanItem(0),
-        nMainWinPreviousW(0),
-        nMainWinPreviousH(0),
-        nScanTimeout(2),
-        nDeadTimeout(100),
-        nStartingLocalPort(15000),
-        showTooltips(true),
-        debugMode(false),
-        nAppFontSize(10),
-        strListFont("Sans"),
-        nListFontSize(10),
-        nMenuFontSize(11),
-        blockLocalClipboardHandling(false),
-        packButtons(NULL),
-        showReverseConnect(true),
-        savedX(0),
-        savedY(0),
-        savedW(800),
-        savedH(600),
-        createdObjects(0),
-        msgThread(0),
-        strF12ClipVar(""),
-        windowIcon(NULL),
-        sshCommand("ssh")
+  AppVars() :
+    mainWin(NULL),
+    hostList(NULL),
+    scroller(NULL),
+    vncViewer(NULL),
+    iconDisconnected(NULL),
+    iconDisconnectedError(NULL),
+    iconDisconnectedBigError(NULL),
+    iconConnected(NULL),
+    iconNoConnect(NULL),
+    iconConnecting(NULL),
+    libVncVncPointer((void *)"VncObject"),
+    userName(""),
+    configPath(""),
+    configPathAndFile(""),
+    nConnectionTimeout(SV_CONNECTION_TIMEOUT_SECS),
+    nViewersWaiting(0),
+    verboseLogging(false),
+    colorBlindIcons(false),
+    shuttingDown(false),
+    childWindowVisible(false),
+    btnListAdd(NULL),
+    btnListDelete(NULL),
+    btnListHelp(NULL),
+    btnListOptions(NULL),
+    btnListUp(NULL),
+    btnListDown(NULL),
+    btnListListen(NULL),
+    btnListScan(NULL),
+    childWindowBeingDisplayed(NULL),
+    itmBeingEdited(NULL),
+    scanIsRunning(false),
+    nCurrentScanItem(0),
+    nMainWinPreviousW(0),
+    nMainWinPreviousH(0),
+    nScanTimeout(2),
+    nDeadTimeout(100),
+    nStartingLocalPort(15000),
+    showTooltips(true),
+    debugMode(false),
+    nAppFontSize(10),
+    strListFont("Sans"),
+    nListFontSize(10),
+    nMenuFontSize(11),
+    blockLocalClipboardHandling(false),
+    packButtons(NULL),
+    showReverseConnect(true),
+    savedX(0),
+    savedY(0),
+    savedW(800),
+    savedH(600),
+    createdObjects(0),
+    msgThread(0),
+    strF12ClipVar(""),
+    windowIcon(NULL),
+    sshCommand("ssh")
+  {
+    // get user's login name for reading/writing config file
+
+    // linux / bsd
+    if (getenv("USER") != NULL)
+      userName = getenv("USER");
+
+    // solaris / openindiana / ?
+    if (userName.empty() == true && getenv("LOGNAME") != NULL)
+      userName = getenv("LOGNAME");
+
+    // uh-oh, can't figure out user's name
+    if (userName.empty() == true)
     {
-        // get user's login name for reading/writing config file
+      std::cout << "SpiritVNC - FLTK: CRITICAL - Could not get user's login name"
+          " from environment\n\nExiting\n";
 
-        // linux / bsd
-        if (getenv("USER") != NULL)
-            userName = getenv("USER");
-
-        // solaris / openindiana / ?
-        if (userName.empty() == true && getenv("LOGNAME") != NULL)
-            userName = getenv("LOGNAME");
-
-        // uh-oh, can't figure out user's name
-        if (userName.empty() == true)
-        {
-            std::cout << "SpiritVNC - FLTK: CRITICAL - Could not get user's login name"
-                " from environment\n\nExiting\n";
-
-            Fl::lock();
-            fl_message_hotspot(0);
-            fl_message_title("SpiritVNC - FLTK");
-            fl_message("%s", "CRITICAL ERROR - Could not get user's login name"
-                " from environment\n\nExiting\n");
-            Fl::unlock();
-            exit(1);
-        }
-
-        // set up config file path and file
-
-        // for macOS / OS X
-		#if defined __APPLE__
-        configPath = "/Users/" + userName + "/.spiritvnc/";
-        #elif defined __sun__
-        // for solaris or openindiana
-        configPath = "/export/home/" + userName + "/.spiritvnc/";
-        #else
-        // default is typical linux, freebsd path
-        configPath = "/home/" + userName + "/.spiritvnc/";
-        #endif
-
-        // build full path
-        configPathAndFile = configPath + "spiritvnc-fltk.conf";
+      Fl::lock();
+      fl_message_hotspot(0);
+      fl_message_title("SpiritVNC - FLTK");
+      fl_message("%s", "CRITICAL ERROR - Could not get user's login name"
+          " from environment\n\nExiting\n");
+      Fl::unlock();
+      exit(1);
     }
 
-    Fl_Window * mainWin;
-    Fl_Hold_Browser * hostList;
-    Fl_Scroll * scroller;
-    VncViewer * vncViewer;
-    Fl_Image * iconDisconnected;
-    Fl_Image * iconDisconnectedError;
-    Fl_Image * iconDisconnectedBigError;
-    Fl_Image * iconConnected;
-    Fl_Image * iconNoConnect;
-    Fl_Image * iconConnecting;
-    void * libVncVncPointer;
-    std::string userName;
-    std::string configPath;
-    std::string configPathAndFile;
-    int nConnectionTimeout;
-    int nViewersWaiting;
-    bool verboseLogging;
-    bool colorBlindIcons;
-    bool shuttingDown;
-    bool childWindowVisible;
-    Fl_Button * btnListAdd;
-    Fl_Button * btnListDelete;
-    Fl_Button * btnListHelp;
-    Fl_Button * btnListOptions;
-    Fl_Button * btnListUp;
-    Fl_Button * btnListDown;
-    Fl_Button * btnListListen;
-    Fl_Button * btnListScan;
-    Fl_Window * childWindowBeingDisplayed;
-    HostItem * itmBeingEdited;
-    bool scanIsRunning;
-    int nCurrentScanItem;
-    int nMainWinPreviousW;
-    int nMainWinPreviousH;
-    int nScanTimeout;
-    int nDeadTimeout;
-    int nStartingLocalPort;
-    bool showTooltips;
-    bool debugMode;
-    int nAppFontSize;
-    std::string strListFont;
-    int nListFontSize;
-    int nMenuFontSize;
-    bool blockLocalClipboardHandling;
-    Fl_Pack * packButtons;
-    bool showReverseConnect;
-    int savedX;
-    int savedY;
-    int savedW;
-    int savedH;
-    int createdObjects;
-    pthread_t msgThread;
-    std::string strF12ClipVar;
-    Fl_Image * windowIcon;
-    std::string sshCommand;
+    // set up config file path and file
+
+    // for macOS / OS X
+  #if defined __APPLE__
+    configPath = "/Users/" + userName + "/.spiritvnc/";
+    #elif defined __sun__
+    // for solaris or openindiana
+    configPath = "/export/home/" + userName + "/.spiritvnc/";
+    #else
+    // default is typical linux, freebsd path
+    configPath = "/home/" + userName + "/.spiritvnc/";
+    #endif
+
+    // build full path
+    configPathAndFile = configPath + "spiritvnc-fltk.conf";
+  }
+
+  Fl_Window * mainWin;
+  Fl_Hold_Browser * hostList;
+  Fl_Scroll * scroller;
+  VncViewer * vncViewer;
+  Fl_Image * iconDisconnected;
+  Fl_Image * iconDisconnectedError;
+  Fl_Image * iconDisconnectedBigError;
+  Fl_Image * iconConnected;
+  Fl_Image * iconNoConnect;
+  Fl_Image * iconConnecting;
+  void * libVncVncPointer;
+  std::string userName;
+  std::string configPath;
+  std::string configPathAndFile;
+  int nConnectionTimeout;
+  int nViewersWaiting;
+  bool verboseLogging;
+  bool colorBlindIcons;
+  bool shuttingDown;
+  bool childWindowVisible;
+  Fl_Button * btnListAdd;
+  Fl_Button * btnListDelete;
+  Fl_Button * btnListHelp;
+  Fl_Button * btnListOptions;
+  Fl_Button * btnListUp;
+  Fl_Button * btnListDown;
+  Fl_Button * btnListListen;
+  Fl_Button * btnListScan;
+  Fl_Window * childWindowBeingDisplayed;
+  HostItem * itmBeingEdited;
+  bool scanIsRunning;
+  int nCurrentScanItem;
+  int nMainWinPreviousW;
+  int nMainWinPreviousH;
+  int nScanTimeout;
+  int nDeadTimeout;
+  int nStartingLocalPort;
+  bool showTooltips;
+  bool debugMode;
+  int nAppFontSize;
+  std::string strListFont;
+  int nListFontSize;
+  int nMenuFontSize;
+  bool blockLocalClipboardHandling;
+  Fl_Pack * packButtons;
+  bool showReverseConnect;
+  int savedX;
+  int savedY;
+  int savedW;
+  int savedH;
+  int createdObjects;
+  pthread_t msgThread;
+  std::string strF12ClipVar;
+  Fl_Image * windowIcon;
+  std::string sshCommand;
 } extern * app;
 
 
@@ -241,10 +241,10 @@ public:
 class SVInput : public Fl_Input
 {
 public:
-    SVInput (int x, int y, int w, int h, const char * label = 0) :
-        Fl_Input(x, y, w, h, label) {}
+  SVInput (int x, int y, int w, int h, const char * label = 0) :
+      Fl_Input(x, y, w, h, label) {}
 private:
-    int handle (int event);
+  int handle (int event);
 };
 
 
@@ -252,10 +252,10 @@ private:
 class SVSecretInput : public Fl_Secret_Input
 {
 public:
-    SVSecretInput (int x, int y, int w, int h, const char * label = 0) :
-        Fl_Secret_Input(x, y, w, h, label) {}
+  SVSecretInput (int x, int y, int w, int h, const char * label = 0) :
+    Fl_Secret_Input(x, y, w, h, label) {}
 private:
-    int handle (int event);
+  int handle (int event);
 };
 
 

@@ -47,93 +47,93 @@ class HostItem;
 class VncObject
 {
 public:
-    VncObject () :
-        vncClient(rfbGetClient(8, 3, 4)),
-        itm(NULL),
-        allowDrawing(false),
-        waitTime(0),
-        nLastClientWidth(0),
-        nLastClientHeight(0),
-        imgCursor(NULL),
-        nCursorXHot(0),
-        nCursorYHot(0),
-        inactiveSeconds(0),
-        nLastScrollX(0),
-        nLastScrollY(0),
-        centeredX(0),
-        centeredY(0)
-    {
-        // client and general rfb options
-        vncClient->canHandleNewFBSize = true;
-        vncClient->appData.forceTrueColour = false;
-        vncClient->appData.useRemoteCursor = false;
-        vncClient->listenPort = 5500;
+  VncObject () :
+    vncClient(rfbGetClient(8, 3, 4)),
+    itm(NULL),
+    allowDrawing(false),
+    waitTime(0),
+    nLastClientWidth(0),
+    nLastClientHeight(0),
+    imgCursor(NULL),
+    nCursorXHot(0),
+    nCursorYHot(0),
+    inactiveSeconds(0),
+    nLastScrollX(0),
+    nLastScrollY(0),
+    centeredX(0),
+    centeredY(0)
+  {
+    // client and general rfb options
+    vncClient->canHandleNewFBSize = true;
+    vncClient->appData.forceTrueColour = false;
+    vncClient->appData.useRemoteCursor = false;
+    vncClient->listenPort = 5500;
 
-        // callbacks
-        vncClient->GetPassword = VncObject::handlePassword;
-        vncClient->GotCursorShape = VncObject::handleCursorShapeChange;
-        vncClient->GotXCutText = VncObject::handleRemoteClipboardProc;
-        vncClient->FinishedFrameBufferUpdate = VncObject::handleFrameBufferUpdate;
+    // callbacks
+    vncClient->GetPassword = VncObject::handlePassword;
+    vncClient->GotCursorShape = VncObject::handleCursorShapeChange;
+    vncClient->GotXCutText = VncObject::handleRemoteClipboardProc;
+    vncClient->FinishedFrameBufferUpdate = VncObject::handleFrameBufferUpdate;
 
-        rfbClientLog = VncObject::libVncLogging;
-        rfbClientErr = VncObject::libVncLogging;
-    }
+    rfbClientLog = VncObject::libVncLogging;
+    rfbClientErr = VncObject::libVncLogging;
+  }
 
-    // public variables
-    rfbClient * vncClient;
-    HostItem * itm;
-    bool allowDrawing;
-    int waitTime;
-    int nLastClientWidth;
-    int nLastClientHeight;
-    Fl_RGB_Image * imgCursor;
-    int nCursorXHot;
-    int nCursorYHot;
-    int inactiveSeconds;
-    int nLastScrollX;
-    int nLastScrollY;
-    int centeredX;
-    int centeredY;
+  // public variables
+  rfbClient * vncClient;
+  HostItem * itm;
+  bool allowDrawing;
+  int waitTime;
+  int nLastClientWidth;
+  int nLastClientHeight;
+  Fl_RGB_Image * imgCursor;
+  int nCursorXHot;
+  int nCursorYHot;
+  int inactiveSeconds;
+  int nLastScrollX;
+  int nLastScrollY;
+  int centeredX;
+  int centeredY;
 
-    // public methods
-    //  instance
-    void setObjectVisible ();
-    bool fitsScroller ();
-    void endViewer ();
+  // public methods
+  //  instance
+  void setObjectVisible ();
+  bool fitsScroller ();
+  void endViewer ();
 
-    //  static
-    static void hideMainViewer ();
-    static void endAndDeleteViewer (VncObject **);
-    static void endAllViewers ();
-    static char * handlePassword (rfbClient *);
-    static void handleCursorShapeChange (rfbClient *, int, int, int, int, int);
-    static void libVncLogging (const char *, ...);
-    static void parseErrorMessages(HostItem *, const char *);
-    static void checkVNCMessages (VncObject *);
-    static void handleRemoteClipboardProc (rfbClient *, const char *, int);
-    static void handleFrameBufferUpdate (rfbClient *);
-    static void createVNCObject (HostItem *);
-    static void createVNCListener ();
-    static void * initVNCConnection (void *);
-    static void masterMessageLoop ();
+  //  static
+  static void hideMainViewer ();
+  static void endAndDeleteViewer (VncObject **);
+  static void endAllViewers ();
+  static char * handlePassword (rfbClient *);
+  static void handleCursorShapeChange (rfbClient *, int, int, int, int, int);
+  static void libVncLogging (const char *, ...);
+  static void parseErrorMessages(HostItem *, const char *);
+  static void checkVNCMessages (VncObject *);
+  static void handleRemoteClipboardProc (rfbClient *, const char *, int);
+  static void handleFrameBufferUpdate (rfbClient *);
+  static void createVNCObject (HostItem *);
+  static void createVNCListener ();
+  static void * initVNCConnection (void *);
+  static void masterMessageLoop ();
 };
 
 /* vnc viewer widget class */
 class VncViewer : public Fl_Box
 {
 public:
-    VncViewer (int x, int y, int w, int h, const char * label = 0) :
-    Fl_Box(x, y, w, h, label),
-    vnc(NULL)
-    {
-        box(FL_FLAT_BOX);
-    }
+  VncViewer (int x, int y, int w, int h, const char * label = 0) :
+  Fl_Box(x, y, w, h, label),
+  vnc(NULL)
+  {
+      box(FL_FLAT_BOX);
+  }
 
-    VncObject * vnc;
+  VncObject * vnc;
 private:
-    int handle (int);
-    void draw ();
-    void sendCorrectedKeyEvent (const char *, const int, HostItem *, rfbClient *, bool);
+  int handle (int);
+  void draw ();
+  void sendCorrectedKeyEvent (const char *, const int, HostItem *, rfbClient *, bool);
 };
 
 #endif
