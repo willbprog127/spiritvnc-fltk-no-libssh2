@@ -118,6 +118,7 @@ int main (int argc, char **argv)
   app->hostList->take_focus();
 
   // ignore SIGPIPE from libvncclient socket calls
+  // (not sure if this does anything...?)
   signal(SIGPIPE, SIG_IGN);
 
   // start up the connection 'supervisor' timer callback

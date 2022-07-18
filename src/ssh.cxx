@@ -36,6 +36,7 @@
 #include "hostitem.h"
 
 
+/* attempts to close the popen'd ssh process */
 void * svSSHCloseHelper (void * itmData)
 {
   // detach this thread
@@ -46,14 +47,16 @@ void * svSSHCloseHelper (void * itmData)
   if (itm == NULL || itm->sshCmdStream == NULL)
     return SV_RET_VOID;
 
-  int sshKillResult = -1;
+  //int sshKillResult = -1;
 
   fprintf(itm->sshCmdStream, "%s\r\n", "exit");
   fflush(itm->sshCmdStream);
 
-  sshKillResult = pclose(itm->sshCmdStream);
+  pclose(itm->sshCmdStream);
 
-  (void)sshKillResult;
+  //sshKillResult = pclose(itm->sshCmdStream);
+
+  //(void)sshKillResult;
 
   return SV_RET_VOID;
 }

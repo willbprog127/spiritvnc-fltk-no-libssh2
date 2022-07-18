@@ -38,12 +38,12 @@
 /* handle method for SVInput
  * (instance method)
  */
-int SVInput::handle (int e)
+int SVInput::handle (int evt)
 {
   static bool inMenu;
 
   // handle child window input controls right-click
-  if (e == FL_PUSH && Fl::event_button3() != 0)
+  if (evt == FL_PUSH && Fl::event_button3() != 0)
   {
     // prevent re-entry
     if (inMenu == true)
@@ -52,11 +52,12 @@ int SVInput::handle (int e)
     inMenu = true;
 
     // create context menu
+    // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
     const Fl_Menu_Item miMain[] = {
-      {"Undo",  0, 0, 0, FL_MENU_DIVIDER, 0, 31, app->nMenuFontSize},
-      {"Cut",   0, 0, 0, 0,               0, 31, app->nMenuFontSize},
-      {"Copy",  0, 0, 0, 0,               0, 31, app->nMenuFontSize},
-      {"Paste", 0, 0, 0, 0,               0, 31, app->nMenuFontSize},
+      {"Undo",  0, 0, 0, FL_MENU_DIVIDER, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
+      {"Cut",   0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
+      {"Copy",  0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
+      {"Paste", 0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
       {0}
     };
 
@@ -90,19 +91,19 @@ int SVInput::handle (int e)
     return 1;
   }
 
-  return Fl_Input::handle(e);
+  return Fl_Input::handle(evt);
 }
 
 
 /* handle method for SVSecretInput
  * (instance method)
  */
-int SVSecretInput::handle (int e)
+int SVSecretInput::handle (int evt)
 {
   static bool inMenu;
 
   // handle child window input controls right-click
-  if (e == FL_PUSH && Fl::event_button3() != 0)
+  if (evt == FL_PUSH && Fl::event_button3() != 0)
   {
     // prevent re-entry
     if (inMenu == true)
@@ -111,11 +112,12 @@ int SVSecretInput::handle (int e)
     inMenu = true;
 
     // create context menu
+    // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
     const Fl_Menu_Item miMain[] = {
-      {"Undo",  0, 0, 0, FL_MENU_DIVIDER,  0, 31, app->nMenuFontSize},
-      {"Cut",   0, 0, 0, FL_MENU_INACTIVE, 0, 31, app->nMenuFontSize},
-      {"Copy",  0, 0, 0, FL_MENU_INACTIVE, 0, 31, app->nMenuFontSize},
-      {"Paste", 0, 0, 0, 0,                0, 31, app->nMenuFontSize},
+      {"Undo",  0, 0, 0, FL_MENU_DIVIDER,  0, SV_FLTK_FONT_0, app->nMenuFontSize},
+      {"Cut",   0, 0, 0, FL_MENU_INACTIVE, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
+      {"Copy",  0, 0, 0, FL_MENU_INACTIVE, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
+      {"Paste", 0, 0, 0, 0,                0, SV_FLTK_FONT_0, app->nMenuFontSize},
       {0}
     };
 
@@ -142,15 +144,16 @@ int SVSecretInput::handle (int e)
     return 1;
   }
 
-  return Fl_Secret_Input::handle(e);
+  return Fl_Secret_Input::handle(evt);
 }
 
 
-/* child window 'OK' button callback - closes child windows (settings, options, etc */
-void svCloseChildWindow (Fl_Widget * button, void * data)
+/*
+  child window 'OK' button callback - closes child windows (settings, options, etc
+  (Fl_Widget * is unused, so parameter name removed according to 'best practices')
+*/
+void svCloseChildWindow (Fl_Widget *, void * data)
 {
-  (void) button;
-
   Fl_Window * childWindow = static_cast<Fl_Window *>(data);
 
   // close the child window, if valid
@@ -576,12 +579,12 @@ void svConfigWrite ()
   // blank line
   ofs << std::endl;
 
-  // host list entries
-  uint16_t nSize = app->hostList->size();
-
   HostItem * itm = NULL;
 
   ofs << "# host-list entries" << std::endl;
+
+  // host list entries
+  uint16_t nSize = app->hostList->size();
 
   for (uint16_t i = 0; i <= nSize; i ++)
   {
@@ -622,25 +625,26 @@ void svConfigWrite ()
 }
 
 
-/* a connection 'supervisor' that is called approx. every second by a timer */
-/* (timer callback) */
-void svConnectionWatcher (void * notUsed)
+/*
+  a connection 'supervisor' that is called approx. every second by a timer
+  (timer callback)
+  (void * not used so parameter name removed)
+*/
+void svConnectionWatcher (void *)
 {
   HostItem * itm = NULL;
   VncObject * vnc = NULL;
-  uint16_t nListSize;
-
-  (void) notUsed;
+  uint16_t nSize;
 
   // only check if there are waiting viewers
   if (app->nViewersWaiting > 0)
   {
     svDebugLog("svConnectionWatcher - At least one itm ready for processing");
 
-    nListSize = app->hostList->size();
+    nSize = app->hostList->size();
 
     // iterate through hostlist items
-    for (uint16_t i = 0; i <= nListSize; i ++)
+    for (uint16_t i = 0; i <= nSize; i ++)
     {
       itm = static_cast<HostItem *>(app->hostList->data(i));
 
@@ -692,10 +696,10 @@ void svConnectionWatcher (void * notUsed)
   }
 
   // do an inactive connection check
-  nListSize = app->hostList->size();
+  nSize = app->hostList->size();
 
   // iterate through hostlist items
-  for (uint16_t i = 0; i <= nListSize; i ++)
+  for (uint16_t i = 0; i <= nSize; i ++)
   {
     itm = static_cast<HostItem *>(app->hostList->data(i));
 
@@ -876,21 +880,22 @@ void svDebugLog (const std::string& strDebugMessage)
 /* show confirmation and delete item from hostList */
 void svDeleteItem (int nItem)
 {
-  static bool inMenu;
+  static bool inDeleteItem;
 
   bool okayToDelete = false;
 
   // prevent re-entry (FLTK menu bug)
-  if (inMenu == true)
+  if (inDeleteItem == true)
     return;
   else
-    inMenu = true;
+    inDeleteItem = true;
 
   const HostItem * itm = static_cast<HostItem *>(app->hostList->data(nItem));
 
   if (itm == NULL)
   {
     fl_beep(FL_BEEP_DEFAULT);
+    inDeleteItem = false;
     return;
   }
 
@@ -905,7 +910,7 @@ void svDeleteItem (int nItem)
     fl_message_hotspot(0);
     fl_message_title("SpiritVNC - Delete Item");
 
-    if (fl_choice("%s", "Cancel", "No", "Yes", strConfirm.c_str()) == 2)
+    if (fl_choice("%s", "Cancel", "No", "Yes", strConfirm.c_str()) == SV_CHOICE_2)
       okayToDelete = true;
   }
 
@@ -915,7 +920,7 @@ void svDeleteItem (int nItem)
     app->hostList->redraw();
   }
 
-  inMenu = false;
+  inDeleteItem = false;
 }
 
 
@@ -1012,13 +1017,14 @@ std::string svGetConfigValue (char * strIn)
 }
 
 
-/* handle app options buttons */
-void svHandleAppOptionsButtons (Fl_Widget * widget, void * data)
+/*
+  handle app options buttons
+  (void * not used so parameter name removed)
+*/
+void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
 {
   Fl_Window * childWindow = app->childWindowBeingDisplayed;
   Fl_Button * btn = static_cast<Fl_Button *>(widget);
-
-  (void) data;
 
   if (childWindow == NULL || btn == NULL)
   {
@@ -1134,12 +1140,13 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void * data)
 }
 
 
-/* handle F8 buttons */
-void svHandleF8Buttons (Fl_Widget * widget, void * data)
+/*
+  handle F8 buttons
+  (void * not used so parameter name removed)
+*/
+void svHandleF8Buttons (Fl_Widget * widget, void *)
 {
   Fl_Window * childWindow = app->childWindowBeingDisplayed;
-
-  (void) data;
 
   if (childWindow == NULL || widget == NULL)
   {
@@ -1210,12 +1217,13 @@ void svHandleF8Buttons (Fl_Widget * widget, void * data)
 }
 
 
-/* handle host list button events */
-void svHandleHostListButtons (Fl_Widget * button, void * data)
+/*
+  handle host list button events
+  (void * not used so parameter name removed)
+*/
+void svHandleHostListButtons (Fl_Widget * button, void *)
 {
   Fl_Button * btn = static_cast<Fl_Button *>(button);
-
-  (void) data;
 
   if (btn == NULL)
     return;
@@ -1331,14 +1339,14 @@ void svHandleHostListButtons (Fl_Widget * button, void * data)
 }
 
 
-/* handle mouse click and other events from the host list */
-void svHandleHostListEvents (Fl_Widget * list, void * data2)
+/*
+  handle mouse click and other events from the host list
+  (no parameters used so all parameter names removed)
+*/
+void svHandleHostListEvents (Fl_Widget *, void *)
 {
   int event = app->hostList->when();
   int nHostItemNum = app->hostList->value();
-
-  (void) list;
-  (void) data2;
 
   HostItem * itm = static_cast<HostItem *>(app->hostList->data(nHostItemNum));
 
@@ -1440,12 +1448,13 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
         nF12Flags = 0;
 
       // create context menu
+      // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
       const Fl_Menu_Item miMain[] = {
-        {strError,         0, 0, 0, nFlags,    0, 31, app->nMenuFontSize},
-        {"Connect",        0, 0, 0, 0,         0, 31, app->nMenuFontSize},
-        {"Edit",           0, 0, 0, 0,         0, 31, app->nMenuFontSize},
-        {"Copy F12 macro", 0, 0, 0, nF12Flags, 0, 31, app->nMenuFontSize},
-        {"Delete...",      0, 0, 0, 0,         0, 31, app->nMenuFontSize},
+        {strError,         0, 0, 0, nFlags,    0, SV_FLTK_FONT_0, app->nMenuFontSize},
+        {"Connect",        0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
+        {"Edit",           0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
+        {"Copy F12 macro", 0, 0, 0, nF12Flags, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
+        {"Delete...",      0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
         {0}
       };
 
@@ -1496,8 +1505,9 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
           && itm->isWaitingForShow == false)
       {
         // create context menu
+        // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
         const Fl_Menu_Item miM[] = {
-          {"Delete", 0, 0, 0, 0, 0, 31, app->nMenuFontSize},
+          {"Delete", 0, 0, 0, 0, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
           {0}
         };
 
@@ -1527,10 +1537,11 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
           nF12Flags = 0;
 
         // create context menu
+        // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
         const Fl_Menu_Item miMain[] = {
-          {"Disconnect",      0, 0, 0, 0,         0, 31, app->nMenuFontSize},
-          {"Edit",            0, 0, 0, 0,         0, 31, app->nMenuFontSize},
-          {"Paste F12 macro", 0, 0, 0, nF12Flags, 0, 31, app->nMenuFontSize},
+          {"Disconnect",      0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
+          {"Edit",            0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
+          {"Paste F12 macro", 0, 0, 0, nF12Flags, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
           {0}
         };
 
@@ -1579,14 +1590,15 @@ void svHandleHostListEvents (Fl_Widget * list, void * data2)
 }
 
 
-/* handle itm option window button presses */
-void svHandleItmOptionsButtons (Fl_Widget * widget, void * data)
+/*
+  handle itm option window button presses
+  (void * not used so parameter name removed)
+*/
+void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
 {
   Fl_Window * childWindow = app->childWindowBeingDisplayed;
   HostItem * itm = app->itmBeingEdited;
   Fl_Button * btn = static_cast<Fl_Button *>(widget);
-
-  (void) data;
 
   if (itm == NULL || childWindow == NULL || btn == NULL)
   {
@@ -1617,7 +1629,7 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void * data)
     fl_message_hotspot(0);
     fl_message_title("SpiritVNC - Delete Item");
 
-    if (fl_choice("Are you sure you want to delete this?", "Cancel", "No", "Yes") == 2)
+    if (fl_choice("Are you sure you want to delete this?", "Cancel", "No", "Yes") == SV_CHOICE_2)
     {
       int nItem = svItemNumFromItm(itm);
 
@@ -1832,11 +1844,12 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void * data)
 }
 
 
-/* sends new clipboard text to the currently displayed vnc host */
-void svHandleLocalClipboard (int source, void * notUsed)
+/*
+  sends new clipboard text to the currently displayed vnc host
+  (void * not used so parameter name removed)
+*/
+void svHandleLocalClipboard (int source, void *)
 {
-  (void) notUsed;
-
   // don't process clipboard if there's no remote server being displayed
   // of it's the selection buffer
   if (app->vncViewer->vnc == NULL || source != 1)
@@ -1855,11 +1868,12 @@ void svHandleLocalClipboard (int source, void * notUsed)
 }
 
 
-/* handle main window close event */
-void svHandleMainWindowEvents (Fl_Widget * window, void * data)
+/*
+  handle main window close event
+  (void * not used so parameter name removed)
+*/
+void svHandleMainWindowEvents (Fl_Widget * window, void *)
 {
-  (void) data;
-
   int event = window->when();
 
   // window closing
@@ -1933,13 +1947,14 @@ void svPositionWidgets ()
 }
 
 
-/* handle host item icon change */
-void svHandleListItemIconChange (void * notUsed)
+/*
+  handle host item icon change
+  (void * not used so parameter name removed)
+*/
+void svHandleListItemIconChange (void *)
 {
-  //int i;
   uint16_t nSize = app->hostList->size();
   HostItem * itm = NULL;
-  (void) notUsed;
 
   // iterate through host list and set status icons for items
   for (uint16_t i = 0; i < nSize; i++)
@@ -2016,8 +2031,14 @@ void svHandleThreadConnection (void * data)
       VncObject::createVNCListener();
 
       if (app->showReverseConnect == true)
+      {
         svMessageWindow("A remote VNC host has just reverse-connected"
           "\n\nClick the 'Listen' item(s) in the host list to view");
+        //app->mBar = new SVMessageBar("A remote VNC host has just reverse-connected"
+          //"\n\nClick the 'Listen' item(s) in the host list to view");
+        //svResizeScroller();
+        //// app->scroller->add(app->mBar);
+      }
     }
   }
 
@@ -2079,11 +2100,12 @@ void svHandleThreadConnection (void * data)
 }
 
 
-/* handle thread cursor change */
-void svHandleThreadCursorChange (void * notUsed)
+/*
+  handle thread cursor change
+  (void * not used so parameter name removed)
+*/
+void svHandleThreadCursorChange (void *)
 {
-    (void) notUsed;
-
     if (app->vncViewer == NULL)
       return;
 
@@ -2196,11 +2218,13 @@ HostItem * svItmFromVnc (const VncObject * vncIn)
 }
 
 
-/* handle itm option window choose prvkey button presses */
-void svItmOptionsChoosePrvKeyBtnCallback (Fl_Widget * button, void * data)
+/*
+  handle itm option window choose prvkey button presses
+  (Fl_Widget * not used so parameter name removed)
+*/
+void svItmOptionsChoosePrvKeyBtnCallback (Fl_Widget *, void * data)
 {
   SVInput * inPrvKey = static_cast<SVInput *>(data);
-  (void) button;
 
   if (inPrvKey == NULL)
     return;
@@ -2219,12 +2243,13 @@ void svItmOptionsChoosePrvKeyBtnCallback (Fl_Widget * button, void * data)
 }
 
 
-/* handle itm option window vnc radio button presses */
-void svItmOptionsRadioButtonsCallback (Fl_Widget * button, void * data)
+/*
+  handle itm option window vnc radio button presses
+  (void * not used so parameter name removed)
+*/
+void svItmOptionsRadioButtonsCallback (Fl_Widget * button, void *)
 {
   Fl_Radio_Round_Button * btn = static_cast<Fl_Radio_Round_Button *>(button);
-
-  (void) data;
 
   if (btn == NULL)
     return;
@@ -2322,24 +2347,24 @@ void svResizeScroller ()
 }
 
 
-/* restore previous session's window position */
-void svRestoreWindowSizePosition (void * notUsed)
+/*
+  restore previous session's window position
+  (void * not used so parameter name removed)
+*/
+void svRestoreWindowSizePosition (void *)
 {
-    (void) notUsed;
-
     app->mainWin->resize(app->savedX, app->savedY, app->savedW, app->savedH);
     app->mainWin->redraw();
 }
 
 
 /*
- * scan the host list for active connections and pause on each one
- * for user-determined time interval
- */
-void svScanTimer (void * data)
+  scan the host list for active connections and pause on each one
+  for user-determined time interval
+  (void * not used so parameter name removed)
+*/
+void svScanTimer (void *)
 {
-  (void) data;
-
   if (app->scanIsRunning == false || svThereAreConnectedItems() == false)
   {
     app->scanIsRunning = false;
@@ -2491,9 +2516,9 @@ void svShowAboutHelp ()
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create messagebox window
-  Fl_Window * winAboutHelp = new Fl_Window(nX, nY, nWinWidth, nWinHeight, NULL);
+  Fl_Window * winAboutHelp = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "About / Help"); //NULL);
   winAboutHelp->set_non_modal();
-  winAboutHelp->box(FL_GTK_UP_BOX);
+  //winAboutHelp->box(FL_GTK_UP_BOX);
 
   Fl_Help_View * hv = new Fl_Help_View(10, 10, nWinWidth - 20, nWinHeight - 70);
 
@@ -2548,7 +2573,7 @@ void svShowAboutHelp ()
   winAboutHelp->end();
 
   // make this window an embedded window in the parent
-  app->mainWin->add(winAboutHelp);
+  //app->mainWin->add(winAboutHelp);
 
   // show window
   winAboutHelp->show();
@@ -2575,18 +2600,18 @@ void svShowAppOptions ()
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create window
-  Fl_Window * winAppOpts = new Fl_Window(nX, nY, nWinWidth, nWinHeight, NULL);
+  Fl_Window * winAppOpts = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Application Options"); //NULL);
   winAppOpts->set_non_modal();
-  winAppOpts->box(FL_GTK_UP_BOX);
+  //winAppOpts->box(FL_GTK_UP_BOX);
   app->childWindowBeingDisplayed = winAppOpts;
 
-  // add main top label, showing itm name
-  Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, "Application Options");
-  bxTopLabel->align(FL_ALIGN_CENTER);
-  bxTopLabel->labelfont(1);
-  bxTopLabel->labelsize(app->nAppFontSize);
-  bxTopLabel->box(FL_GTK_UP_BOX);
-  bxTopLabel->color(17);
+  //// add main top label, showing itm name
+  //Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, "Application Options");
+  //bxTopLabel->align(FL_ALIGN_CENTER);
+  //bxTopLabel->labelfont(1);
+  //bxTopLabel->labelsize(app->nAppFontSize);
+  //bxTopLabel->box(FL_GTK_UP_BOX);
+  //bxTopLabel->color(17);
 
   // add itm value editors / selectors
   int nXPos = 300;
@@ -2750,7 +2775,7 @@ void svShowAppOptions ()
   winAppOpts->end();
 
   // make this window an embedded window in the parent
-  app->mainWin->add(winAppOpts);
+  //app->mainWin->add(winAppOpts);
 
   // show window
   winAppOpts->show();
@@ -2787,17 +2812,17 @@ void svShowF8Window ()
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create window
-  Fl_Window * winF8 = new Fl_Window(nX, nY, nWinWidth, nWinHeight, NULL);
+  Fl_Window * winF8 = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Remote host actions"); // NULL);
   winF8->set_non_modal();
-  winF8->box(FL_GTK_UP_BOX);
+  //winF8->box(FL_GTK_UP_BOX);
   app->childWindowBeingDisplayed = winF8;
 
-  // add main top label
-  Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, "Remote host actions");
-  bxTopLabel->align(FL_ALIGN_CENTER);
-  bxTopLabel->labelfont(1);
-  bxTopLabel->box(FL_GTK_UP_BOX);
-  bxTopLabel->color(17);
+  //// add main top label
+  //Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, "Remote host actions");
+  //bxTopLabel->align(FL_ALIGN_CENTER);
+  //bxTopLabel->labelfont(1);
+  //bxTopLabel->box(FL_GTK_UP_BOX);
+  //bxTopLabel->color(17);
 
   // add itm value editors / selectors
   int nXPos = 15;
@@ -2859,7 +2884,7 @@ void svShowF8Window ()
   winF8->end();
 
   // make this window an embedded window in the parent
-  app->mainWin->add(winF8);
+  //app->mainWin->add(winF8);
 
   // show window
   winF8->show();
@@ -2908,16 +2933,16 @@ void svShowItemOptions (HostItem * im)
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create window
-  Fl_Window * itmOptWin = new Fl_Window(nX, nY, nWinWidth, nWinHeight, NULL);
+  Fl_Window * itmOptWin = new Fl_Window(nX, nY, nWinWidth, nWinHeight, itm->name.c_str()); //NULL);
   itmOptWin->set_non_modal();
-  itmOptWin->box(FL_GTK_UP_BOX);
+  //itmOptWin->box(FL_GTK_UP_BOX);
 
-  // add main top label, showing itm name
-  Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, itm->name.c_str());
-  bxTopLabel->align(FL_ALIGN_CENTER);
-  bxTopLabel->labelfont(1);
-  bxTopLabel->box(FL_GTK_UP_BOX);
-  bxTopLabel->color(17);
+  //// add main top label, showing itm name
+  //Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, itm->name.c_str());
+  //bxTopLabel->align(FL_ALIGN_CENTER);
+  //bxTopLabel->labelfont(1);
+  //bxTopLabel->box(FL_GTK_UP_BOX);
+  //bxTopLabel->color(17);
 
   // add itm value editors / selectors
   int nXPos = 195;
@@ -3209,7 +3234,7 @@ void svShowItemOptions (HostItem * im)
   }
 
   // make this window an embedded window in the parent
-  app->mainWin->add(itmOptWin);
+  //app->mainWin->add(itmOptWin);
 
   // focus the first input box and select all text within
   inName->take_focus();

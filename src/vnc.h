@@ -134,6 +134,7 @@ private:
   int handle (int);
   void draw ();
   void sendCorrectedKeyEvent (const char *, const int, HostItem *, rfbClient *, bool);
+  void drawMessageBar ();
 };
 
 #endif

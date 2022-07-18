@@ -46,6 +46,8 @@
 #define SV_APP_FONT_SIZE            14
 #define SV_MAX_PROP_LEN             1024
 #define SV_MAX_HOSTLIST_ENTRIES     65000
+#define SV_FLTK_FONT_0              0
+#define SV_CHOICE_2                 2
 
 // return type for threads
 #define SV_RET_VOID         static_cast<void *>(NULL)

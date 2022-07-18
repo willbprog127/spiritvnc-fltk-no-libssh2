@@ -901,6 +901,7 @@ void VncObject::checkVNCMessages (VncObject * vnc)
  * ########################## VNC VIEWER WIDGET ###########################################
  * ########################################################################################
  */
+
 /* draw event for vnc view widget */
 /* (instance method) */
 void VncViewer::draw ()
@@ -1192,13 +1193,14 @@ int VncViewer::handle (int event)
 }
 
 
-/* fix / convert X11 key codes to rfb key codes */
-void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int nKey, HostItem * itm,
+/*
+  fix / convert X11 key codes to rfb key codes
+  (const in not used so parameter name removed)
+*/
+void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem * itm,
   rfbClient * cl, bool downState)
 {
   int nK = Fl::event_key();
-
-  (void) nKey;
 
   if (cl == NULL || itm == NULL)
     return;

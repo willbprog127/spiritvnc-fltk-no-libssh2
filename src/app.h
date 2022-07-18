@@ -242,7 +242,7 @@ class SVInput : public Fl_Input
 {
 public:
   SVInput (int x, int y, int w, int h, const char * label = 0) :
-      Fl_Input(x, y, w, h, label) {}
+    Fl_Input(x, y, w, h, label) {}
 private:
   int handle (int event);
 };
@@ -255,7 +255,7 @@ public:
   SVSecretInput (int x, int y, int w, int h, const char * label = 0) :
     Fl_Secret_Input(x, y, w, h, label) {}
 private:
-  int handle (int event);
+  int handle (int evt);
 };
 
 
