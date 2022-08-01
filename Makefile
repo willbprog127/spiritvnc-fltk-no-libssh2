@@ -1,13 +1,13 @@
 CC       =	c++
 CFLAGS   =	-O2 -Wall -Wunused -lpthread `fltk-config --use-images --cxxflags --ldflags` \
-			--std=c++11 \
-			`pkg-config --cflags --libs libvncclient libvncserver`
+			--std=c++11 -finline-functions -march=x86-64
 DEBUGFLGS=	-g -O0
 BINDIR   = /usr/local/bin
 TARGET   =	spiritvnc-fltk
 SRC 	 =	`ls src/*.cxx`
 PKGCONF  =	`which pkg-config`
 LIBXPM   =
+LIBVNC	 =
 OSNAME   = $(shell uname -s)
 
 # don't include X11 stuff for mac
@@ -15,6 +15,13 @@ ifeq ($(OSNAME), Darwin)
 	LIBXPM =
 else
 	LIBXPM = -lXpm
+endif
+
+# fix OI / Solaris stuff
+ifeq ($(OSNAME), SunOS)
+	LIBVNC = `libvncserver-config --cflags --libs` -m64
+else
+	LIBVNC = `pkg-config --cflags --libs libvncclient libvncserver`
 endif
 
 spiritvnc-fltk:
@@ -27,7 +34,7 @@ spiritvnc-fltk:
 		exit 1 ; \
 	fi
 
-	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBXPM)
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBXPM) $(LIBVNC)
 
 debug:
 	@echo "Building debug on '$(OSNAME)'"
@@ -40,7 +47,7 @@ debug:
 		exit 1 ; \
 	fi
 
-	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBXPM) $(DEBUGFLGS)
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBXPM) $(LIBVNC) $(DEBUGFLGS)
 
 .PHONY: clean
 clean::
