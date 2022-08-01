@@ -1,10 +1,8 @@
 __SpiritVNC - FLTK__
 
-SpiritVNC - FLTK is an FLTK-based multi-view VNC client for most Linux distros, macOS and FreeBSD.  SpiritVNC features VNC-through-SSH, reverse (listening) VNC connections and timed scanning of connected viewers.  SpiritVNC - FLTK may run on other Unix-like systems using X11, as well.
+SpiritVNC - FLTK is an FLTK-based multi-view VNC client for most Linux distros, macOS, FreeBSD and OpenIndiana.  SpiritVNC features VNC-through-SSH, reverse (listening) VNC connections and timed scanning of connected viewers.  SpiritVNC - FLTK may run on other Unix-like systems using X11, as well.
 
-_(OpenIndiana was previously supported, but changes to their packages has caused some problems.  Please contact me if you need SpiritVNC - FLTK working on OI)_
-
-__Now working on macOS again!__ :smile:
+__Now working on OpenIndiana again!__ :smile:
 
 __A note about NOT using libssh2__ - Because of recent issues with libssh2, I was forced to develop this non-libssh2 version of SpiritVNC - FLTK.  This version uses the system's built-in or readily-installed SSH client.  Most Linux distros, recent macOS releases and BSDs have the `ssh` command ready for use.  If not, it usually can be installed easily enough.  You can even install a SSH client on Windows 10 and higher.
 
@@ -49,7 +47,7 @@ $ make [debug]
 $ sudo make install   # (don't use this command when building on macOS)
 ```
 
-On FreeBSD, OpenBSD and others:
+On FreeBSD, OpenBSD and others (OpenIndiana?):
 ```sh
 $ gmake [debug]
 $ sudo gmake install
