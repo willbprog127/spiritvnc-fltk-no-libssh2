@@ -2527,7 +2527,7 @@ void svShowAboutHelp ()
   hv->textfont(0);
 
   const char strHelp[] = "<center><strong><h3>SpiritVNC"
-      " - FLTK</strong></center></font>"
+      " - FLTK<br />no libssh2</strong></center></font>"
       "<p><center><font face='sans'>&copy; 2016-" SV_CURRENT_YEAR " Will Brokenbourgh - <a"
       " href='https://www.pismotek.com/brainout/'>"
       "https://www.pismotek.com/brainout/</a></font></center></p>"

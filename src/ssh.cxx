@@ -137,6 +137,4 @@ void svCreateSSHConnection (void * data)
     itm->sshReady = false;
     itm->hasError = true;
   }
-
-  return;
 }
