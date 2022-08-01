@@ -30,7 +30,7 @@ You will need both the libraries and development packages of the following:
 
 The 'pkg-config' program must be installed for building, unless you want to specify locations for includes and libs manually in the Makefile.
 
-[MacPorts](https://www.macports.org) is highly recommended for installing dependencies on macOS.
+[~~MacPorts~~](https://www.macports.org) ~~is highly recommended for installing dependencies on macOS.~~ [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  Also, I don't have access to an Apple Silicon Mac (M1, M2, etc) so patches from people who *do* have these machines would be helpful.
 
 
 - - -
