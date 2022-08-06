@@ -47,16 +47,10 @@ void * svSSHCloseHelper (void * itmData)
   if (itm == NULL || itm->sshCmdStream == NULL)
     return SV_RET_VOID;
 
-  //int sshKillResult = -1;
-
   fprintf(itm->sshCmdStream, "%s\r\n", "exit");
   fflush(itm->sshCmdStream);
 
   pclose(itm->sshCmdStream);
-
-  //sshKillResult = pclose(itm->sshCmdStream);
-
-  //(void)sshKillResult;
 
   return SV_RET_VOID;
 }
@@ -118,7 +112,7 @@ void svCreateSSHConnection (void * data)
 
   // build the command string for our system() call
   sshCommandLine = app->sshCommand + " " + itm->sshUser + "@" + itm->hostAddress + " -t" + " -t" +
-    " -p " + itm->sshPort +
+    " -p " + itm->sshPort + " -o ConnectTimeout=" + std::to_string(itm->sshWaitTime) +    // <<<--- added timeout 2022-08-05
     " -L " + std::to_string(itm->sshLocalPort) + ":127.0.0.1:" + itm->vncPort +
     " -i " + itm->sshKeyPrivate;
 
@@ -137,4 +131,6 @@ void svCreateSSHConnection (void * data)
     itm->sshReady = false;
     itm->hasError = true;
   }
+
+  return;
 }

@@ -952,14 +952,18 @@ int svFindFreeTcpPort ()
     return 0;
   }
 
-  // go through a range of startingLocalPort + 99 to see if we can use for ssh forwarding
-  for (uint16_t nPort = app->nStartingLocalPort + 99; nPort > app->nStartingLocalPort; nPort --)
+  // go through a range of startingLocalPort to + 99 to see if we can use for ssh forwarding
+  for (uint16_t nPort = app->nStartingLocalPort; nPort < (app->nStartingLocalPort + 99); nPort ++)
   {
     structSockAddress.sin_port = htons((unsigned short)nPort);
 
+    // don't clobber the listening port
+    if (nPort == 5500)
+      continue;
+
     // if nothing is on this port and it's not the reverse vnc port, return the port number
     if (bind(nSock, reinterpret_cast<sockaddr *>(&structSockAddress),
-      sizeof(structSockAddress)) == 0 && nPort != 5500)
+      sizeof(structSockAddress)) == 0)
     {
       close(nSock);
       return nPort;
@@ -2067,6 +2071,9 @@ void svHandleThreadConnection (void * data)
     }
 
     itm->vnc = NULL;
+
+    if (itm->hostType == 's')
+      svCloseSSHConnection(itm);
   }
 
   // advance and check viewer timeout value
@@ -2527,7 +2534,7 @@ void svShowAboutHelp ()
   hv->textfont(0);
 
   const char strHelp[] = "<center><strong><h3>SpiritVNC"
-      " - FLTK<br />no libssh2</strong></center></font>"
+      " - FLTK</strong></center></font>"
       "<p><center><font face='sans'>&copy; 2016-" SV_CURRENT_YEAR " Will Brokenbourgh - <a"
       " href='https://www.pismotek.com/brainout/'>"
       "https://www.pismotek.com/brainout/</a></font></center></p>"

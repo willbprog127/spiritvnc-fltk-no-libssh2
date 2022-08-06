@@ -187,23 +187,24 @@ void VncObject::createVNCObject (HostItem * itm)
       //int sshResult = pthread_create(&itm->threadSSH, NULL, svCreateSSHConnection, itm);
       svCreateSSHConnection(itm);
 
-      //if (sshResult != 0)
-      if (itm->sshReady == false)
-      {
-        svLogToFile("ERROR - Couldn't create SSH thread for '" + itm->name +
-          "' - " + itm->hostAddress);
-        itm->isConnecting = false;
-        itm->hasCouldntConnect = true;
-        itm->hasError = true;
-        itm->lastErrorMessage = "Unable to make SSH connection";
+      ////if (sshResult != 0)
+      //// ### THIS BLOCK COMMENTED OUT 2022-08-05 ###
+      //if (itm->sshReady == false)
+      //{
+        //svLogToFile("ERROR - Couldn't create SSH thread for '" + itm->name +
+          //"' - " + itm->hostAddress);
+        //itm->isConnecting = false;
+        //itm->hasCouldntConnect = true;
+        //itm->hasError = true;
+        //itm->lastErrorMessage = "Unable to make SSH connection";
 
-        if (vnc != NULL && vnc->vncClient != NULL)
-          VncObject::endAndDeleteViewer(&vnc);
+        ////if (vnc != NULL && vnc->vncClient != NULL)
+        //VncObject::endAndDeleteViewer(&vnc);
 
-        svHandleThreadConnection(itm);
+        //svHandleThreadConnection(itm);
 
-        return;
-      }
+        //return;
+      //}
 
       time_t sshDelay = time(NULL) + itm->sshWaitTime;
 
@@ -243,8 +244,8 @@ void VncObject::createVNCObject (HostItem * itm)
       itm->hasCouldntConnect = true;
       itm->hasError = true;
 
-      if (vnc != NULL && vnc->vncClient != NULL)
-        VncObject::endAndDeleteViewer(&vnc);
+      //if (vnc != NULL && vnc->vncClient != NULL)
+      VncObject::endAndDeleteViewer(&vnc);
 
       svHandleThreadConnection(itm);
 
