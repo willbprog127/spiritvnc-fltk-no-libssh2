@@ -8,6 +8,8 @@ __A note about NOT using libssh2__ - Because of recent issues with libssh2, I wa
 
 Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
 
+__Windows version?__ - While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  I will continue to work on this as time allows.
+
 2016-2022 Will Brokenbourgh
 https://www.pismotek.com/brainout/
 
