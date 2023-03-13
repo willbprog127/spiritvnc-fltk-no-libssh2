@@ -1,19 +1,15 @@
 # SpiritVNC - FLTK
 SpiritVNC - FLTK is an FLTK-based multi-view VNC client for most Linux distros, macOS, FreeBSD and OpenIndiana.  SpiritVNC features VNC-through-SSH, reverse (listening) VNC connections and timed scanning of connected viewers.  SpiritVNC - FLTK may run on other Unix-like systems using X11, as well.
 
-## Project health NOTE: Please see https://github.com/willbprog127/spiritvnc-fltk-no-libssh2/issues/1
-
-Now working on OpenIndiana again! :smile:
-
 #### A note about NOT using libssh2
-Because of recent issues with libssh2, I was forced to develop this non-libssh2 version of SpiritVNC - FLTK.  This version uses the system's built-in or readily-installed SSH client.  Most Linux distros, recent macOS releases and BSDs have the `ssh` command ready for use.  If not, it usually can be installed easily enough.  You can even install a SSH client on Windows 10 and higher.
+Because of changes the last year or two with libssh2, I was forced to develop this non-libssh2 version of SpiritVNC - FLTK.  This version uses the system's built-in or readily-installed SSH client.  Most Linux distros, recent macOS releases and BSDs have the `ssh` command ready for use.  If not, it usually can be installed easily enough.  You can even install a SSH client on Windows 10 and higher.
 
-Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
+Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  On some OSs the child `ssh` processes won't even close properly.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
 
 #### Windows version?
-While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  I will continue to work on this as time allows.
+While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  Unfortunately I have not had the time to work on this lately due to higher-priority projects.  If anyone needs this, please file an issue.
 
-2016-2022 Will Brokenbourgh
+2016-2023 Will Brokenbourgh
 https://www.pismotek.com/brainout/
 
 To God be the glory! :-D :heart:
