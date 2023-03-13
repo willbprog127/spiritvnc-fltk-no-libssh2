@@ -1,6 +1,6 @@
 /*
  * app.h - part of SpiritVNC - FLTK
- * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2023 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -285,7 +285,7 @@ void svHandleMainWindowEvents (Fl_Widget *, void *);
 void svPositionWidgets ();
 void svHandleListItemIconChange (void * notUsed);
 void svHandleThreadConnection (void *);
-void svHandleThreadCursorChange (void * notUsed);
+void svHandleThreadCursorChange (void *);
 void svInsertEmptyItem ();
 int svItemNumFromItm (const HostItem *);
 HostItem * svItmFromVnc (const VncObject *);

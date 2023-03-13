@@ -1,6 +1,6 @@
 /*
  * vnc.cxx - part of SpiritVNC - FLTK
- * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2023 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -456,7 +456,7 @@ void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int
   vnc->nCursorXHot = xHot;
   vnc->nCursorYHot = yHot;
 
-  svHandleThreadCursorChange(NULL);
+  Fl::awake(svHandleThreadCursorChange, reinterpret_cast<void *>(false));
 
   delete img;
 }
@@ -892,7 +892,8 @@ void VncObject::checkVNCMessages (VncObject * vnc)
       return;
     }
     else
-      Fl::awake();
+      //Fl::awake();
+      Fl::check();
   }
 }
 
@@ -1150,13 +1151,12 @@ int VncViewer::handle (int event)
     // ** misc events **
     case FL_ENTER:
       if (vnc->imgCursor != NULL && itm->showRemoteCursor == true)
-        svHandleThreadCursorChange(NULL);
+        Fl::awake(svHandleThreadCursorChange, reinterpret_cast<void *>(false));
       return 1;
       break;
 
     case FL_LEAVE:
-      app->mainWin->cursor(FL_CURSOR_DEFAULT);
-      Fl::wait();
+      Fl::awake(svHandleThreadCursorChange, reinterpret_cast<void *>(true));
       return 1;
       break;
 

@@ -1,6 +1,6 @@
 /*
  * app.cxx - part of SpiritVNC - FLTK
- * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2023 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
@@ -2038,10 +2038,6 @@ void svHandleThreadConnection (void * data)
       {
         svMessageWindow("A remote VNC host has just reverse-connected"
           "\n\nClick the 'Listen' item(s) in the host list to view");
-        //app->mBar = new SVMessageBar("A remote VNC host has just reverse-connected"
-          //"\n\nClick the 'Listen' item(s) in the host list to view");
-        //svResizeScroller();
-        //// app->scroller->add(app->mBar);
       }
     }
   }
@@ -2111,8 +2107,17 @@ void svHandleThreadConnection (void * data)
   handle thread cursor change
   (void * not used so parameter name removed)
 */
-void svHandleThreadCursorChange (void *)
+void svHandleThreadCursorChange (void * setToDefault)
 {
+    bool setDefault = reinterpret_cast<bool *>(setToDefault);
+
+    // if we're just resetting the cursor and nothing else
+    if (setDefault == true)
+    {
+      app->mainWin->cursor(FL_CURSOR_DEFAULT);
+      return;
+    }
+
     if (app->vncViewer == NULL)
       return;
 
