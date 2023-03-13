@@ -704,7 +704,7 @@ void VncObject::masterMessageLoop ()
       for (uint8_t i = 0; i < 100; i++)
       {
         // keep from making too tight a loop
-        Fl::wait(0.100);
+        Fl::check();
 
         vnc = app->vncViewer->vnc;
 
