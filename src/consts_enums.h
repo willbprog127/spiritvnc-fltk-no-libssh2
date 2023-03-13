@@ -36,9 +36,9 @@
 #define CONSTS_H
 
 /* constants */
-#define SV_APP_VERSION "0.4.11"
+#define SV_APP_VERSION "0.4.12"
 
-#define SV_CURRENT_YEAR "2022"
+#define SV_CURRENT_YEAR "2023"
 
 #define SV_CONNECTION_TIMEOUT_SECS  30
 #define SV_ONE_SECOND               1.00
