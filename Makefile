@@ -6,16 +6,9 @@ BINDIR   = /usr/local/bin
 TARGET   =	spiritvnc-fltk
 SRC 	 =	`ls src/*.cxx`
 PKGCONF  =	`which pkg-config`
-LIBXPM   =
 LIBVNC	 =
 OSNAME   = $(shell uname -s)
 
-# don't include X11 stuff for mac
-ifeq ($(OSNAME), Darwin)
-	LIBXPM =
-else
-	LIBXPM = -lXpm
-endif
 
 # fix OI / Solaris stuff
 ifeq ($(OSNAME), SunOS)
@@ -34,7 +27,7 @@ spiritvnc-fltk:
 		exit 1 ; \
 	fi
 
-	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBXPM) $(LIBVNC)
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBVNC)
 
 debug:
 	@echo "Building debug on '$(OSNAME)'"
@@ -47,7 +40,7 @@ debug:
 		exit 1 ; \
 	fi
 
-	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBXPM) $(LIBVNC) $(DEBUGFLGS)
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LIBVNC) $(DEBUGFLGS)
 
 .PHONY: clean
 clean::
