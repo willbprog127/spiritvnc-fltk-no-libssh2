@@ -62,10 +62,10 @@ $ ./spiritvnc-fltk
 ```
 
 ##### Basic usage
-* Double-click a server entry to try to connect to it
-* Single-click a server entry to switch to it from another
-* If connected, right-clicking a server entry closes the connection *(except `Listening` entries)*
-* If NOT connected, right-clicking a server entry brings up a pop-up menu with various actions you can perform
+* Double-click a disconnected server entry to try to connect to it
+* Single-click a connected server entry to switch to it from another
+* Right-click a connected server entry to close the connection *(except `Listening` entries)*
+* Right-click a disconnected server entry to display a pop-up menu with various actions you can perform
 
 ##### Server entry buttons
 * Click the [+] button to add a new server entry, click the [-] button to delete a server entry
