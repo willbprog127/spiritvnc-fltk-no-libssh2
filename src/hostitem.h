@@ -55,7 +55,6 @@ public:
     sshPort(""),
     sshUser(""),
     sshPass(""),
-    // sshKeyPublic(""),
     sshKeyPrivate(""),
     sshLocalPort(0),
     vncPassword(""),
@@ -63,8 +62,6 @@ public:
     vnc(NULL),
     threadRFB(0),
     threadRFBRunning(false),
-    //threadSSH(0),
-    //threadLoop(0),
     sshReady(false),
     vncAddressAndPort(""),
     f12Macro(""),
@@ -98,7 +95,6 @@ public:
   std::string sshPort;
   std::string sshUser;
   std::string sshPass;
-  // std::string sshKeyPublic;
   std::string sshKeyPrivate;
   int sshLocalPort;
   std::string vncPassword;
@@ -106,8 +102,6 @@ public:
   VncObject * vnc;
   pthread_t threadRFB;
   bool threadRFBRunning;
-  //pthread_t threadSSH;
-  //pthread_t threadLoop;
   bool sshReady;
   std::string vncAddressAndPort;
   std::string f12Macro;

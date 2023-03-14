@@ -184,27 +184,7 @@ void VncObject::createVNCObject (HostItem * itm)
       svDebugLog("svCreateVNCObject - Creating and running threadSSH");
 
       // create, launch and detach call to create our ssh connection
-      //int sshResult = pthread_create(&itm->threadSSH, NULL, svCreateSSHConnection, itm);
       svCreateSSHConnection(itm);
-
-      ////if (sshResult != 0)
-      //// ### THIS BLOCK COMMENTED OUT 2022-08-05 ###
-      //if (itm->sshReady == false)
-      //{
-        //svLogToFile("ERROR - Couldn't create SSH thread for '" + itm->name +
-          //"' - " + itm->hostAddress);
-        //itm->isConnecting = false;
-        //itm->hasCouldntConnect = true;
-        //itm->hasError = true;
-        //itm->lastErrorMessage = "Unable to make SSH connection";
-
-        ////if (vnc != NULL && vnc->vncClient != NULL)
-        //VncObject::endAndDeleteViewer(&vnc);
-
-        //svHandleThreadConnection(itm);
-
-        //return;
-      //}
 
       time_t sshDelay = time(NULL) + itm->sshWaitTime;
 
@@ -722,9 +702,9 @@ void VncObject::masterMessageLoop ()
       // for (uint16_t i = 0; i <= app->hostList->size(); i ++)
       for (uint16_t i = 0; i <= nSize; i ++)
       {
-        Fl::lock();
+        // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
         itm = static_cast<HostItem *>(app->hostList->data(i));
-        Fl::unlock();
+        // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
         if (itm == NULL)
           continue;

@@ -601,7 +601,6 @@ void svConfigWrite ()
     ofs << "vncpass=" << base64Encode(reinterpret_cast<const unsigned char *>
       (itm->vncPassword.c_str()), itm->vncPassword.size()) << std::endl;
     ofs << "type=" << itm->hostType << std::endl;
-    //ofs << "sshkeypublic=" << itm->sshKeyPublic << std::endl;
     ofs << "sshkeyprivate=" << itm->sshKeyPrivate << std::endl;
     ofs << "sshuser=" << itm->sshUser << std::endl;
     ofs << "sshpass=" << itm->sshPass << std::endl;
@@ -1911,43 +1910,33 @@ void svHandleMainWindowEvents (Fl_Widget * window, void *)
 void svPositionWidgets ()
 {
   // only continue if main window geometry changes
-  if (app->mainWin->w() != app->nMainWinPreviousW
-      || app->mainWin->h() != app->nMainWinPreviousH)
+  svDebugLog("svPositionWidgets - Resizing GUI elements");
+
+  // resize the host list vertically if the main window resizes
+  app->hostList->size(app->hostList->w(), app->mainWin->h() - 26);
+
+  // set list buttons position
+  app->packButtons->position(3, app->hostList->x() + app->hostList->h() + 3);
+
+  // don't allow host list width to be smaller than right-most button's x+w
+  if (app->hostList->w() < (app->packButtons->x() + app->packButtons->w()))
+    app->hostList->size((app->packButtons->x() + app->packButtons->w()), app->hostList->h());
+
+  // set scroller x
+  app->scroller->position(app->hostList->x() + app->hostList->w() + 3, app->scroller->y());
+  app->scroller->redraw();
+
+  VncObject * vnc = app->vncViewer->vnc;
+
+  // reset scroller position
+  if (vnc != NULL)
   {
-    svDebugLog("svPositionWidgets - Resizing GUI elements");
-
-    // store window geometry for comparison later
-    app->nMainWinPreviousW = app->mainWin->w();
-    app->nMainWinPreviousH = app->mainWin->h();
-
-    // resize the host list vertically if the main window resizes
-    app->hostList->size(app->hostList->w(), app->mainWin->h() - 26);
-
-    // set list buttons position
-    app->packButtons->position(3, app->hostList->x() + app->hostList->h() + 3);
-
-    // don't allow host list width to be smaller than right-most button's x+w
-    if (app->hostList->w() < (app->packButtons->x() + app->packButtons->w()))
-      app->hostList->size((app->packButtons->x() + app->packButtons->w()), app->hostList->h());
-
-    // set scroller x
-    app->scroller->position(app->hostList->x() + app->hostList->w() + 3, app->scroller->y());
-    app->scroller->redraw();
-
-    VncObject * vnc = app->vncViewer->vnc;
-
-    // reset scroller position
-    if (vnc != NULL)
-    {
-      svResizeScroller();
-      vnc->setObjectVisible();
-    }
-
-    Fl::redraw();
-    Fl::check();
-
-    return;
+    svResizeScroller();
+    vnc->setObjectVisible();
   }
+
+  Fl::redraw();
+  Fl::check();
 }
 
 
@@ -1967,9 +1956,9 @@ void svHandleListItemIconChange (void *)
 
     if (itm != NULL && itm->icon != NULL)
     {
-      Fl::lock();
+      // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
       app->hostList->icon(i, itm->icon);
-      Fl::unlock();
+      // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
       Fl::check();
     }
   }
@@ -1978,7 +1967,7 @@ void svHandleListItemIconChange (void *)
 }
 
 
-/* handle messages from child threads */
+/* handle connection changes from child threads */
 void svHandleThreadConnection (void * data)
 {
   HostItem * itm = static_cast<HostItem *>(data);
@@ -2026,8 +2015,9 @@ void svHandleThreadConnection (void * data)
 
       std::string strHostViewName = "Listening - ";
       strHostViewName.append(vnc->vncClient->desktopName);
+      itm->name = strHostViewName;
 
-      app->hostList->text(nListeningItem, strHostViewName.c_str());
+      app->hostList->text(nListeningItem, itm->name.c_str()); // strHostViewName.c_str());
 
       // (try to) create another listener
       svDebugLog("svConnectionWatcher - Creating Listener object");
@@ -2126,7 +2116,7 @@ void svHandleThreadCursorChange (void * setToDefault)
     if (vnc == NULL)
       return;
 
-    Fl::lock();
+    // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
 
     // set cursor, if valid
     if (vnc->imgCursor != NULL)
@@ -2136,7 +2126,7 @@ void svHandleThreadCursorChange (void * setToDefault)
     } else
       app->mainWin->cursor(FL_CURSOR_DEFAULT);
 
-    Fl::unlock();
+    // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 }
 
 
@@ -2149,17 +2139,16 @@ void svInsertEmptyItem ()
   itm->hostAddress = "192.168.0.1";
   itm->vncPort = "5900";
   itm->scaling = 'f';
-  // itm->sshKeyPublic = "";
   itm->sshKeyPrivate = "";
   itm->showRemoteCursor = true;
   itm->compressLevel = 5;
   itm->qualityLevel = 5;
 
-  Fl::lock();
+  // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
   app->hostList->add(itm->name.c_str(), itm);
   app->hostList->icon(app->hostList->size(), app->iconDisconnected);
   app->hostList->make_visible(app->hostList->size());
-  Fl::unlock();
+  // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
   Fl::redraw();
   Fl::check();
@@ -2175,7 +2164,7 @@ int svItemNumFromItm (const HostItem * itmIn)
   HostItem * itm = NULL;
   uint16_t nSize = app->hostList->size();
 
-  Fl::lock();
+  // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
 
   // go through hostlist and find item owning matching itmIn
   for (uint16_t i = 0; i <= nSize; i ++)
@@ -2185,13 +2174,13 @@ int svItemNumFromItm (const HostItem * itmIn)
 
     if (itm != NULL && itm == itmIn)
     {
-      Fl::unlock();
+      // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
       return i;
     }
   }
 
-  Fl::unlock();
+  // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
   return 0;
 }
@@ -2206,7 +2195,7 @@ HostItem * svItmFromVnc (const VncObject * vncIn)
   HostItem * itm = NULL;
   uint16_t nSize = app->hostList->size();
 
-  Fl::lock();
+  // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
 
   for (uint16_t i = 0; i <= nSize; i ++)
   {
@@ -2217,14 +2206,14 @@ HostItem * svItmFromVnc (const VncObject * vncIn)
       {
         if (itm->vnc == vncIn)
         {
-          Fl::unlock();
+          // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
           return itm;
         }
       }
   }
 
-  Fl::unlock();
+  // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
   return NULL;
 }
@@ -2928,7 +2917,6 @@ void svShowItemOptions (HostItem * im)
     itm->vncPort = "5900";
     itm->sshPort = "";
     itm->scaling = 's';
-    // itm->sshKeyPublic = "";
     itm->sshKeyPrivate = "";
     itm->showRemoteCursor = true;
     itm->compressLevel = 5;

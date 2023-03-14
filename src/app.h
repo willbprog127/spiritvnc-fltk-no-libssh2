@@ -113,8 +113,6 @@ public:
     itmBeingEdited(NULL),
     scanIsRunning(false),
     nCurrentScanItem(0),
-    nMainWinPreviousW(0),
-    nMainWinPreviousH(0),
     nScanTimeout(2),
     nDeadTimeout(100),
     nStartingLocalPort(15000),
@@ -152,12 +150,12 @@ public:
       std::cout << "SpiritVNC - FLTK: CRITICAL - Could not get user's login name"
           " from environment\n\nExiting\n";
 
-      Fl::lock();
+      // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
       fl_message_hotspot(0);
       fl_message_title("SpiritVNC - FLTK");
       fl_message("%s", "CRITICAL ERROR - Could not get user's login name"
           " from environment\n\nExiting\n");
-      Fl::unlock();
+      // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
       exit(1);
     }
 
@@ -210,8 +208,6 @@ public:
   HostItem * itmBeingEdited;
   bool scanIsRunning;
   int nCurrentScanItem;
-  int nMainWinPreviousW;
-  int nMainWinPreviousH;
   int nScanTimeout;
   int nDeadTimeout;
   int nStartingLocalPort;
@@ -281,7 +277,7 @@ void svHandleHostListButtons (Fl_Widget *, void *);
 void svHandleHostListEvents (Fl_Widget *, void *);
 void svHandleMainWindowEvents (Fl_Widget *, void *);
 void svPositionWidgets ();
-void svHandleListItemIconChange (void * notUsed);
+void svHandleListItemIconChange (void *);
 void svHandleThreadConnection (void *);
 void svHandleThreadCursorChange (void *);
 void svInsertEmptyItem ();

@@ -37,6 +37,7 @@
 
 
 /* attempts to close the popen'd ssh process */
+/* (run as thread) */
 void * svSSHCloseHelper (void * itmData)
 {
   // detach this thread
@@ -47,9 +48,15 @@ void * svSSHCloseHelper (void * itmData)
   if (itm == NULL || itm->sshCmdStream == NULL)
     return SV_RET_VOID;
 
-  fprintf(itm->sshCmdStream, "%s\r\n", "exit");
-  fflush(itm->sshCmdStream);
+  // fprintf(itm->sshCmdStream, "%s\r\n", "exit");  //  <<--- trying different way to close (below) ---<<<
 
+  // send 'exit' control-char sequence
+  fprintf(itm->sshCmdStream, "\r\n%s", "~.");
+  fflush(itm->sshCmdStream);
+  // send extra CRLF, just for fun
+  fprintf(itm->sshCmdStream, "\r\n");
+
+  // close the ssh process command stream
   pclose(itm->sshCmdStream);
 
   return SV_RET_VOID;
