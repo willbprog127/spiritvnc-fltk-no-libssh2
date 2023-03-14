@@ -31,7 +31,7 @@ You will need both the libraries and development packages of the following:
 
 The 'pkg-config' program must be installed for building, unless you want to specify locations for includes and libs manually in the Makefile.
 
-[~~MacPorts~~](https://www.macports.org) ~~is highly recommended for installing dependencies on macOS.~~ [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  Also, I don't have access to an Apple Silicon Mac (M1, M2, etc) so patches from people who *do* have these machines would be helpful.
+[Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  Also, I don't have access to an Apple Silicon Mac (M1, M2, etc) so patches from people who *do* have these machines would be helpful.
 
 
 - - -
@@ -56,11 +56,26 @@ $ sudo gmake install
 - - -
 __Usage__
 
-(this section is 'under construction')
+`cd` to the directory where `spiritvnc-fltk` was built, then...
+```sh
+$ ./spiritvnc-fltk
+```
 
-`$ ./spiritvnc-fltk`
+##### Basic usage
+* Double-click a server entry to try to connect to it
+* Single-click a server entry to switch to it from another
+* If connected, right-clicking a server entry closes the connection *(except `Listening` entries)*
+* If NOT connected, right-clicking a server entry brings up a pop-up menu with various actions you can perform
 
-* You can only have 65,000 connection entries in the host-list (should be more than enough!)
+##### Server entry buttons
+* Click the [+] button to add a new server entry, click the [-] button to delete a server entry
+* Click the [up arrow] button or [down arrow] button to move the selected server entry up or down the list
+* Click the [timer icon] button to begin timed scanning of all connected servers
+* Click the [ear] button to start listening for reverse VNC connections on port 5500
+* Click the [?] button for version and help information
+* Click the [three control sliders icon] button to adjust program settings
+
+*(You can only have 65,000 connection entries in the host-list (should be more than enough!))*
 - - -
 
 __Hey!__
