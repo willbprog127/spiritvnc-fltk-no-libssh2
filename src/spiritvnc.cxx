@@ -42,9 +42,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __APPLE__
-#include <X11/xpm.h>
-#endif
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_PNG_Image.H>
@@ -86,33 +83,8 @@ int main (int argc, char **argv)
   // manually trigger misc events callback
   svPositionWidgets();
 
-  // set window's icon on Linux and FreeBSD
-  #ifndef __APPLE__
-  // needed if display has not been previously opened
-  fl_open_display();
-
-  Pixmap pm;
-  Pixmap mask;
-  XpmCreatePixmapFromData(fl_display, DefaultRootWindow(fl_display),
-      (char **)pmSpiritvnc_xpm, &pm, &mask, NULL);
-
-  app->mainWin->icon(reinterpret_cast<void *>(pm));
-  #endif
-
   app->mainWin->end();
   app->mainWin->show(argc, argv);
-
-  // read in the current window hints, then modify them to allow icon transparency
-  // Thanks Ian MacArthur!
-  #ifndef __APPLE__
-  XWMHints * hints = XGetWMHints(fl_display, fl_xid(app->mainWin));
-  // ensure transparency mask is enabled for the XPM icon
-  hints->flags |= IconMaskHint;
-  // set the transparency mask
-  hints->icon_mask = mask;
-  XSetWMHints(fl_display, fl_xid(app->mainWin), hints);
-  XFree(hints);
-  #endif
 
   Fl::focus(app->hostList);
   app->hostList->take_focus();

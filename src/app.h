@@ -134,7 +134,6 @@ public:
     createdObjects(0),
     msgThread(0),
     strF12ClipVar(""),
-    windowIcon(NULL),
     sshCommand("ssh")
   {
     // get user's login name for reading/writing config file
@@ -232,7 +231,6 @@ public:
   int createdObjects;
   pthread_t msgThread;
   std::string strF12ClipVar;
-  Fl_Image * windowIcon;
   std::string sshCommand;
 } extern * app;
 
