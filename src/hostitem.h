@@ -127,6 +127,7 @@ public:
   int sshWaitTime;
   FILE * sshCmdStream;
   pthread_t sshCloseThread;
+  std::string quickNote;
 };
 
 #endif

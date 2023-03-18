@@ -54,6 +54,7 @@
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Secret_Input.H>
 #include <FL/Fl_Spinner.H>
+//#include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
 
@@ -75,6 +76,8 @@
 #include "vnc.h"
 #include "ssh.h"
 
+
+class SVInput;
 
 /* global app class */
 class AppVars
@@ -132,7 +135,12 @@ public:
     createdObjects(0),
     msgThread(0),
     strF12ClipVar(""),
-    sshCommand("ssh")
+    sshCommand("ssh"),
+    quickNoteGroup(NULL),
+    quickNoteLabel(NULL),
+    quickNote(NULL),
+    quickNoteWindow(NULL),
+    quickNoteInput(NULL)
   {
     // get user's login name for reading/writing config file
 
@@ -228,6 +236,11 @@ public:
   pthread_t msgThread;
   std::string strF12ClipVar;
   std::string sshCommand;
+  Fl_Group * quickNoteGroup;
+  Fl_Box * quickNoteLabel;
+  Fl_Box * quickNote;
+  Fl_Window * quickNoteWindow;
+  SVInput * quickNoteInput;
 } extern * app;
 
 
@@ -241,7 +254,6 @@ private:
   int handle (int event);
 };
 
-
 /* subclassed password input box */
 class SVSecretInput : public Fl_Secret_Input
 {
@@ -250,6 +262,16 @@ public:
     Fl_Secret_Input(x, y, w, h, label) {}
 private:
   int handle (int evt);
+};
+
+/* subclassed box */
+class SVQuickNoteBox : public Fl_Box
+{
+public:
+  SVQuickNoteBox (int x, int y, int w, int h, const char * label = 0) :
+    Fl_Box(x, y, w, h, label) {}
+private:
+  int handle (int event);
 };
 
 
@@ -278,6 +300,7 @@ void svHandleHostListEvents (Fl_Widget *, void *);
 void svHandleMainWindowEvents (Fl_Widget *, void *);
 void svPositionWidgets ();
 void svHandleListItemIconChange (void *);
+void svHandleQuickNoteWindowEvents (Fl_Widget *, void *);
 void svHandleThreadConnection (void *);
 void svHandleThreadCursorChange (void *);
 void svInsertEmptyItem ();

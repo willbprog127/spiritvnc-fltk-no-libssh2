@@ -56,6 +56,7 @@
 #define SV_OPTS_SCN_TIMEOUT     const_cast<char *>("spinScanTimeout")
 #define SV_OPTS_LOCAL_SSH_PORT  const_cast<char *>("spinLocalSSHPort")
 #define SV_OPTS_DEAD_TIMEOUT    const_cast<char *>("spinDeadTimeout")
+#define SV_OPTS_SSH_COMMAND     const_cast<char *>("inSSHCommand")
 #define SV_OPTS_APP_FONT_SIZE   const_cast<char *>("inAppFontSize")
 #define SV_OPTS_LIST_FONT_NAME  const_cast<char *>("inListFont")
 #define SV_OPTS_LIST_FONT_SIZE  const_cast<char *>("inListFontSize")

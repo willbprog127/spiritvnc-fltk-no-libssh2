@@ -37,7 +37,7 @@
 
 
 /* attempts to close the popen'd ssh process */
-/* (run as thread) */
+/* (this is called as a thread because it could block) */
 void * svSSHCloseHelper (void * itmData)
 {
   // detach this thread
@@ -56,7 +56,7 @@ void * svSSHCloseHelper (void * itmData)
   // send extra CRLF, just for fun
   fprintf(itm->sshCmdStream, "\r\n");
 
-  // close the ssh process command stream
+  // close the ssh process stream
   pclose(itm->sshCmdStream);
 
   return SV_RET_VOID;
@@ -103,8 +103,12 @@ void svCreateSSHConnection (void * data)
   if (system(sshCheck.c_str()) != 0)
   {
     fl_beep(FL_BEEP_DEFAULT);
-    svMessageWindow("Error: This connection requires SSH and \nthe SSH command isn't working."
-        "\n\nCheck that the SSH client program is installed", "SpiritVNC - FLTK");
+    std::string sshEMsg = "Error: This connection requires SSH and the\n"
+        "SSH command isn't working\n\n"
+        "The SSH command is set to:\n" + app->sshCommand + "\n\n"
+        "Check that the SSH command is set correctly and an\n"
+        "SSH client program is properly installed on your system";
+    svMessageWindow(sshEMsg, "SpiritVNC - FLTK");
 
     svLogToFile("SSH command not working for connection '"
         + itm->name + "' - " + itm->hostAddress);
@@ -119,11 +123,11 @@ void svCreateSSHConnection (void * data)
 
   // build the command string for our system() call
   sshCommandLine = app->sshCommand + " " + itm->sshUser + "@" + itm->hostAddress + " -t" + " -t" +
-    " -p " + itm->sshPort + " -o ConnectTimeout=" + std::to_string(itm->sshWaitTime) +    // <<<--- added timeout 2022-08-05
+    " -p " + itm->sshPort + " -o ConnectTimeout=" + std::to_string(itm->sshWaitTime) +
     " -L " + std::to_string(itm->sshLocalPort) + ":127.0.0.1:" + itm->vncPort +
     " -i " + itm->sshKeyPrivate;
 
-  // call the system's ssh client, if available
+  // call the system's ssh client, if available and open write stream
   itm->sshCmdStream = popen(sshCommandLine.c_str(), "w");
 
   if (itm->sshCmdStream != NULL)

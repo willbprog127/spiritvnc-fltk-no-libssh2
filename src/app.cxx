@@ -40,6 +40,31 @@
  */
 int SVInput::handle (int evt)
 {
+  // save and close the quicknote editor
+  if (evt == FL_KEYUP && app->quickNoteWindow != 0)
+  {
+    if (Fl::event_key() == FL_Enter)
+    {
+      // get currently selected list item
+      int curLine = app->hostList->value();
+
+      if (curLine > 0)
+      {
+        HostItem * itm = static_cast<HostItem *>(app->hostList->data(curLine));
+
+        if (itm != NULL)
+        {
+          itm->quickNote = app->quickNoteInput->value();
+          app->quickNote->copy_label(itm->quickNote.c_str());
+          app->quickNoteInput->value("");
+          app->quickNoteWindow->hide();
+          svConfigWrite();
+        }
+      }
+    }
+    return 1;
+  }
+
   static bool inMenu;
 
   // handle child window input controls right-click
@@ -147,6 +172,56 @@ int SVSecretInput::handle (int evt)
   return Fl_Secret_Input::handle(evt);
 }
 
+
+/* handle method for SVBox
+ * (instance method)
+ */
+int SVQuickNoteBox::handle (int evt)
+{
+  // get currently selected list item
+  int curLine = app->hostList->value();
+
+  // handle quicknote click if an item is selected
+  if (evt == FL_PUSH && curLine > 0)
+  {
+    // create a quicknote window if it doesn't exist
+    if (app->quickNoteWindow == NULL)
+    {
+      app->quickNoteWindow = new Fl_Window(0, 0, 110, 32);
+
+      Fl_Group * inputGroup = new Fl_Group(3, 3, 100, 24);
+      inputGroup->box(FL_THIN_DOWN_BOX);
+      app->quickNoteInput = new SVInput(0, 0, 100, 24);
+      inputGroup->end();
+
+      app->quickNoteWindow->end();
+      app->quickNoteWindow->clear_border();
+      app->quickNoteWindow->xclass("spiritvncfltktextentry");
+      app->quickNoteWindow->callback(svHandleQuickNoteWindowEvents);
+    }
+
+    // show the editor if there's a selected item
+    if (curLine > 0)
+    {
+      HostItem * itm = static_cast<HostItem *>(app->hostList->data(curLine));
+
+      if (itm != NULL && itm->name != "")
+      {
+        app->quickNoteWindow->position(app->mainWin->x_root() + app->quickNote->x(),
+          app->mainWin->y_root() + app->quickNote->y());
+        app->quickNoteWindow->size(app->quickNote->w(), app->quickNoteWindow->h());
+        app->quickNoteWindow->set_modal();
+
+        app->quickNoteInput->size(app->quickNote->w(), app->quickNoteWindow->h());
+        app->quickNoteInput->value(itm->quickNote.c_str());
+
+        app->quickNoteWindow->show();
+      }
+    }
+  }
+
+  return Fl_Box::handle(evt);
+}
 
 /*
   child window 'OK' button callback - closes child windows (settings, options, etc
@@ -260,6 +335,15 @@ void svConfigReadCreateHostList ()
               w = 100;
 
           app->nDeadTimeout = w;
+        }
+
+        // ssh command
+        if (strProp == "sshcommand")
+        {
+          app->sshCommand = strVal;
+
+          if (app->sshCommand == "")
+            app->sshCommand = "ssh";
         }
 
         // starting local port number for ssh
@@ -485,6 +569,10 @@ void svConfigReadCreateHostList ()
         // center y?
         if (strProp == "centery")
           itm->centerY = svConvertStringToBoolean(strVal);
+
+        // quicknote
+        if (strProp == "quicknote")
+          itm->quickNote = base64Decode(strVal);
       }
     }
     else
@@ -554,6 +642,9 @@ void svConfigWrite ()
   // starting local port number (+99) for ssh connections
   ofs << "startinglocalport=" << app->nStartingLocalPort << std::endl;
 
+  // ssh command
+  ofs << "sshcommand=" << app->sshCommand << std::endl;
+
   // show tool tips
   ofs << "showtooltips=" << svConvertBooleanToString(app->showTooltips) << std::endl;
 
@@ -613,6 +704,8 @@ void svConfigWrite ()
     ofs << "ignoreinactive=" << svConvertBooleanToString(itm->ignoreInactive) << std::endl;
     ofs << "centerx=" << svConvertBooleanToString(itm->centerX) << std::endl;
     ofs << "centery=" << svConvertBooleanToString(itm->centerY) << std::endl;
+    ofs << "quicknote=" << base64Encode(reinterpret_cast<const unsigned char *>
+      (itm->quickNote.c_str()), itm->quickNote.size()) << std::endl;
 
     ofs << std::endl;
   }
@@ -813,7 +906,7 @@ void svCreateGUI ()
 
   app->packButtons = new Fl_Pack(0, 0, 1, nBtnSize);
   app->packButtons->type(Fl_Pack::HORIZONTAL);
-  app->packButtons->begin();
+  //app->packButtons->begin();
 
   app->btnListAdd = new Fl_Button(0, 0, nBtnSize, nBtnSize);
   app->btnListAdd->clear_visible_focus();
@@ -851,6 +944,33 @@ void svCreateGUI ()
 
   app->packButtons->end();
 
+  // create host list
+  app->hostList = new Fl_Hold_Browser(0, 0, 0, 0);
+  app->hostList->clear_visible_focus();
+  app->hostList->callback(svHandleHostListEvents, NULL);
+  app->hostList->box(FL_THIN_DOWN_BOX);
+
+  // *** quicknote ***
+
+  // quicknote group
+  app->quickNoteGroup = new Fl_Group(0, 0, 100, 68);
+
+  // quicknote label - item name
+  app->quickNoteLabel = new Fl_Box(0, 0, 100, 18);
+  app->quickNoteLabel->labelsize(app->nAppFontSize);
+  app->quickNoteLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+  app->quickNoteLabel->labelfont(1);
+  app->quickNoteLabel->box(FL_THIN_DOWN_BOX);
+
+  // quicknote - very brief item info
+  app->quickNote = new SVQuickNoteBox(0, 22, 100, 50);
+  app->quickNote->labelsize(app->nAppFontSize);
+  app->quickNote->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
+  app->quickNote->box(FL_THIN_DOWN_BOX);
+  //// app->quickNote->labelfont(1);
+
+  app->quickNoteGroup->end();
+
   // create scrolling window we will add viewers to
   app->scroller = new Fl_Scroll(0, 0, 0, 0);
   app->vncViewer = new VncViewer(0, 0, 0, 0);
@@ -858,12 +978,7 @@ void svCreateGUI ()
   app->scroller->type(0);
   app->scroller->end();
 
-  // create host list
-  app->hostList = new Fl_Hold_Browser(0, 0, 0, 0);
-  app->hostList->clear_visible_focus();
-  app->hostList->callback(svHandleHostListEvents, NULL);
-  app->hostList->box(FL_THIN_DOWN_BOX);
-
+  // set resizable widget for whole app
   app->mainWin->resizable(app->scroller);
 }
 
@@ -1085,6 +1200,9 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
 
         if (strName == "spinDeadTimeout")
           app->nDeadTimeout = static_cast<Fl_Spinner *>(wid)->value();
+
+        if (strName == "inSSHCommand")
+          app->sshCommand = static_cast<SVInput *>(wid)->value();
 
         if (strName == "inAppFontSize")
           app->nAppFontSize = atoi(static_cast<SVInput *>(wid)->value());
@@ -1354,11 +1472,21 @@ void svHandleHostListEvents (Fl_Widget *, void *)
   HostItem * itm = static_cast<HostItem *>(app->hostList->data(nHostItemNum));
 
   if (itm == NULL)
+  {
+    // set itm's quicknote text, if any
+    app->quickNoteLabel->label("");
+    app->quickNote->label("");
+
     return;
+  }
 
   VncObject * vnc = itm->vnc;
 
   static bool menuUp;
+
+  // set itm's quicknote text, if any
+  app->quickNoteLabel->copy_label(itm->name.c_str());
+  app->quickNote->copy_label(itm->quickNote.c_str());
 
   // *** DO *NOT* CHECK vnc FOR NULL HERE!!! ***
   // *** IT'S OKAY IF vnc IS NULL AT THIS POINT!!! ***
@@ -1903,20 +2031,49 @@ void svHandleMainWindowEvents (Fl_Widget * window, void *)
 }
 
 
+/* handle quicknote's box events (mostly clicks) */
+void svHandleQuickNoteWindowEvents (Fl_Widget *, void *)
+{
+  int event = app->quickNoteWindow->when();
+
+  // window is closing
+  if (event == FL_LEAVE)
+  {
+    app->quickNoteInput->value("");
+    app->quickNoteWindow->hide();
+  }
+}
+
+
 /*
  * handle app and main window events, such as resize, move, etc
  * and resize gui elements
  */
 void svPositionWidgets ()
 {
-  // only continue if main window geometry changes
   svDebugLog("svPositionWidgets - Resizing GUI elements");
 
   // resize the host list vertically if the main window resizes
-  app->hostList->size(app->hostList->w(), app->mainWin->h() - 26);
+  app->hostList->size(app->hostList->w(),
+    app->mainWin->h() - //155); //26);
+    app->quickNoteGroup->h() -
+    //app->quickNoteLabel->h() - app->quickNote->h() -
+    app->packButtons->h());
+
+  // position QuickNote stuff
+  app->quickNoteGroup->size(app->hostList->w(), app->quickNoteGroup->h() - 3);
+  app->quickNoteGroup->position(0, app->hostList->y() + app->hostList->h() + 3);
+
+  app->quickNoteLabel->size(app->hostList->w(), app->quickNoteLabel->h() - 3);
+  //app->quickNoteLabel->position(0, app->hostList->y() + app->hostList->h() + 3);
+
+  app->quickNote->size(app->hostList->w(), app->quickNote->h() - 3);
+  //app->quickNote->position(0, app->quickNoteLabel->y() + app->quickNoteLabel->h() + 3);
 
   // set list buttons position
-  app->packButtons->position(3, app->hostList->x() + app->hostList->h() + 3);
+  // app->packButtons->position(3, app->hostList->x() + app->hostList->h() + 3);
+  app->packButtons->position(0, app->quickNote->y() + app->quickNote->h()
+    + 3);
 
   // don't allow host list width to be smaller than right-most button's x+w
   if (app->hostList->w() < (app->packButtons->x() + app->packButtons->w()))
@@ -2603,16 +2760,7 @@ void svShowAppOptions ()
   // create window
   Fl_Window * winAppOpts = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Application Options"); //NULL);
   winAppOpts->set_non_modal();
-  //winAppOpts->box(FL_GTK_UP_BOX);
   app->childWindowBeingDisplayed = winAppOpts;
-
-  //// add main top label, showing itm name
-  //Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, "Application Options");
-  //bxTopLabel->align(FL_ALIGN_CENTER);
-  //bxTopLabel->labelfont(1);
-  //bxTopLabel->labelsize(app->nAppFontSize);
-  //bxTopLabel->box(FL_GTK_UP_BOX);
-  //bxTopLabel->color(17);
 
   // add itm value editors / selectors
   int nXPos = 300;
@@ -2666,6 +2814,16 @@ void svShowAppOptions ()
     spinDeadTimeout->tooltip("This is the time, in seconds, SpiritVNC waits before"
       " disconnecting a remote host due to inactivity");
 
+  // ssh command
+  SVInput * inSSHCommand = new SVInput(nXPos, nYPos += nYStep, 210, 28,
+    "SSH command (eg: ssh or /usr/bin/ssh) ");
+  inSSHCommand->textsize(app->nAppFontSize);
+  inSSHCommand->labelsize(app->nAppFontSize);
+  inSSHCommand->user_data(SV_OPTS_SSH_COMMAND);
+  inSSHCommand->value(app->sshCommand.c_str());
+  if (app->showTooltips == true)
+    inSSHCommand->tooltip("This is the command to start the SSH client on"
+      " your system");
 
   Fl_Box * lblSep01 = new Fl_Box(nXPos, nYPos += nYStep + 14, 100, 28, "Appearance Options");
   lblSep01->labelsize(app->nAppFontSize);
