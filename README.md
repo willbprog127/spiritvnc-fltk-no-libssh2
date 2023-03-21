@@ -16,7 +16,7 @@ To God be the glory! :-D :heart:
 
 SpiritVNC - FLTK has a 3-Clause BSD License
 
-![SpiritVNC - FLTK screenshot](https://www.pismotek.com/media/spiritvnc-fltk-2020-11.png)
+![SpiritVNC - FLTK screenshot](https://www.pismotek.com/media/spiritvnc-fltk-screenshot-2023-03-21--15-20.png)
 
 
 
@@ -66,6 +66,7 @@ $ ./spiritvnc-fltk
 * Single-click a connected server entry to switch to it from another
 * Right-click a connected server entry to close the connection *(except `Listening` entries)*
 * Right-click a disconnected server entry to display a pop-up menu with various actions you can perform
+* Click a server entry, then click in the Quick Note box near the bottom left to enter a brief message
 
 ##### Server entry buttons
 * Click the [+] button to add a new server entry, click the [-] button to delete a server entry
