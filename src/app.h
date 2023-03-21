@@ -55,6 +55,7 @@
 #include <FL/Fl_Secret_Input.H>
 #include <FL/Fl_Spinner.H>
 //#include <FL/Fl_Text_Editor.H>
+#include <FL/Fl_Multiline_Output.H>
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
 
@@ -78,6 +79,7 @@
 
 
 class SVInput;
+class SVQuickNoteInput;
 
 /* global app class */
 class AppVars
@@ -238,9 +240,9 @@ public:
   std::string sshCommand;
   Fl_Group * quickNoteGroup;
   Fl_Box * quickNoteLabel;
-  Fl_Box * quickNote;
+  Fl_Multiline_Output * quickNote;
   Fl_Window * quickNoteWindow;
-  SVInput * quickNoteInput;
+  SVQuickNoteInput * quickNoteInput;
 } extern * app;
 
 
@@ -250,7 +252,7 @@ class SVInput : public Fl_Input
 public:
   SVInput (int x, int y, int w, int h, const char * label = 0) :
     Fl_Input(x, y, w, h, label) {}
-private:
+//private:
   int handle (int event);
 };
 
@@ -265,11 +267,21 @@ private:
 };
 
 /* subclassed box */
-class SVQuickNoteBox : public Fl_Box
+class SVQuickNoteBox : public Fl_Multiline_Output
 {
 public:
   SVQuickNoteBox (int x, int y, int w, int h, const char * label = 0) :
-    Fl_Box(x, y, w, h, label) {}
+    Fl_Multiline_Output(x, y, w, h, label) {}
+private:
+  int handle (int event);
+};
+
+/* subclassed input box */
+class SVQuickNoteInput : public SVInput
+{
+public:
+  SVQuickNoteInput (int x, int y, int w, int h, const char * label = 0) :
+    SVInput(x, y, w, h, label) {}
 private:
   int handle (int event);
 };

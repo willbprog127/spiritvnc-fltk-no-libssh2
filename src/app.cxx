@@ -40,31 +40,6 @@
  */
 int SVInput::handle (int evt)
 {
-  // save and close the quicknote editor
-  if (evt == FL_KEYUP && app->quickNoteWindow != 0)
-  {
-    if (Fl::event_key() == FL_Enter)
-    {
-      // get currently selected list item
-      int curLine = app->hostList->value();
-
-      if (curLine > 0)
-      {
-        HostItem * itm = static_cast<HostItem *>(app->hostList->data(curLine));
-
-        if (itm != NULL)
-        {
-          itm->quickNote = app->quickNoteInput->value();
-          app->quickNote->copy_label(itm->quickNote.c_str());
-          app->quickNoteInput->value("");
-          app->quickNoteWindow->hide();
-          svConfigWrite();
-        }
-      }
-    }
-    return 1;
-  }
-
   static bool inMenu;
 
   // handle child window input controls right-click
@@ -75,6 +50,9 @@ int SVInput::handle (int evt)
       return 0;
 
     inMenu = true;
+
+    // TODO: Make *one* menu display function instead of copying code over and over
+    // TODO: Pass (this) to it
 
     // create context menu
     // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
@@ -173,6 +151,53 @@ int SVSecretInput::handle (int evt)
 }
 
 
+/* handle method for SVQuickNoteInput
+ * (instance method)
+ */
+int SVQuickNoteInput::handle (int evt)
+{
+  // save and close the quicknote editor
+  if (evt == FL_KEYUP && app->quickNoteWindow != 0)
+  {
+    if (Fl::event_key() == FL_Enter)
+    {
+      // get currently selected list item
+      int curLine = app->hostList->value();
+
+      if (curLine > 0)
+      {
+        HostItem * itm = static_cast<HostItem *>(app->hostList->data(curLine));
+
+        if (itm != NULL)
+        {
+          // set quickNote text
+          itm->quickNote = std::string(app->quickNoteInput->value()).substr(0, 256);
+
+          if (itm->quickNote == "")
+          {
+            app->quickNote->textfont(FL_HELVETICA_ITALIC);
+            app->quickNote->value("(no Quick Note)");
+          }
+          else
+          {
+            app->quickNote->textfont(FL_HELVETICA);
+            app->quickNote->value(itm->quickNote.c_str());
+          }
+
+          // clear the quickNote input and hide the quickNote input window
+          app->quickNoteInput->value("");
+          app->quickNoteWindow->hide();
+          svConfigWrite();
+        }
+      }
+    }
+    return 1;
+  }
+
+  return SVInput::handle(evt);  //Fl_Input::handle(evt);
+}
+
+
 /* handle method for SVBox
  * (instance method)
  */
@@ -191,7 +216,7 @@ int SVQuickNoteBox::handle (int evt)
 
       Fl_Group * inputGroup = new Fl_Group(3, 3, 100, 24);
       inputGroup->box(FL_THIN_DOWN_BOX);
-      app->quickNoteInput = new SVInput(0, 0, 100, 24);
+      app->quickNoteInput = new SVQuickNoteInput(0, 0, 100, 24);
       inputGroup->end();
 
       app->quickNoteWindow->end();
@@ -215,12 +240,16 @@ int SVQuickNoteBox::handle (int evt)
         app->quickNoteInput->size(app->quickNote->w(), app->quickNoteWindow->h());
         app->quickNoteInput->value(itm->quickNote.c_str());
 
+        // blank quickNote so user isn't confused by background text when editor displays
+        app->quickNote->value("");
+
         app->quickNoteWindow->show();
       }
     }
   }
 
-  return Fl_Box::handle(evt);
+  //return Fl_Box::handle(evt);
+  return Fl_Multiline_Output::handle(evt);
 }
 
 /*
@@ -964,10 +993,13 @@ void svCreateGUI ()
 
   // quicknote - very brief item info
   app->quickNote = new SVQuickNoteBox(0, 22, 100, 50);
-  app->quickNote->labelsize(app->nAppFontSize);
+  app->quickNote->textsize((app->nAppFontSize + 2));
+  app->quickNote->textfont(FL_HELVETICA_ITALIC);
   app->quickNote->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
   app->quickNote->box(FL_THIN_DOWN_BOX);
-  //// app->quickNote->labelfont(1);
+  app->quickNote->wrap(1);
+  app->quickNote->clear_visible_focus();
+  app->quickNote->value("(no Quick Note)");
 
   app->quickNoteGroup->end();
 
@@ -1475,7 +1507,8 @@ void svHandleHostListEvents (Fl_Widget *, void *)
   {
     // set itm's quicknote text, if any
     app->quickNoteLabel->label("");
-    app->quickNote->label("");
+    app->quickNote->textfont(FL_HELVETICA_ITALIC);
+    app->quickNote->value("(no Quick Note)");
 
     return;
   }
@@ -1486,7 +1519,17 @@ void svHandleHostListEvents (Fl_Widget *, void *)
 
   // set itm's quicknote text, if any
   app->quickNoteLabel->copy_label(itm->name.c_str());
-  app->quickNote->copy_label(itm->quickNote.c_str());
+
+  if (itm->quickNote == "")
+  {
+    app->quickNote->textfont(FL_HELVETICA_ITALIC);
+    app->quickNote->value("(no Quick Note)");
+  }
+  else
+  {
+    app->quickNote->textfont(FL_HELVETICA);
+    app->quickNote->value(itm->quickNote.c_str());
+  }
 
   // *** DO *NOT* CHECK vnc FOR NULL HERE!!! ***
   // *** IT'S OKAY IF vnc IS NULL AT THIS POINT!!! ***
@@ -2039,8 +2082,31 @@ void svHandleQuickNoteWindowEvents (Fl_Widget *, void *)
   // window is closing
   if (event == FL_LEAVE)
   {
-    app->quickNoteInput->value("");
-    app->quickNoteWindow->hide();
+    int nHostItemNum = app->hostList->value();
+    HostItem * itm = static_cast<HostItem *>(app->hostList->data(nHostItemNum));
+
+    if (itm == NULL)
+    {
+      // set itm's quicknote text, if any
+      app->quickNoteLabel->label("");
+      app->quickNote->textfont(FL_HELVETICA_ITALIC);
+      app->quickNote->value("(no Quick Note)");
+    }
+    else
+    {
+      app->quickNoteInput->value("");
+      if (itm->quickNote == "")
+      {
+        app->quickNote->textfont(FL_HELVETICA_ITALIC);
+        app->quickNote->value("(no Quick Note)");
+      }
+      else
+      {
+        app->quickNote->textfont(FL_HELVETICA);
+        app->quickNote->value(itm->quickNote.c_str());
+      }
+      app->quickNoteWindow->hide();
+    }
   }
 }
 

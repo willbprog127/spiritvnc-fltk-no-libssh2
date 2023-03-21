@@ -85,7 +85,8 @@ public:
     lastErrorMessage(""),
     sshWaitTime(5),
     sshCmdStream(NULL),
-    sshCloseThread(0)
+    sshCloseThread(0),
+    quickNote("")
   {}
 
   std::string name;
