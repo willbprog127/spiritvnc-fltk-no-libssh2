@@ -36,7 +36,7 @@
 #define CONSTS_H
 
 /* constants */
-#define SV_APP_VERSION "0.4.13"
+#define SV_APP_VERSION "0.4.14"
 
 #define SV_CURRENT_YEAR "2023"
 
