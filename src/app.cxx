@@ -2632,6 +2632,20 @@ void svScanTimer (void *)
       app->hostList->select(app->nCurrentScanItem);
       itm->vnc->setObjectVisible();
 
+      // set itm's quicknote text, if any
+      app->quickNoteLabel->copy_label(itm->name.c_str());
+
+      if (itm->quickNote == "")
+      {
+        app->quickNote->textfont(FL_HELVETICA_ITALIC);
+        app->quickNote->value("(no Quick Note)");
+      }
+      else
+      {
+        app->quickNote->textfont(FL_HELVETICA);
+        app->quickNote->value(itm->quickNote.c_str());
+      }
+
       // 'tickle' host screen so it doesn't go to screensaver by
       // moving remote mouse back and forth a certain amount
       SendPointerEvent(itm->vnc->vncClient, 0, 0, 0);
