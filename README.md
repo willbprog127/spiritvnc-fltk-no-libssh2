@@ -27,7 +27,7 @@ __Dependencies__
 You will need both the libraries and development packages of the following:
 - fltk 1.3.4, 1.3.5 or newer
 - libvncserver / libvncclient (if separate, you only need libvncclient)
-- An installed SSH client runable with the `ssh` command
+- An installed SSH client runable with the `ssh` command or similar (adjustable within program settings)
 
 The 'pkg-config' program must be installed for building, unless you want to specify locations for includes and libs manually in the Makefile.
 
