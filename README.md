@@ -107,9 +107,9 @@ $ ./spiritvnc-fltk
 * **Compression level**: The amount of desired compression from the remote VNC server, 0 (none) to 9 (full)
 * **Quality level**: The desired image quality from the remote VNC server, 0 (very poor) to 9 (best)
 * **Auto-disconnect when inactive**: This connection will automatically disconnect if there's no activity from the remote VNC server after the time set in program settings (This used to be labeled "Don't auto-disconnect when inactive" which was unclear)
-* **Scale off (scroll)**: The image from the remote VNC server will not be resized to SpiritVNC's screen but scrolled
-* **Scale up and down**: The image from the remote VNC server will be scaled to fit SpiritVNC's screen
-* **Scale down only**: The image from the remote VNC server will only be scaled down.  Remote screens slightly equal or smaller than SpiritVNC's screen will not be scaled up
+* **Scale off (scroll)**: The image from the remote VNC server will not be resized to SpiritVNC's viewer but scrolled
+* **Scale up and down**: The image from the remote VNC server will be scaled to fit SpiritVNC's viewer
+* **Scale down only**: The image from the remote VNC server will only be scaled down.  Remote screens slightly equal or smaller than SpiritVNC's viewer will not be scaled up
 
 *VNC through SSH options*
 * **SSH user name**: The name used when authenticating to the remote SSH server
