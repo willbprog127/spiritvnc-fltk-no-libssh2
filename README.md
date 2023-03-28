@@ -67,6 +67,7 @@ $ ./spiritvnc-fltk
 * Right-click a connected server entry to close the connection *(except `Listening` entries)*
 * Right-click a disconnected server entry to display a pop-up menu with various actions you can perform
 * Click a server entry, then click in the Quick Note box near the bottom left to enter a brief message
+* When viewing a remote VNC server, press the F8 key to display some common key combinations to send or to send F8 or F12 keys
 
 ##### Server entry list buttons
 * Click the [+] button to add a new server entry, click the [-] button to delete a server entry
