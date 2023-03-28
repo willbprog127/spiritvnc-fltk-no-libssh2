@@ -70,7 +70,7 @@ $ ./spiritvnc-fltk
 * When viewing a remote VNC server, press the F8 key to display some common key combinations to send or to send F8 or F12 keys
 
 ##### Server entry list buttons
-* Click the [+] button to add a new server entry, click the [-] button to delete a server entry
+* Click the [+] button to add a new server entry, click the [-] button to delete the selected server entry
 * Click the [up arrow] button or [down arrow] button to move the selected server entry up or down the list
 * Click the [timer icon] button to begin timed scanning of all connected servers
 * Click the [ear] button to start listening for reverse VNC connections on port 5500
