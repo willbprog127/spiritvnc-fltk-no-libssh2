@@ -36,7 +36,7 @@
 #define CONSTS_H
 
 /* constants */
-#define SV_APP_VERSION "0.4.14"
+#define SV_APP_VERSION "0.4.15"
 
 #define SV_CURRENT_YEAR "2023"
 
@@ -75,6 +75,8 @@
 #define SV_ITM_CON_SVNC         const_cast<char *>("rbSVNC")
 #define SV_ITM_VNC_PORT         const_cast<char *>("inVNCPort")
 #define SV_ITM_VNC_PASS         const_cast<char *>("inVNCPassword")
+#define SV_ITM_VNC_LOGIN_USER   const_cast<char *>("inVNCLoginUser")
+#define SV_ITM_VNC_LOGIN_PASS   const_cast<char *>("inVNCLoginPassword")
 #define SV_ITM_VNC_COMP         const_cast<char *>("inVNCCompressLevel")
 #define SV_ITM_VNC_QUAL         const_cast<char *>("inVNCQualityLevel")
 #define SV_ITM_IGN_DEAD         const_cast<char *>("chkIgnoreInactive")

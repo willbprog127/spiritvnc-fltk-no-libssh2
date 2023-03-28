@@ -41,6 +41,8 @@
 #include <fstream>
 #include "hostitem.h"
 
+
+/* forward declaration of HostItem class */
 class HostItem;
 
 /* vnc viewer class */
@@ -70,6 +72,7 @@ public:
     vncClient->listenPort = 5500;
 
     // callbacks
+    vncClient->GetCredential = VncObject::handleCredential;
     vncClient->GetPassword = VncObject::handlePassword;
     vncClient->GotCursorShape = VncObject::handleCursorShapeChange;
     vncClient->GotXCutText = VncObject::handleRemoteClipboardProc;
@@ -105,6 +108,7 @@ public:
   static void hideMainViewer ();
   static void endAndDeleteViewer (VncObject **);
   static void endAllViewers ();
+  static rfbCredential * handleCredential (rfbClient *, int);
   static char * handlePassword (rfbClient *);
   static void handleCursorShapeChange (rfbClient *, int, int, int, int, int);
   static void libVncLogging (const char *, ...);

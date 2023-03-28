@@ -58,6 +58,8 @@ public:
     sshKeyPrivate(""),
     sshLocalPort(0),
     vncPassword(""),
+    vncLoginUser(""),
+    vncLoginPassword(""),
     hostType('v'),
     vnc(NULL),
     threadRFB(0),
@@ -99,6 +101,8 @@ public:
   std::string sshKeyPrivate;
   int sshLocalPort;
   std::string vncPassword;
+  std::string vncLoginUser;
+  std::string vncLoginPassword;
   char hostType;
   VncObject * vnc;
   pthread_t threadRFB;

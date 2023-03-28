@@ -160,12 +160,11 @@ public:
       std::cout << "SpiritVNC - FLTK: CRITICAL - Could not get user's login name"
           " from environment\n\nExiting\n";
 
-      // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
       fl_message_hotspot(0);
       fl_message_title("SpiritVNC - FLTK");
       fl_message("%s", "CRITICAL ERROR - Could not get user's login name"
           " from environment\n\nExiting\n");
-      // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
+
       exit(1);
     }
 
@@ -325,6 +324,9 @@ void svListeningModeEnd ();
 void svLogToFile (const std::string&);
 void svMessageWindow (const std::string&, const std::string& = "SpiritVNC");
 bool svThereAreConnectedItems ();
+void svPopUpEditMenu (Fl_Input_ *);
+void svQuickNoteSetLabelAndText (HostItem *);
+void svQuickNoteSetToEmpty ();
 void svResizeScroller ();
 void svRestoreWindowSizePosition (void *);
 void svScanTimer (void *);

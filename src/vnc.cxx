@@ -702,9 +702,7 @@ void VncObject::masterMessageLoop ()
       // for (uint16_t i = 0; i <= app->hostList->size(); i ++)
       for (uint16_t i = 0; i <= nSize; i ++)
       {
-        // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
         itm = static_cast<HostItem *>(app->hostList->data(i));
-        // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
         if (itm == NULL)
           continue;
@@ -730,6 +728,58 @@ void VncObject::masterMessageLoop ()
 
 /* libvnc send password to host callback */
 /* (static function) */
+rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
+{
+  if (credentialType != rfbCredentialTypeUser)
+  {
+    svLogToFile("ERROR - handleCredential: Non-username / password required for authentication");
+
+    return NULL;
+  }
+
+  // client is null
+  if (cl == NULL)
+  {
+    svLogToFile("ERROR - handlePassword: vnc->vncClient is null");
+    return NULL;
+  }
+
+  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
+
+  // vnc object is null
+  if (vnc == NULL)
+  {
+    svLogToFile("ERROR - handlePassword: vnc is null");
+    return NULL;
+  }
+
+  HostItem * itm = svItmFromVnc(vnc);
+
+  // itm is null
+  if (itm == NULL)
+  {
+    svLogToFile("ERROR - handlePassword: itm is null");
+    return NULL;
+  }
+
+
+  // build and populate credential
+  rfbCredential * cred = static_cast<rfbCredential *>(malloc(sizeof(rfbCredential)));
+
+  // allocate memory for username / password
+  cred->userCredential.username = static_cast<char *>(malloc(RFB_BUF_SIZE));
+  cred->userCredential.password = static_cast<char *>(malloc(RFB_BUF_SIZE));
+
+  // set username / password
+  strncpy(cred->userCredential.username, itm->vncLoginUser.c_str(), (RFB_BUF_SIZE - 1));
+  strncpy(cred->userCredential.password, itm->vncLoginPassword.c_str(), (RFB_BUF_SIZE - 1));
+
+  return cred;
+}
+
+
+ /* libvnc send password to host callback */
+ /* (static function) */
 char * VncObject::handlePassword (rfbClient * cl)
 {
   if (cl == NULL)
@@ -755,7 +805,7 @@ char * VncObject::handlePassword (rfbClient * cl)
   }
 
   // ------ trying this out due to 'bad password' errors sometimes -------
-  char * strPass = (char *) malloc(10);
+  char * strPass = static_cast<char *>(malloc(10));
 
   if (strPass != NULL)
     strncpy(strPass, itm->vncPassword.c_str(), 9);

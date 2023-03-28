@@ -40,56 +40,10 @@
  */
 int SVInput::handle (int evt)
 {
-  static bool inMenu;
-
   // handle child window input controls right-click
   if (evt == FL_PUSH && Fl::event_button3() != 0)
   {
-    // prevent re-entry
-    if (inMenu == true)
-      return 0;
-
-    inMenu = true;
-
-    // TODO: Make *one* menu display function instead of copying code over and over
-    // TODO: Pass (this) to it
-
-    // create context menu
-    // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
-    const Fl_Menu_Item miMain[] = {
-      {"Undo",  0, 0, 0, FL_MENU_DIVIDER, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
-      {"Cut",   0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
-      {"Copy",  0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
-      {"Paste", 0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
-      {0}
-    };
-
-    // show context menu and return selected item, if any
-    const Fl_Menu_Item * miRes = miMain->popup(Fl::event_x() + 14, Fl::event_y() - 10);
-
-    if (miRes != NULL)
-    {
-      const char * strRes = miRes->text;
-
-      if (strRes != NULL)
-      {
-        std::string strR = strRes;
-
-        if (strR == "Undo")
-          undo();
-        else if (strR == "Cut")
-        {
-          copy(1);
-          cut();
-        }
-        else if (strR == "Copy")
-          copy(1);
-        else if (strR == "Paste")
-          Fl::paste(*this);
-      }
-    }
-
-    inMenu = false;
+    svPopUpEditMenu(this);
 
     return 1;
   }
@@ -103,46 +57,10 @@ int SVInput::handle (int evt)
  */
 int SVSecretInput::handle (int evt)
 {
-  static bool inMenu;
-
   // handle child window input controls right-click
   if (evt == FL_PUSH && Fl::event_button3() != 0)
   {
-    // prevent re-entry
-    if (inMenu == true)
-      return 0;
-
-    inMenu = true;
-
-    // create context menu
-    // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
-    const Fl_Menu_Item miMain[] = {
-      {"Undo",  0, 0, 0, FL_MENU_DIVIDER,  0, SV_FLTK_FONT_0, app->nMenuFontSize},
-      {"Cut",   0, 0, 0, FL_MENU_INACTIVE, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
-      {"Copy",  0, 0, 0, FL_MENU_INACTIVE, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
-      {"Paste", 0, 0, 0, 0,                0, SV_FLTK_FONT_0, app->nMenuFontSize},
-      {0}
-    };
-
-    // show context menu and return selected item, if any
-    const Fl_Menu_Item * miRes = miMain->popup(Fl::event_x() + 14, Fl::event_y() - 10);
-
-    if (miRes != NULL)
-    {
-      const char * strRes = miRes->text;
-
-      if (strRes != NULL)
-      {
-        std::string strR = strRes;
-
-        if (strR == "Undo")
-          undo();
-        else if (strR == "Paste")
-          Fl::paste(*this);
-      }
-    }
-
-    inMenu = false;
+    svPopUpEditMenu(this);
 
     return 1;
   }
@@ -173,16 +91,8 @@ int SVQuickNoteInput::handle (int evt)
           // set quickNote text
           itm->quickNote = std::string(app->quickNoteInput->value()).substr(0, 256);
 
-          if (itm->quickNote == "")
-          {
-            app->quickNote->textfont(FL_HELVETICA_ITALIC);
-            app->quickNote->value("(no Quick Note)");
-          }
-          else
-          {
-            app->quickNote->textfont(FL_HELVETICA);
-            app->quickNote->value(itm->quickNote.c_str());
-          }
+          // set quick note label and note text
+          svQuickNoteSetLabelAndText(itm);
 
           // clear the quickNote input and hide the quickNote input window
           app->quickNoteInput->value("");
@@ -194,7 +104,7 @@ int SVQuickNoteInput::handle (int evt)
     return 1;
   }
 
-  return SVInput::handle(evt);  //Fl_Input::handle(evt);
+  return SVInput::handle(evt);
 }
 
 
@@ -524,13 +434,26 @@ void svConfigReadCreateHostList ()
         if (strProp == "sshpass")
           itm->sshPass = strVal;
 
-        // password
+        // vnc password (password authentication)
         if (strProp == "vncpass")
         {
           itm->vncPassword = base64Decode(strVal);
 
-          if (itm->vncPassword == "")
-            itm->vncPassword = "(empty)";
+          //if (itm->vncPassword == "")    //  <<<--- commented out because why do (empty)?
+            //itm->vncPassword = "(empty)";
+        }
+
+        // vnc login user (credential authentication)
+        if (strProp == "vncloginuser")
+          itm->vncLoginUser = strVal;
+
+        // vnc login password (credential authentication)
+        if (strProp == "vncloginpass")
+        {
+          itm->vncLoginPassword = base64Decode(strVal);
+
+          //if (itm->vncLoginPassword == "")    //  <<<--- commented out because why do (empty)?
+            //itm->vncLoginPassword = "(empty)";
         }
 
         // host type
@@ -632,6 +555,13 @@ void svConfigReadCreateHostList ()
 /* write config file */
 void svConfigWrite ()
 {
+  static bool inConfigWrite;
+
+  if (inConfigWrite == true)
+    return;
+
+  inConfigWrite = true;
+
   std::ofstream ofs;
 
   // open our config file
@@ -641,6 +571,7 @@ void svConfigWrite ()
   if (ofs.fail())
   {
     std::cout << "SpiritVNC ERROR - Could not open config file for writing" << std::endl;
+    inConfigWrite = false;
     return;
   }
 
@@ -720,6 +651,9 @@ void svConfigWrite ()
     ofs << "sshport=" << itm->sshPort << std::endl;
     ofs << "vncpass=" << base64Encode(reinterpret_cast<const unsigned char *>
       (itm->vncPassword.c_str()), itm->vncPassword.size()) << std::endl;
+    ofs << "vncloginuser=" << itm->vncLoginUser << std::endl;
+    ofs << "vncloginpass=" << base64Encode(reinterpret_cast<const unsigned char *>
+      (itm->vncLoginPassword.c_str()), itm->vncLoginPassword.size()) << std::endl;
     ofs << "type=" << itm->hostType << std::endl;
     ofs << "sshkeyprivate=" << itm->sshKeyPrivate << std::endl;
     ofs << "sshuser=" << itm->sshUser << std::endl;
@@ -743,6 +677,8 @@ void svConfigWrite ()
 
   // close file
   ofs.close();
+
+  inConfigWrite = false;
 }
 
 
@@ -1505,10 +1441,8 @@ void svHandleHostListEvents (Fl_Widget *, void *)
 
   if (itm == NULL)
   {
-    // set itm's quicknote text, if any
-    app->quickNoteLabel->label("");
-    app->quickNote->textfont(FL_HELVETICA_ITALIC);
-    app->quickNote->value("(no Quick Note)");
+    // set itm's quicknote to nothing
+    svQuickNoteSetToEmpty();
 
     return;
   }
@@ -1517,19 +1451,8 @@ void svHandleHostListEvents (Fl_Widget *, void *)
 
   static bool menuUp;
 
-  // set itm's quicknote text, if any
-  app->quickNoteLabel->copy_label(itm->name.c_str());
-
-  if (itm->quickNote == "")
-  {
-    app->quickNote->textfont(FL_HELVETICA_ITALIC);
-    app->quickNote->value("(no Quick Note)");
-  }
-  else
-  {
-    app->quickNote->textfont(FL_HELVETICA);
-    app->quickNote->value(itm->quickNote.c_str());
-  }
+  // set quick note label and note text
+  svQuickNoteSetLabelAndText(itm);
 
   // *** DO *NOT* CHECK vnc FOR NULL HERE!!! ***
   // *** IT'S OKAY IF vnc IS NULL AT THIS POINT!!! ***
@@ -1882,6 +1805,14 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
         if (strName == SV_ITM_VNC_PASS)
           itm->vncPassword = static_cast<Fl_Secret_Input *>(wid)->value();
 
+        // vnc login name input
+        if (strName == SV_ITM_VNC_LOGIN_USER)
+          itm->vncLoginUser = static_cast<Fl_Input *>(wid)->value();
+
+        // vnc login password secret input
+        if (strName == SV_ITM_VNC_LOGIN_PASS)
+          itm->vncLoginPassword = static_cast<Fl_Secret_Input *>(wid)->value();
+
         // vnc compression level text input
         if (strName == SV_ITM_VNC_COMP)
         {
@@ -1909,9 +1840,9 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
         if (strName == SV_ITM_IGN_DEAD)
         {
           if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
-            itm->ignoreInactive = true;
-          else
             itm->ignoreInactive = false;
+          else
+            itm->ignoreInactive = true;
         }
 
         // scaling options group
@@ -2087,27 +2018,102 @@ void svHandleQuickNoteWindowEvents (Fl_Widget *, void *)
 
     if (itm == NULL)
     {
-      // set itm's quicknote text, if any
-      app->quickNoteLabel->label("");
-      app->quickNote->textfont(FL_HELVETICA_ITALIC);
-      app->quickNote->value("(no Quick Note)");
+      // set itm's quicknote to nothing
+      svQuickNoteSetToEmpty();
     }
     else
     {
+      // clear quick note input value
       app->quickNoteInput->value("");
-      if (itm->quickNote == "")
-      {
-        app->quickNote->textfont(FL_HELVETICA_ITALIC);
-        app->quickNote->value("(no Quick Note)");
-      }
-      else
-      {
-        app->quickNote->textfont(FL_HELVETICA);
-        app->quickNote->value(itm->quickNote.c_str());
-      }
+
+      // set quick note label and note text
+      svQuickNoteSetLabelAndText(itm);
+
       app->quickNoteWindow->hide();
     }
   }
+}
+
+
+/* popup edit menu in input widgets and handle choice */
+void svPopUpEditMenu (Fl_Input_ * input)
+{
+  static bool inMenu;
+
+  // prevent re-entry
+  if (inMenu == true)
+    return;
+
+  inMenu = true;
+
+  // create context menu
+  // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
+  const Fl_Menu_Item miMain[] = {
+    {"Undo",  0, 0, 0, FL_MENU_DIVIDER, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
+    {"Cut",   0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
+    {"Copy",  0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
+    {"Paste", 0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
+    {0}
+  };
+
+  // show context menu and return selected item, if any
+  const Fl_Menu_Item * miRes = miMain->popup(Fl::event_x() + 14, Fl::event_y() - 10);
+
+  // process response, if any
+  if (miRes != NULL)
+  {
+    const char * strRes = miRes->text;
+
+    // do edit action based on menu item label text, if any
+    if (strRes != NULL)
+    {
+      std::string strR = strRes;
+
+      if (strR == "Undo")
+        input->undo();
+      else if (strR == "Cut")
+      {
+        input->copy(1);
+        input->cut();
+      }
+      else if (strR == "Copy")
+        input->copy(1);
+      else if (strR == "Paste")
+        Fl::paste(*input, 1);
+    }
+  }
+
+  inMenu = false;
+}
+
+
+/* set quick note text to current item */
+void svQuickNoteSetLabelAndText (HostItem * itm)
+{
+  // set itm's quicknote text, if any
+  app->quickNoteLabel->copy_label(itm->name.c_str());
+
+  // set appropriate text style and quick note text
+  if (itm->quickNote == "")
+  {
+    app->quickNote->textfont(FL_HELVETICA_ITALIC);
+    app->quickNote->value("(no Quick Note)");
+  }
+  else
+  {
+    app->quickNote->textfont(FL_HELVETICA);
+    app->quickNote->value(itm->quickNote.c_str());
+  }
+}
+
+
+/* set quick note to empty / no item */
+void svQuickNoteSetToEmpty ()
+{
+  // set itm's quicknote text, if any
+  app->quickNoteLabel->label("");
+  app->quickNote->textfont(FL_HELVETICA_ITALIC);
+  app->quickNote->value("(no Quick Note)");
 }
 
 
@@ -2179,9 +2185,8 @@ void svHandleListItemIconChange (void *)
 
     if (itm != NULL && itm->icon != NULL)
     {
-      // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
       app->hostList->icon(i, itm->icon);
-      // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
+
       Fl::check();
     }
   }
@@ -2339,8 +2344,6 @@ void svHandleThreadCursorChange (void * setToDefault)
     if (vnc == NULL)
       return;
 
-    // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
-
     // set cursor, if valid
     if (vnc->imgCursor != NULL)
     {
@@ -2348,15 +2351,13 @@ void svHandleThreadCursorChange (void * setToDefault)
       Fl::wait();
     } else
       app->mainWin->cursor(FL_CURSOR_DEFAULT);
-
-    // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 }
 
 
 /* create and insert empty listitem if no items were added at startup */
 void svInsertEmptyItem ()
 {
-  // make a new itm
+  // make and populate a new itm
   HostItem * itm = new HostItem();
   itm->name = "(new connection)";
   itm->hostAddress = "192.168.0.1";
@@ -2367,11 +2368,10 @@ void svInsertEmptyItem ()
   itm->compressLevel = 5;
   itm->qualityLevel = 5;
 
-  // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
+  // add empty item to hostlist, set its icon and make it visible
   app->hostList->add(itm->name.c_str(), itm);
   app->hostList->icon(app->hostList->size(), app->iconDisconnected);
   app->hostList->make_visible(app->hostList->size());
-  // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
   Fl::redraw();
   Fl::check();
@@ -2387,8 +2387,6 @@ int svItemNumFromItm (const HostItem * itmIn)
   HostItem * itm = NULL;
   uint16_t nSize = app->hostList->size();
 
-  // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
-
   // go through hostlist and find item owning matching itmIn
   for (uint16_t i = 0; i <= nSize; i ++)
   {
@@ -2396,14 +2394,8 @@ int svItemNumFromItm (const HostItem * itmIn)
     itm = static_cast<HostItem *>(app->hostList->data(i));
 
     if (itm != NULL && itm == itmIn)
-    {
-      // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
-
       return i;
-    }
   }
-
-  // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
   return 0;
 }
@@ -2418,8 +2410,6 @@ HostItem * svItmFromVnc (const VncObject * vncIn)
   HostItem * itm = NULL;
   uint16_t nSize = app->hostList->size();
 
-  // Fl::lock();  // <<<--- commenting out because this is main thread ---<<<
-
   for (uint16_t i = 0; i <= nSize; i ++)
   {
       itm = NULL;
@@ -2428,15 +2418,9 @@ HostItem * svItmFromVnc (const VncObject * vncIn)
       if (itm != NULL && itm->vnc != NULL)
       {
         if (itm->vnc == vncIn)
-        {
-          // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
-
           return itm;
-        }
       }
   }
-
-  // Fl::unlock();  // <<<--- commenting out because this is main thread ---<<<
 
   return NULL;
 }
@@ -2632,19 +2616,8 @@ void svScanTimer (void *)
       app->hostList->select(app->nCurrentScanItem);
       itm->vnc->setObjectVisible();
 
-      // set itm's quicknote text, if any
-      app->quickNoteLabel->copy_label(itm->name.c_str());
-
-      if (itm->quickNote == "")
-      {
-        app->quickNote->textfont(FL_HELVETICA_ITALIC);
-        app->quickNote->value("(no Quick Note)");
-      }
-      else
-      {
-        app->quickNote->textfont(FL_HELVETICA);
-        app->quickNote->value(itm->quickNote.c_str());
-      }
+      // set quick note label and note text
+      svQuickNoteSetLabelAndText(itm);
 
       // 'tickle' host screen so it doesn't go to screensaver by
       // moving remote mouse back and forth a certain amount
@@ -3173,19 +3146,11 @@ void svShowItemOptions (HostItem * im)
   // create window
   Fl_Window * itmOptWin = new Fl_Window(nX, nY, nWinWidth, nWinHeight, itm->name.c_str()); //NULL);
   itmOptWin->set_non_modal();
-  //itmOptWin->box(FL_GTK_UP_BOX);
-
-  //// add main top label, showing itm name
-  //Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, itm->name.c_str());
-  //bxTopLabel->align(FL_ALIGN_CENTER);
-  //bxTopLabel->labelfont(1);
-  //bxTopLabel->box(FL_GTK_UP_BOX);
-  //bxTopLabel->color(17);
 
   // add itm value editors / selectors
   int nXPos = 195;
   int nYStep = 28;
-  int nYPos = 20;
+  int nYPos = -5;
 
   // widgetName->user_data() is used to assign the widget's name to itself
   // so it can be easily handled in the callbacks
@@ -3252,13 +3217,29 @@ void svShowItemOptions (HostItem * im)
   if (app->showTooltips == true)
     inVNCPort->tooltip("The VNC port/display number of the host.  Defaults to 5900");
 
-  // vnc password (shows dots, not cleartext password)
+  // vnc password (shows dots, not cleartext password, for 'password' authentication)
   SVSecretInput * inVNCPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
     "VNC password ");
   inVNCPassword->value(itm->vncPassword.c_str());
   inVNCPassword->user_data(SV_ITM_VNC_PASS);
   if (app->showTooltips == true)
     inVNCPassword->tooltip("The VNC password for the host");
+
+  // vnc login name (for 'credential' authentication)
+  SVInput * inVNCLoginUser = new SVInput(nXPos, nYPos += nYStep, 210, 28,
+    "VNC login user name ");
+  inVNCLoginUser->value(itm->vncLoginUser.c_str());
+  inVNCLoginUser->user_data(SV_ITM_VNC_LOGIN_USER);
+  if (app->showTooltips == true)
+    inVNCLoginUser->tooltip("The VNC login name for the host");
+
+  // vnc login password (shows dots, not cleartext password, for 'credential' authentication)
+  SVSecretInput * inVNCLoginPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
+    "VNC login password ");
+  inVNCLoginPassword->value(itm->vncLoginPassword.c_str());
+  inVNCLoginPassword->user_data(SV_ITM_VNC_LOGIN_PASS);
+  if (app->showTooltips == true)
+    inVNCLoginPassword->tooltip("The VNC login password for the host");
 
   // vnc compression level
   SVInput * inVNCCompressLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28,
@@ -3279,14 +3260,14 @@ void svShowItemOptions (HostItem * im)
   if (app->showTooltips == true)
     inVNCQualityLevel->tooltip("The level of image quality, from 0 to 9");
 
-  // ignore inactive connection checking
+  // inactive connection auto-disconnect
   Fl_Check_Button * chkIgnoreInactive = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
-    " Don't auto-disconnect when inactive");
+    " Auto-disconnect when inactive");
   chkIgnoreInactive->user_data(SV_ITM_IGN_DEAD);
   if (app->showTooltips == true)
-    chkIgnoreInactive->tooltip("Check to prevent auto-disconnect due to remote"
+    chkIgnoreInactive->tooltip("Check to auto-disconnect due to remote"
         " server inactivity");
-  if (itm->ignoreInactive == true)
+  if (itm->ignoreInactive == false)
     chkIgnoreInactive->set();
 
   // * scaling options group *
