@@ -66,7 +66,7 @@ $ ./spiritvnc-fltk
 * Single-click a connected server entry to switch to it from another
 * Right-click a connected server entry to close the connection *(except `Listening` entries)*
 * Right-click a disconnected server entry to display a pop-up menu with various actions you can perform
-* Click a server entry, then click in the Quick Note box near the bottom left to enter a brief message
+* Click a server entry, then click in the Quick Note box near the bottom left of SpiritVNC's window to enter a brief message
 * When viewing a remote VNC server, press the F8 key to display some common key combinations to send or to send F8 or F12 keys
 
 ##### Server entry list buttons
