@@ -1,6 +1,6 @@
 CC       =	c++
 CFLAGS   =	-O2 -Wall -Wunused -lpthread `fltk-config --use-images --cxxflags --ldflags` \
-			--std=c++11 -finline-functions -march=x86-64
+			--std=c++11 -finline-functions
 DEBUGFLGS=	-g -O0
 BINDIR   = /usr/local/bin
 TARGET   =	spiritvnc-fltk
@@ -12,7 +12,7 @@ OSNAME   = $(shell uname -s)
 
 # fix OI / Solaris stuff
 ifeq ($(OSNAME), SunOS)
-	LIBVNC = `libvncserver-config --cflags --libs` -m64
+	LIBVNC = `libvncserver-config --cflags --libs` -march=x86-64 -m64
 else
 	LIBVNC = `pkg-config --cflags --libs libvncclient libvncserver`
 endif
