@@ -125,7 +125,7 @@ void svCreateSSHConnection (void * data)
   sshCommandLine = app->sshCommand + " " + itm->sshUser + "@" + itm->hostAddress + " -t" + " -t" +
     " -p " + itm->sshPort + " -o ConnectTimeout=" + std::to_string(itm->sshWaitTime) +
     " -L " + std::to_string(itm->sshLocalPort) + ":127.0.0.1:" + itm->vncPort +
-    " -i " + itm->sshKeyPrivate;
+    " -i " + itm->sshKeyPrivate;    //  <<<---- Where is ssh password??? ----<<<<
 
   // call the system's ssh client, if available and open write stream
   itm->sshCmdStream = popen(sshCommandLine.c_str(), "w");

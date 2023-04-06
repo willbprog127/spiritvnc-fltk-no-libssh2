@@ -36,7 +36,7 @@
 #define CONSTS_H
 
 /* constants */
-#define SV_APP_VERSION "0.4.15"
+#define SV_APP_VERSION  "0.5.0"  //"0.4.16"
 
 #define SV_CURRENT_YEAR "2023"
 
@@ -46,8 +46,9 @@
 #define SV_APP_FONT_SIZE            14
 #define SV_MAX_PROP_LEN             1024
 #define SV_MAX_HOSTLIST_ENTRIES     65000
-#define SV_FLTK_FONT_0              0
 #define SV_CHOICE_2                 2
+#define SV_LIST_FONT_ID             31
+#define SV_BLINK_TIME               0.6
 
 // return type for threads
 #define SV_RET_VOID         static_cast<void *>(NULL)
@@ -60,6 +61,7 @@
 #define SV_OPTS_APP_FONT_SIZE   const_cast<char *>("inAppFontSize")
 #define SV_OPTS_LIST_FONT_NAME  const_cast<char *>("inListFont")
 #define SV_OPTS_LIST_FONT_SIZE  const_cast<char *>("inListFontSize")
+#define SV_OPTS_LIST_WIDTH      const_cast<char *>("inListWidth")
 #define SV_OPTS_USE_CB_ICONS    const_cast<char *>("chkCBIcons")
 #define SV_OPTS_SHOW_TOOLTIPS   const_cast<char *>("chkShowTooltips")
 #define SV_OPTS_SHOW_REV_CON    const_cast<char *>("chkShowReverseConnect")

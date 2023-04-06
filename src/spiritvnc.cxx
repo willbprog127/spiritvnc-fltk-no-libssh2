@@ -67,8 +67,8 @@ int main (int argc, char **argv)
   // read config file, set app options and populate host list
   svConfigReadCreateHostList();
 
-  // set or unset main window tooltips to user preference
-  svSetUnsetMainWindowTooltips();
+  // set app tooltips
+  svSetAppTooltips();
 
   // add default empty host list item if no items added from config file
   if (app->hostList->size() == 0)
@@ -83,6 +83,7 @@ int main (int argc, char **argv)
   // manually trigger misc events callback
   svPositionWidgets();
 
+  // end widget adding and show app window
   app->mainWin->end();
   app->mainWin->show(argc, argv);
 

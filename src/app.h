@@ -54,7 +54,7 @@
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Secret_Input.H>
 #include <FL/Fl_Spinner.H>
-//#include <FL/Fl_Text_Editor.H>
+#include <FL/Fl_Tooltip.H>
 #include <FL/Fl_Multiline_Output.H>
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Window.H>
@@ -80,6 +80,8 @@
 
 class SVInput;
 class SVQuickNoteInput;
+class SVQuickNoteBox;
+class SVQuickNotePack;
 
 /* global app class */
 class AppVars
@@ -90,6 +92,7 @@ public:
     hostList(NULL),
     scroller(NULL),
     vncViewer(NULL),
+    iconApp(NULL),
     iconDisconnected(NULL),
     iconDisconnectedError(NULL),
     iconDisconnectedBigError(NULL),
@@ -100,6 +103,7 @@ public:
     userName(""),
     configPath(""),
     configPathAndFile(""),
+    requestedListWidth(170),
     nConnectionTimeout(SV_CONNECTION_TIMEOUT_SECS),
     nViewersWaiting(0),
     verboseLogging(false),
@@ -128,7 +132,6 @@ public:
     nListFontSize(10),
     nMenuFontSize(11),
     blockLocalClipboardHandling(false),
-    packButtons(NULL),
     showReverseConnect(true),
     savedX(0),
     savedY(0),
@@ -138,11 +141,15 @@ public:
     msgThread(0),
     strF12ClipVar(""),
     sshCommand("ssh"),
-    quickNoteGroup(NULL),
-    quickNoteLabel(NULL),
+    quickInfoPack(NULL),
+    quickInfoLabel(NULL),
+    lastConnectedLabel(),
+    lastConnected(NULL),
+    lastError(NULL),
     quickNote(NULL),
-    quickNoteWindow(NULL),
-    quickNoteInput(NULL)
+    quickNotePack(NULL),
+    quickNoteInput(NULL),
+    packButtons(NULL)
   {
     // get user's login name for reading/writing config file
 
@@ -189,6 +196,7 @@ public:
   Fl_Hold_Browser * hostList;
   Fl_Scroll * scroller;
   VncViewer * vncViewer;
+  Fl_RGB_Image * iconApp;
   Fl_Image * iconDisconnected;
   Fl_Image * iconDisconnectedError;
   Fl_Image * iconDisconnectedBigError;
@@ -199,7 +207,8 @@ public:
   std::string userName;
   std::string configPath;
   std::string configPathAndFile;
-  int nConnectionTimeout;
+  int requestedListWidth;
+  uint16_t nConnectionTimeout;
   int nViewersWaiting;
   bool verboseLogging;
   bool colorBlindIcons;
@@ -217,8 +226,8 @@ public:
   HostItem * itmBeingEdited;
   bool scanIsRunning;
   int nCurrentScanItem;
-  int nScanTimeout;
-  int nDeadTimeout;
+  uint16_t nScanTimeout;
+  uint16_t nDeadTimeout;
   int nStartingLocalPort;
   bool showTooltips;
   bool debugMode;
@@ -227,7 +236,6 @@ public:
   int nListFontSize;
   int nMenuFontSize;
   bool blockLocalClipboardHandling;
-  Fl_Pack * packButtons;
   bool showReverseConnect;
   int savedX;
   int savedY;
@@ -237,11 +245,15 @@ public:
   pthread_t msgThread;
   std::string strF12ClipVar;
   std::string sshCommand;
-  Fl_Group * quickNoteGroup;
-  Fl_Box * quickNoteLabel;
-  Fl_Multiline_Output * quickNote;
-  Fl_Window * quickNoteWindow;
+  Fl_Pack * quickInfoPack;
+  Fl_Box * quickInfoLabel;
+  Fl_Box * lastConnectedLabel;
+  Fl_Box * lastConnected;
+  Fl_Multiline_Output * lastError;
+  SVQuickNoteBox * quickNote;
+  SVQuickNotePack * quickNotePack;
   SVQuickNoteInput * quickNoteInput;
+  Fl_Pack * packButtons;
 } extern * app;
 
 
@@ -275,6 +287,16 @@ private:
   int handle (int event);
 };
 
+/* subclassed group */
+class SVQuickNotePack : public Fl_Pack
+{
+public:
+  SVQuickNotePack (int x, int y, int w, int h, const char * label = 0) :
+    Fl_Pack(x, y, w, h, label) {}
+private:
+  int handle (int event);
+};
+
 /* subclassed input box */
 class SVQuickNoteInput : public SVInput
 {
@@ -287,6 +309,7 @@ private:
 
 
 /* forward function declarations */
+void svBlinkCursor (void *);
 void svCloseChildWindow (Fl_Widget *, void *);
 void svCloseSSHConnection (void *);
 void svConfigCreateNew ();
@@ -297,9 +320,11 @@ void svCreateAppIcons (bool fromAppOptions = false);
 std::string svConvertBooleanToString (bool);
 bool svConvertStringToBoolean (const std::string&);
 void svCreateGUI ();
+void svCreateQuickNoteEditWidgets ();
 void svDebugLog (const std::string&);
 void svDeleteItem (int);
 void svDeselectAllItems ();
+void svEnableDisableTooltips ();
 int svFindFreeTcpPort ();
 std::string svGetConfigProperty (char *);
 std::string svGetConfigValue (char *);
@@ -311,9 +336,11 @@ void svHandleHostListEvents (Fl_Widget *, void *);
 void svHandleMainWindowEvents (Fl_Widget *, void *);
 void svPositionWidgets ();
 void svHandleListItemIconChange (void *);
-void svHandleQuickNoteWindowEvents (Fl_Widget *, void *);
+//void svHandleQuickNoteButtonEvents (Fl_Widget *, void *);
+//void svHandleQuickNoteWindowEvents (Fl_Widget *, void *);
 void svHandleThreadConnection (void *);
 void svHandleThreadCursorChange (void *);
+void svHideQuickNoteEditWidgets ();
 void svInsertEmptyItem ();
 int svItemNumFromItm (const HostItem *);
 HostItem * svItmFromVnc (const VncObject *);
@@ -325,13 +352,13 @@ void svLogToFile (const std::string&);
 void svMessageWindow (const std::string&, const std::string& = "SpiritVNC");
 bool svThereAreConnectedItems ();
 void svPopUpEditMenu (Fl_Input_ *);
-void svQuickNoteSetLabelAndText (HostItem *);
-void svQuickNoteSetToEmpty ();
+void svQuickInfoSetLabelAndText (HostItem *);
+void svQuickInfoSetToEmpty ();
 void svResizeScroller ();
 void svRestoreWindowSizePosition (void *);
 void svScanTimer (void *);
 void svSendKeyStrokesToHost (std::string&, VncObject *);
-void svSetUnsetMainWindowTooltips ();
+void svSetAppTooltips ();
 void svShowAboutHelp ();
 void svShowAppOptions ();
 void svShowF8Window ();

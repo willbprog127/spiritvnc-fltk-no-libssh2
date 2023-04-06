@@ -88,7 +88,8 @@ public:
     sshWaitTime(5),
     sshCmdStream(NULL),
     sshCloseThread(0),
-    quickNote("")
+    quickNote(""),
+    lastConnectedTime("")
   {}
 
   std::string name;
@@ -113,8 +114,8 @@ public:
   char scaling;
   bool scalingFast;
   bool showRemoteCursor;
-  int compressLevel;
-  int qualityLevel;
+  uint8_t compressLevel;
+  uint8_t qualityLevel;
   bool ignoreInactive;
   bool centerX;
   bool centerY;
@@ -129,10 +130,11 @@ public:
   bool hasEnded;
   Fl_Image * icon;
   std::string lastErrorMessage;
-  int sshWaitTime;
+  uint16_t sshWaitTime;
   FILE * sshCmdStream;
   pthread_t sshCloseThread;
   std::string quickNote;
+  std::string lastConnectedTime;
 };
 
 #endif

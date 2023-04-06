@@ -116,6 +116,7 @@ void VncObject::createVNCObject (HostItem * itm)
     itm->hasDisconnectRequest = false;
     itm->hasEnded = false;
     itm->lastErrorMessage = "";
+    app->lastError->value("");
 
     // store this viewer pointer in libvnc client data
     rfbClientSetClientData(vnc->vncClient, app->libVncVncPointer, vnc);

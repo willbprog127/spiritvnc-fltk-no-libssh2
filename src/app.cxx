@@ -69,40 +69,66 @@ int SVSecretInput::handle (int evt)
 }
 
 
+/* handle method for SVQuickNoteGroup
+ * (instance method)
+ */
+int SVQuickNotePack::handle (int evt)
+{
+  // we will accept focus by returning non-zero
+  if (evt == FL_FOCUS)
+    return 1;
+
+  if (evt == FL_UNFOCUS)
+    return 1;
+
+  return Fl_Pack::handle(evt);
+}
+
+
 /* handle method for SVQuickNoteInput
  * (instance method)
  */
 int SVQuickNoteInput::handle (int evt)
 {
-  // save and close the quicknote editor
-  if (evt == FL_KEYUP && app->quickNoteWindow != 0)
+  // handle enter key - save edits
+  if (evt == FL_KEYDOWN && Fl::event_key() == FL_Enter)
   {
-    if (Fl::event_key() == FL_Enter)
+    // get currently selected list item
+    int curLine = app->hostList->value();
+
+    if (curLine > 0)
     {
-      // get currently selected list item
-      int curLine = app->hostList->value();
+      HostItem * itm = static_cast<HostItem *>(app->hostList->data(curLine));
 
-      if (curLine > 0)
+      if (itm != NULL)
       {
-        HostItem * itm = static_cast<HostItem *>(app->hostList->data(curLine));
+        // set quickNote text
+        itm->quickNote = std::string(app->quickNoteInput->value()).substr(0, 256);
 
-        if (itm != NULL)
-        {
-          // set quickNote text
-          itm->quickNote = std::string(app->quickNoteInput->value()).substr(0, 256);
+        // clear the quickNote input and hide the quickNote input window
+        svHideQuickNoteEditWidgets();
 
-          // set quick note label and note text
-          svQuickNoteSetLabelAndText(itm);
-
-          // clear the quickNote input and hide the quickNote input window
-          app->quickNoteInput->value("");
-          app->quickNoteWindow->hide();
-          svConfigWrite();
-        }
+        // set quick note label and note text
+        svQuickInfoSetLabelAndText(itm);
+        svConfigWrite();
       }
     }
     return 1;
   }
+
+  // escape key pressed -- abandon edits
+  if (evt == FL_SHORTCUT && Fl::event_key() == FL_Escape)
+  {
+    svHideQuickNoteEditWidgets();
+    return 1;
+  }
+
+  // we will accept focus by returning non-zero
+  if (evt == FL_FOCUS)
+    return 1;
+
+  if (evt == FL_UNFOCUS)
+    return 1;
 
   return SVInput::handle(evt);
 }
@@ -119,22 +145,6 @@ int SVQuickNoteBox::handle (int evt)
   // handle quicknote click if an item is selected
   if (evt == FL_PUSH && curLine > 0)
   {
-    // create a quicknote window if it doesn't exist
-    if (app->quickNoteWindow == NULL)
-    {
-      app->quickNoteWindow = new Fl_Window(0, 0, 110, 32);
-
-      Fl_Group * inputGroup = new Fl_Group(3, 3, 100, 24);
-      inputGroup->box(FL_THIN_DOWN_BOX);
-      app->quickNoteInput = new SVQuickNoteInput(0, 0, 100, 24);
-      inputGroup->end();
-
-      app->quickNoteWindow->end();
-      app->quickNoteWindow->clear_border();
-      app->quickNoteWindow->xclass("spiritvncfltktextentry");
-      app->quickNoteWindow->callback(svHandleQuickNoteWindowEvents);
-    }
-
     // show the editor if there's a selected item
     if (curLine > 0)
     {
@@ -142,25 +152,64 @@ int SVQuickNoteBox::handle (int evt)
 
       if (itm != NULL && itm->name != "")
       {
-        app->quickNoteWindow->position(app->mainWin->x_root() + app->quickNote->x(),
-          app->mainWin->y_root() + app->quickNote->y());
-        app->quickNoteWindow->size(app->quickNote->w(), app->quickNoteWindow->h());
-        app->quickNoteWindow->set_modal();
-
-        app->quickNoteInput->size(app->quickNote->w(), app->quickNoteWindow->h());
         app->quickNoteInput->value(itm->quickNote.c_str());
 
-        // blank quickNote so user isn't confused by background text when editor displays
-        app->quickNote->value("");
+        // show editor stuff
+        app->quickNotePack->position(app->quickNote->x(), app->quickNote->y());
 
-        app->quickNoteWindow->show();
+        // show the quick note edit widgets (hopefully)
+        app->quickNotePack->show();
+        Fl::check();
+        app->quickNotePack->redraw();
+        Fl::redraw();
+
+        // set cursor at top left
+        if (app->quickNoteInput->take_focus())
+          app->quickNoteInput->position(0);
+
+        Fl::add_timeout(SV_BLINK_TIME, svBlinkCursor, app->quickNoteInput);
       }
     }
   }
 
-  //return Fl_Box::handle(evt);
   return Fl_Multiline_Output::handle(evt);
 }
+
+
+/* emulates cursor blinking */
+void svBlinkCursor (void * inp)
+{
+  // if the passed input widget is null, cancel the timeout and get out
+  if (inp == NULL)
+  {
+    Fl::remove_timeout(svBlinkCursor);
+    return;
+  }
+
+  // cast to fl_input_ from void *
+  Fl_Input_ * input = static_cast<Fl_Input_ *>(inp);
+
+  // static blink state for alternating change of cursor color
+  static bool blinkState;
+
+  // turn the cursor a different color based on blink state
+  if (blinkState == true)
+  {
+    blinkState = false;
+    input->cursor_color(FL_BLACK);
+    input->redraw();
+  }
+  else
+  {
+    blinkState = true;
+    input->cursor_color(FL_BACKGROUND_COLOR);
+    input->redraw();
+  }
+
+  // keep repeating the timeout until it's removed
+  Fl::repeat_timeout(SV_BLINK_TIME, svBlinkCursor, inp);
+}
+
 
 /*
   child window 'OK' button callback - closes child windows (settings, options, etc
@@ -241,13 +290,10 @@ void svConfigReadCreateHostList ()
         // such as 'options', 'help', 'listen'...
         if (strProp == "hostlistwidth")
         {
-          int w = atoi(strVal.c_str());
+          app->requestedListWidth = atoi(strVal.c_str());
 
-          if (w < 10)
-              w = 10;
-
-          // set size of hostlist
-          app->hostList->size(w, app->hostList->h());
+          if (app->requestedListWidth < 10)
+            app->requestedListWidth = 10;
         }
 
         // use colorblind icons?
@@ -436,12 +482,7 @@ void svConfigReadCreateHostList ()
 
         // vnc password (password authentication)
         if (strProp == "vncpass")
-        {
           itm->vncPassword = base64Decode(strVal);
-
-          //if (itm->vncPassword == "")    //  <<<--- commented out because why do (empty)?
-            //itm->vncPassword = "(empty)";
-        }
 
         // vnc login user (credential authentication)
         if (strProp == "vncloginuser")
@@ -449,12 +490,7 @@ void svConfigReadCreateHostList ()
 
         // vnc login password (credential authentication)
         if (strProp == "vncloginpass")
-        {
           itm->vncLoginPassword = base64Decode(strVal);
-
-          //if (itm->vncLoginPassword == "")    //  <<<--- commented out because why do (empty)?
-            //itm->vncLoginPassword = "(empty)";
-        }
 
         // host type
         if (strProp == "type")
@@ -525,6 +561,10 @@ void svConfigReadCreateHostList ()
         // quicknote
         if (strProp == "quicknote")
           itm->quickNote = base64Decode(strVal);
+
+        // last connected time
+        if (strProp == "lastconnecttime")
+          itm->lastConnectedTime = strVal;
       }
     }
     else
@@ -535,7 +575,7 @@ void svConfigReadCreateHostList ()
 
       // add a separator
       if (addSep == true)
-        // color 16 (@C16) is supposed to be gray
+        // color 16 (@C16.) is supposed to be gray
         app->hostList->add("@C16@.· · ·");
 
       break;
@@ -545,8 +585,8 @@ void svConfigReadCreateHostList ()
   ifs.close();
 
   // set host list font face and size
-  Fl::set_font(31, app->strListFont.c_str());
-  app->hostList->textfont(31);
+  Fl::set_font(SV_LIST_FONT_ID, app->strListFont.c_str());
+  app->hostList->textfont(SV_LIST_FONT_ID);
   app->hostList->textsize(app->nListFontSize);
   app->nMenuFontSize = app->nListFontSize;
 }
@@ -562,6 +602,7 @@ void svConfigWrite ()
 
   inConfigWrite = true;
 
+  // output stream
   std::ofstream ofs;
 
   // open our config file
@@ -588,7 +629,8 @@ void svConfigWrite ()
   ofs << "# program options" << std::endl;
 
   // hostlist width
-  ofs << "hostlistwidth=" << app->hostList->w() << std::endl;
+  //ofs << "hostlistwidth=" << app->hostList->w() << std::endl;
+  ofs << "hostlistwidth=" << app->requestedListWidth << std::endl;
 
   // colorblind icons
   ofs << "colorblindicons=" << svConvertBooleanToString(app->colorBlindIcons) << std::endl;
@@ -630,11 +672,11 @@ void svConfigWrite ()
   // blank line
   ofs << std::endl;
 
+  // host list entries
   HostItem * itm = NULL;
 
   ofs << "# host-list entries" << std::endl;
 
-  // host list entries
   uint16_t nSize = app->hostList->size();
 
   for (uint16_t i = 0; i <= nSize; i ++)
@@ -669,6 +711,7 @@ void svConfigWrite ()
     ofs << "centery=" << svConvertBooleanToString(itm->centerY) << std::endl;
     ofs << "quicknote=" << base64Encode(reinterpret_cast<const unsigned char *>
       (itm->quickNote.c_str()), itm->quickNote.size()) << std::endl;
+    ofs << "lastconnecttime=" << itm->lastConnectedTime << std::endl;
 
     ofs << std::endl;
   }
@@ -809,6 +852,10 @@ bool svConvertStringToBoolean (const std::string& strIn)
 /* create icons for app */
 void svCreateAppIcons (bool fromAppOptions)
 {
+  // do app icon first
+  app->iconApp = new Fl_RGB_Image(new Fl_Pixmap(pmSpiritvnc_xpm));
+  app->mainWin->default_icon(app->iconApp);
+
   // default or colorblind icons
   if (app->colorBlindIcons == false)
   {
@@ -841,6 +888,7 @@ void svCreateAppIcons (bool fromAppOptions)
   app->btnListOptions->image(new Fl_Pixmap(pmListOptions));
   app->btnListHelp->image(new Fl_Pixmap(pmListHelp));
 
+  // set appropriate list icons only when starting up
   if (fromAppOptions == false)
   {
     // set initial icons on hostlist items
@@ -856,7 +904,8 @@ void svCreateAppIcons (bool fromAppOptions)
 /* create program GUI */
 void svCreateGUI ()
 {
-  // widget tooltips are set (if enabled) in svSetTooltips
+  // widget tooltips are set in svSetTooltips
+  // some additional positioning and sizing is done in svPositionWidgets
 
   // create main window
   app->mainWin = new Fl_Double_Window(1024, 768);
@@ -865,13 +914,74 @@ void svCreateGUI ()
   app->mainWin->xclass("spiritvncfltk");
   app->mainWin->callback(svHandleMainWindowEvents);
 
-  // create host list buttons
-  // (positioning is done in svHandleMiscEvents)
-  int nBtnSize = 20;
+  // explicitly start adding widgets to the app window
+  app->mainWin->begin();
 
-  app->packButtons = new Fl_Pack(0, 0, 1, nBtnSize);
+  // create host list
+  app->hostList = new Fl_Hold_Browser(0, 0, 163, 548);
+  app->hostList->clear_visible_focus();
+  app->hostList->callback(svHandleHostListEvents, NULL);
+  app->hostList->box(FL_THIN_DOWN_BOX);
+
+  // =============== quick info start =======================
+
+  // quick info pack
+  app->quickInfoPack = new Fl_Pack(0, 551, 163, 197);
+  app->quickInfoPack->type(Fl_Pack::VERTICAL);
+
+  // item name label
+  app->quickInfoLabel = new Fl_Box(0, 0, 163, 18);
+  app->quickInfoLabel->labelsize(app->nAppFontSize + 2);
+  app->quickInfoLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+  app->quickInfoLabel->labelfont(FL_HELVETICA_BOLD);
+
+  // last connected label
+  app->lastConnectedLabel = new Fl_Box(0, 0, 163, 18);
+  app->lastConnectedLabel->labelsize(app->nAppFontSize + 1);
+  app->lastConnectedLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE | FL_ALIGN_BOTTOM);
+  //app->lastConnectedLabel->labelfont(FL_HELVETICA);
+
+  // last connected
+  app->lastConnected = new Fl_Box(0, 0, 163, 18);
+  app->lastConnected->labelsize(app->nAppFontSize + 1);
+  //app->lastConnected->labelfont(FL_HELVETICA);
+  app->lastConnected->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE | FL_ALIGN_TOP);
+
+  // last error message
+  app->lastError = new Fl_Multiline_Output(0, 0, 163, 45);
+  app->lastError->textsize((app->nAppFontSize + 1));
+  //app->lastError->textfont(FL_HELVETICA_ITALIC);
+  app->lastError->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
+  app->lastError->box(FL_THIN_DOWN_BOX);
+  app->lastError->wrap(1);
+  app->lastError->textcolor(FL_DARK_RED);
+  app->lastError->readonly(1);
+  app->lastError->clear_visible_focus();
+
+  // note - very brief item info
+  app->quickNote = new SVQuickNoteBox(0, 0, 163, 190);
+  app->quickNote->textsize((app->nAppFontSize + 2));
+  app->quickNote->textfont(FL_HELVETICA_ITALIC);
+  app->quickNote->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
+  app->quickNote->box(FL_THIN_DOWN_BOX);
+  app->quickNote->wrap(1);
+  app->quickNote->readonly(1);
+  app->quickNote->clear_visible_focus();
+
+  app->quickInfoPack->end();
+
+  // set quick info text to empty defaults
+  svQuickInfoSetToEmpty();
+  // =============== quick info end =======================
+
+  // =============== host list buttons start ====================
+  // button size constant
+  const uint nBtnSize = 20;
+
+  app->packButtons = new Fl_Pack(0, 747, 170, nBtnSize);
   app->packButtons->type(Fl_Pack::HORIZONTAL);
-  //app->packButtons->begin();
+
+  app->packButtons->begin();
 
   app->btnListAdd = new Fl_Button(0, 0, nBtnSize, nBtnSize);
   app->btnListAdd->clear_visible_focus();
@@ -881,7 +991,6 @@ void svCreateGUI ()
   app->btnListDelete->clear_visible_focus();
   app->btnListDelete->callback(svHandleHostListButtons);
 
-  //--
   app->btnListUp = new Fl_Button(0, 0, nBtnSize, nBtnSize);
   app->btnListUp->clear_visible_focus();
   app->btnListUp->callback(svHandleHostListButtons);
@@ -909,36 +1018,6 @@ void svCreateGUI ()
 
   app->packButtons->end();
 
-  // create host list
-  app->hostList = new Fl_Hold_Browser(0, 0, 0, 0);
-  app->hostList->clear_visible_focus();
-  app->hostList->callback(svHandleHostListEvents, NULL);
-  app->hostList->box(FL_THIN_DOWN_BOX);
-
-  // *** quicknote ***
-
-  // quicknote group
-  app->quickNoteGroup = new Fl_Group(0, 0, 100, 68);
-
-  // quicknote label - item name
-  app->quickNoteLabel = new Fl_Box(0, 0, 100, 18);
-  app->quickNoteLabel->labelsize(app->nAppFontSize);
-  app->quickNoteLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-  app->quickNoteLabel->labelfont(1);
-  app->quickNoteLabel->box(FL_THIN_DOWN_BOX);
-
-  // quicknote - very brief item info
-  app->quickNote = new SVQuickNoteBox(0, 22, 100, 50);
-  app->quickNote->textsize((app->nAppFontSize + 2));
-  app->quickNote->textfont(FL_HELVETICA_ITALIC);
-  app->quickNote->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
-  app->quickNote->box(FL_THIN_DOWN_BOX);
-  app->quickNote->wrap(1);
-  app->quickNote->clear_visible_focus();
-  app->quickNote->value("(no Quick Note)");
-
-  app->quickNoteGroup->end();
-
   // create scrolling window we will add viewers to
   app->scroller = new Fl_Scroll(0, 0, 0, 0);
   app->vncViewer = new VncViewer(0, 0, 0, 0);
@@ -946,8 +1025,36 @@ void svCreateGUI ()
   app->scroller->type(0);
   app->scroller->end();
 
+  app->mainWin->end();
+
   // set resizable widget for whole app
   app->mainWin->resizable(app->scroller);
+}
+
+
+/* create widgets for quick note editing */
+void svCreateQuickNoteEditWidgets ()
+{
+  // quick note parent container (fl_pack)
+  app->quickNotePack = new SVQuickNotePack(app->quickNote->x(), app->quickNote->y(),
+    app->quickNote->w(), app->quickNote->h() - 3);
+
+  // quick note multi-line wrapped input widget
+  app->quickNoteInput = new SVQuickNoteInput(0, 0, app->quickNotePack->w(), app->quickNotePack->h());
+  app->quickNoteInput->type(FL_MULTILINE_INPUT_WRAP);
+  app->quickNoteInput->textsize(app->nAppFontSize + 2);
+  app->quickNoteInput->color(FL_WHITE);
+  app->quickNoteInput->box(FL_THIN_DOWN_BOX);
+
+  app->quickNotePack->end();
+
+  // make sure quick note edit widgets are initially hidden
+  svHideQuickNoteEditWidgets();
+
+  app->mainWin->add(app->quickNotePack);
+
+  // set quick info text to empty defaults
+  svQuickInfoSetToEmpty();
 }
 
 
@@ -974,6 +1081,7 @@ void svDeleteItem (int nItem)
 
   const HostItem * itm = static_cast<HostItem *>(app->hostList->data(nItem));
 
+  // null itm, get out
   if (itm == NULL)
   {
     fl_beep(FL_BEEP_DEFAULT);
@@ -981,7 +1089,7 @@ void svDeleteItem (int nItem)
     return;
   }
 
-  // listening connection
+  // listening connection doesn't need delete confirmation
   if (itm->isListener)
     okayToDelete = true;
   else
@@ -996,6 +1104,7 @@ void svDeleteItem (int nItem)
       okayToDelete = true;
   }
 
+  // delete itm if everything is okay
   if (okayToDelete == true)
   {
     app->hostList->remove(nItem);
@@ -1014,6 +1123,17 @@ void svDeselectAllItems ()
   // clear list of 'selected' color
   for (uint16_t i = 1; i <= nSize; i ++)
     app->hostList->select(i, 0);
+}
+
+
+/* enable or disable tooltips */
+void svEnableDisableTooltips ()
+{
+  // enable or disable ALL app tooltips
+  if (app->showTooltips == true)
+    Fl_Tooltip::enable();
+  else
+    Fl_Tooltip::disable();
 }
 
 
@@ -1114,7 +1234,6 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
 
   if (childWindow == NULL || btn == NULL)
   {
-    //childWindow->hide();
     app->childWindowVisible = false;
     app->childWindowBeingDisplayed = NULL;
     return;
@@ -1160,27 +1279,42 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
         if (strName == "")
           continue;
 
+        // scan timeout spinner
         if (strName == "spinScanTimeout")
           app->nScanTimeout = static_cast<Fl_Spinner *>(wid)->value();
 
+        // local ssh start port number spinner
         if (strName == "spinLocalSSHPort")
           app->nStartingLocalPort = static_cast<Fl_Spinner *>(wid)->value();
 
+        // inactive connection timeout spinner
         if (strName == "spinDeadTimeout")
           app->nDeadTimeout = static_cast<Fl_Spinner *>(wid)->value();
 
+        // ssh command input
         if (strName == "inSSHCommand")
           app->sshCommand = static_cast<SVInput *>(wid)->value();
 
+        // app font size input
         if (strName == "inAppFontSize")
           app->nAppFontSize = atoi(static_cast<SVInput *>(wid)->value());
 
+        // hostlist font name input
         if (strName == "inListFont")
           app->strListFont = static_cast<SVInput *>(wid)->value();
 
+        // hostlist font size input
         if (strName == "inListFontSize")
           app->nListFontSize = atoi(static_cast<SVInput *>(wid)->value());
 
+        // hostlist requested width input
+        if (strName == "inListWidth")
+        {
+          app->requestedListWidth = atoi(static_cast<SVInput *>(wid)->value());
+          svPositionWidgets();
+        }
+
+        // user color-blind icons checkbutton
         if (strName == "chkCBIcons")
         {
           if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
@@ -1191,6 +1325,7 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
           svCreateAppIcons(true);
         }
 
+        // show tooltips checkbutton
         if (strName == "chkShowTooltips")
         {
           if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
@@ -1198,23 +1333,16 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
           else
             app->showTooltips = false;
 
-          svSetUnsetMainWindowTooltips();
+          svEnableDisableTooltips();
         }
 
+        // show reverse notification checkbutton
         if (strName == "chkShowReverseConnect")
         {
           if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
             app->showReverseConnect = true;
           else
             app->showReverseConnect = false;
-        }
-
-        if (strName == "chkDebugMode")
-        {
-          if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
-            app->debugMode = true;
-          else
-            app->debugMode = false;
         }
       }
     }
@@ -1239,7 +1367,6 @@ void svHandleF8Buttons (Fl_Widget * widget, void *)
 
   if (childWindow == NULL || widget == NULL)
   {
-    //childWindow->hide();
     app->childWindowVisible = false;
     app->childWindowBeingDisplayed = NULL;
     return;
@@ -1339,8 +1466,7 @@ void svHandleHostListButtons (Fl_Widget * button, void *)
     if (nListVal > 0)
       svDeleteItem(nListVal);
     else
-      svMessageWindow("Nothing was selected so nothing was deleted",
-        "SpiritVNC - Delete Item");
+      svMessageWindow("Nothing was selected so nothing was deleted", "SpiritVNC - Delete Item");
   }
 
   // show app options
@@ -1393,6 +1519,7 @@ void svHandleHostListButtons (Fl_Widget * button, void *)
     app->scanIsRunning = true;
     svDeselectAllItems();
     svScanTimer(NULL);
+    //Fl::add_timeout(app->nScanTimeout, svScanTimer);
   }
 
   // create a listening vnc object
@@ -1422,7 +1549,6 @@ void svHandleHostListButtons (Fl_Widget * button, void *)
         }
       }
     }
-
     VncObject::createVNCListener();
   }
 }
@@ -1441,8 +1567,8 @@ void svHandleHostListEvents (Fl_Widget *, void *)
 
   if (itm == NULL)
   {
-    // set itm's quicknote to nothing
-    svQuickNoteSetToEmpty();
+    // set itm's quick note to nothing
+    svQuickInfoSetToEmpty();
 
     return;
   }
@@ -1452,7 +1578,7 @@ void svHandleHostListEvents (Fl_Widget *, void *)
   static bool menuUp;
 
   // set quick note label and note text
-  svQuickNoteSetLabelAndText(itm);
+  svQuickInfoSetLabelAndText(itm);
 
   // *** DO *NOT* CHECK vnc FOR NULL HERE!!! ***
   // *** IT'S OKAY IF vnc IS NULL AT THIS POINT!!! ***
@@ -1468,8 +1594,8 @@ void svHandleHostListEvents (Fl_Widget *, void *)
 
       // start new connection
       if (itm->isConnected == false
-        && itm->isConnecting == false
-        && itm->isListener == false)
+          && itm->isConnecting == false
+          && itm->isListener == false)
       {
         VncObject::hideMainViewer();
         VncObject::createVNCObject(itm);
@@ -1528,16 +1654,6 @@ void svHandleHostListEvents (Fl_Widget *, void *)
         && itm->isListener == false
         && menuUp == false)
     {
-      // include any error message in menu
-      int nFlags = FL_MENU_INVISIBLE;
-      char strError[FL_PATH_MAX] = {0};
-
-      strncat(strError, itm->lastErrorMessage.c_str(), FL_PATH_MAX - 1);
-
-      // enable / disable error message in menu
-      if (itm->lastErrorMessage != "")
-        nFlags = FL_MENU_INACTIVE | FL_MENU_DIVIDER;
-
       // enable / disable 'Copy F12 macro' item in menu
       if (itm->f12Macro == "")
         nF12Flags = FL_MENU_INACTIVE;
@@ -1547,11 +1663,10 @@ void svHandleHostListEvents (Fl_Widget *, void *)
       // create context menu
       // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
       const Fl_Menu_Item miMain[] = {
-        {strError,         0, 0, 0, nFlags,    0, SV_FLTK_FONT_0, app->nMenuFontSize},
-        {"Connect",        0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
-        {"Edit",           0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
-        {"Copy F12 macro", 0, 0, 0, nF12Flags, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
-        {"Delete...",      0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
+        {"Connect",        0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
+        {"Edit",           0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
+        {"Copy F12 macro", 0, 0, 0, nF12Flags, 0, FL_HELVETICA, app->nMenuFontSize},
+        {"Delete...",      0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
         {0}
       };
 
@@ -1604,7 +1719,7 @@ void svHandleHostListEvents (Fl_Widget *, void *)
         // create context menu
         // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
         const Fl_Menu_Item miM[] = {
-          {"Delete", 0, 0, 0, 0, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
+          {"Delete", 0, 0, 0, 0, 0, FL_HELVETICA, app->nMenuFontSize},
           {0}
         };
 
@@ -1636,9 +1751,9 @@ void svHandleHostListEvents (Fl_Widget *, void *)
         // create context menu
         // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
         const Fl_Menu_Item miMain[] = {
-          {"Disconnect",      0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
-          {"Edit",            0, 0, 0, 0,         0, SV_FLTK_FONT_0, app->nMenuFontSize},
-          {"Paste F12 macro", 0, 0, 0, nF12Flags, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
+          {"Disconnect",      0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
+          {"Edit",            0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
+          {"Paste F12 macro", 0, 0, 0, nF12Flags, 0, FL_HELVETICA, app->nMenuFontSize},
           {0}
         };
 
@@ -1979,10 +2094,14 @@ void svHandleLocalClipboard (int source, void *)
 */
 void svHandleMainWindowEvents (Fl_Widget * window, void *)
 {
-  int event = window->when();
+  int event = Fl::event(); //window->when();
+
+  // don't close window with Esc key
+  if (event == FL_SHORTCUT && Fl::event_key() == FL_Escape)
+    return;
 
   // window closing
-  if (event == FL_LEAVE)
+  if (event == FL_CLOSE)  //FL_LEAVE)
   {
     app->shuttingDown = true;
 
@@ -1998,42 +2117,25 @@ void svHandleMainWindowEvents (Fl_Widget * window, void *)
 
     svConfigWrite();
 
+    // finish up any queued events
     Fl::check();
 
+    // we gone
     exit(0);
   }
 }
 
 
-/* handle quicknote's box events (mostly clicks) */
-void svHandleQuickNoteWindowEvents (Fl_Widget *, void *)
+/* hide quick note edit widgets and empty input value */
+void svHideQuickNoteEditWidgets ()
 {
-  int event = app->quickNoteWindow->when();
+  // stop the text input cursor blink timer
+  Fl::remove_timeout(svBlinkCursor);
 
-  // window is closing
-  if (event == FL_LEAVE)
-  {
-    int nHostItemNum = app->hostList->value();
-    HostItem * itm = static_cast<HostItem *>(app->hostList->data(nHostItemNum));
-
-    if (itm == NULL)
-    {
-      // set itm's quicknote to nothing
-      svQuickNoteSetToEmpty();
-    }
-    else
-    {
-      // clear quick note input value
-      app->quickNoteInput->value("");
-
-      // set quick note label and note text
-      svQuickNoteSetLabelAndText(itm);
-
-      app->quickNoteWindow->hide();
-    }
-  }
+  // clear quick note input value and hide quick info pack
+  app->quickNoteInput->value("");
+  app->quickNotePack->hide();
 }
-
 
 /* popup edit menu in input widgets and handle choice */
 void svPopUpEditMenu (Fl_Input_ * input)
@@ -2049,10 +2151,10 @@ void svPopUpEditMenu (Fl_Input_ * input)
   // create context menu
   // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
   const Fl_Menu_Item miMain[] = {
-    {"Undo",  0, 0, 0, FL_MENU_DIVIDER, 0, SV_FLTK_FONT_0, app->nMenuFontSize},
-    {"Cut",   0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
-    {"Copy",  0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
-    {"Paste", 0, 0, 0, 0,               0, SV_FLTK_FONT_0, app->nMenuFontSize},
+    {"Undo",  0, 0, 0, FL_MENU_DIVIDER, 0, FL_HELVETICA, app->nMenuFontSize},
+    {"Cut",   0, 0, 0, 0,               0, FL_HELVETICA, app->nMenuFontSize},
+    {"Copy",  0, 0, 0, 0,               0, FL_HELVETICA, app->nMenuFontSize},
+    {"Paste", 0, 0, 0, 0,               0, FL_HELVETICA, app->nMenuFontSize},
     {0}
   };
 
@@ -2088,10 +2190,32 @@ void svPopUpEditMenu (Fl_Input_ * input)
 
 
 /* set quick note text to current item */
-void svQuickNoteSetLabelAndText (HostItem * itm)
+void svQuickInfoSetLabelAndText (HostItem * itm)
 {
-  // set itm's quicknote text, if any
-  app->quickNoteLabel->copy_label(itm->name.c_str());
+  // create our quick note widgets if they aren't created yet
+  if (app->quickNotePack == NULL)
+    svCreateQuickNoteEditWidgets();
+
+  // clear quick note input value
+  svHideQuickNoteEditWidgets();
+
+  // set itm's quick info label text, if any
+  app->quickInfoLabel->copy_label(itm->name.c_str());
+
+  // set last connected text, if any
+  if (itm->lastConnectedTime != "")
+  {
+    app->lastConnectedLabel->copy_label("Last connected");
+    app->lastConnected->copy_label(itm->lastConnectedTime.c_str());
+  }
+  else
+  {
+    app->lastConnectedLabel->copy_label("");
+    app->lastConnected->copy_label("");
+  }
+
+  // set last error text, if any
+  app->lastError->value(itm->lastErrorMessage.c_str());
 
   // set appropriate text style and quick note text
   if (itm->quickNote == "")
@@ -2108,10 +2232,20 @@ void svQuickNoteSetLabelAndText (HostItem * itm)
 
 
 /* set quick note to empty / no item */
-void svQuickNoteSetToEmpty ()
+void svQuickInfoSetToEmpty ()
 {
-  // set itm's quicknote text, if any
-  app->quickNoteLabel->label("");
+  // create our quick note widgets if they aren't created yet
+  if (app->quickNotePack == NULL)
+    svCreateQuickNoteEditWidgets();
+
+  // clear quick note input value
+  svHideQuickNoteEditWidgets();
+
+  // blank itm's quick info text
+  app->quickInfoLabel->copy_label("-");
+  app->lastConnectedLabel->copy_label("");
+  app->lastConnected->copy_label("");
+  app->lastError->value("");
   app->quickNote->textfont(FL_HELVETICA_ITALIC);
   app->quickNote->value("(no Quick Note)");
 }
@@ -2125,31 +2259,15 @@ void svPositionWidgets ()
 {
   svDebugLog("svPositionWidgets - Resizing GUI elements");
 
-  // resize the host list vertically if the main window resizes
-  app->hostList->size(app->hostList->w(),
-    app->mainWin->h() - //155); //26);
-    app->quickNoteGroup->h() -
-    //app->quickNoteLabel->h() - app->quickNote->h() -
-    app->packButtons->h());
-
-  // position QuickNote stuff
-  app->quickNoteGroup->size(app->hostList->w(), app->quickNoteGroup->h() - 3);
-  app->quickNoteGroup->position(0, app->hostList->y() + app->hostList->h() + 3);
-
-  app->quickNoteLabel->size(app->hostList->w(), app->quickNoteLabel->h() - 3);
-  //app->quickNoteLabel->position(0, app->hostList->y() + app->hostList->h() + 3);
-
-  app->quickNote->size(app->hostList->w(), app->quickNote->h() - 3);
-  //app->quickNote->position(0, app->quickNoteLabel->y() + app->quickNoteLabel->h() + 3);
-
-  // set list buttons position
-  // app->packButtons->position(3, app->hostList->x() + app->hostList->h() + 3);
-  app->packButtons->position(0, app->quickNote->y() + app->quickNote->h()
-    + 3);
-
   // don't allow host list width to be smaller than right-most button's x+w
-  if (app->hostList->w() < (app->packButtons->x() + app->packButtons->w()))
-    app->hostList->size((app->packButtons->x() + app->packButtons->w()), app->hostList->h());
+  if (app->requestedListWidth < (app->packButtons->x() + app->packButtons->w()) - 25)
+    app->requestedListWidth = app->packButtons->x() + app->packButtons->w();
+
+  // readjust hostlist width
+  app->hostList->size(app->requestedListWidth, app->hostList->h());
+
+  // readjust quickInfoPack width
+  app->quickInfoPack->size(app->requestedListWidth, app->packButtons->y() - 3);
 
   // set scroller x
   app->scroller->position(app->hostList->x() + app->hostList->w() + 3, app->scroller->y());
@@ -2224,6 +2342,21 @@ void svHandleThreadConnection (void * data)
     itm->icon = app->iconConnected;
     svHandleListItemIconChange(NULL);
 
+    // build time string for 'last connected'
+    time_t rawtime;
+    struct tm * timeinfo = NULL;
+    char strTimeTemp[80] = {0};
+
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+    strftime(strTimeTemp, 80, "%H:%M:%S--%Y-%m-%d", timeinfo);
+
+    // store connection time
+    itm->lastConnectedTime = strTimeTemp;
+
+    // update 'last' and quick note
+    svQuickInfoSetLabelAndText(itm);
+
     svLogToFile("Connected to '" + itm->name + "' - " + itm->hostAddress);
 
     // show viewer if it matches the selected host list item
@@ -2271,7 +2404,10 @@ void svHandleThreadConnection (void * data)
 
     // set host list item status icon
     if (itm->lastErrorMessage != "")
+    {
       itm->icon = app->iconDisconnectedBigError;
+      app->lastError->value(itm->lastErrorMessage.c_str());
+    }
     else
       itm->icon = app->iconNoConnect;
 
@@ -2561,8 +2697,8 @@ void svResizeScroller ()
 */
 void svRestoreWindowSizePosition (void *)
 {
-    app->mainWin->resize(app->savedX, app->savedY, app->savedW, app->savedH);
-    app->mainWin->redraw();
+  app->mainWin->resize(app->savedX, app->savedY, app->savedW, app->savedH);
+  app->mainWin->redraw();
 }
 
 
@@ -2573,6 +2709,9 @@ void svRestoreWindowSizePosition (void *)
 */
 void svScanTimer (void *)
 {
+  // remove any previously added timer
+  Fl::remove_timeout(svScanTimer);
+
   if (app->scanIsRunning == false || svThereAreConnectedItems() == false)
   {
     app->scanIsRunning = false;
@@ -2617,7 +2756,7 @@ void svScanTimer (void *)
       itm->vnc->setObjectVisible();
 
       // set quick note label and note text
-      svQuickNoteSetLabelAndText(itm);
+      svQuickInfoSetLabelAndText(itm);
 
       // 'tickle' host screen so it doesn't go to screensaver by
       // moving remote mouse back and forth a certain amount
@@ -2656,55 +2795,29 @@ void svSendKeyStrokesToHost (std::string& strIn, VncObject * vnc)
 }
 
 
-/* sets or unsets tooltips */
-void svSetUnsetMainWindowTooltips ()
+/* sets and enables / disables tooltips */
+void svSetAppTooltips ()
 {
-  if (app->showTooltips == true)
-    app->btnListAdd->tooltip("Add a new connection");
-  else
-    app->btnListAdd->tooltip(NULL);
+  // set app tooltips
+  // (item and app options tooltips are set in their svShow.. methods)
+  app->btnListAdd->tooltip("Add a new connection");
+  app->btnListDelete->tooltip("Delete current connection");
+  app->btnListUp->tooltip("Move current connection item up in list");
+  app->btnListDown->tooltip("Move current connection item down in list");
+  app->btnListScan->tooltip("Scan through connected items in list");
+  app->btnListListen->tooltip("Listen for incoming VNC connections");
+  app->btnListHelp->tooltip("View About and Help information");
+  app->btnListOptions->tooltip("View / edit app options");
+  app->hostList->tooltip("Double-click a disconnected item to connect to it\n\n"
+    "Right-click a connected item to disconnect from it\n\n"
+    "Right-click a disconnected item to connect, edit or delete it");
+  app->quickInfoLabel->tooltip("The current item's name");
+  app->lastConnected->tooltip("The last time this connection was successfully made");
+  app->lastError->tooltip("The last error when trying to connect to the current item");
+  app->quickNote->tooltip("Click here to enter a brief note about the current item");
 
-  if (app->showTooltips == true)
-    app->btnListDelete->tooltip("Delete current connection");
-  else
-    app->btnListDelete->tooltip(NULL);
-
-  if (app->showTooltips == true)
-    app->btnListUp->tooltip("Move current connection item up in list");
-  else
-    app->btnListUp->tooltip(NULL);
-
-  if (app->showTooltips == true)
-    app->btnListDown->tooltip("Move current connection item down in list");
-  else
-    app->btnListDown->tooltip(NULL);
-
-  if (app->showTooltips == true)
-    app->btnListScan->tooltip("Scan through connected items in list");
-  else
-    app->btnListScan->tooltip(NULL);
-
-  if (app->showTooltips == true)
-    app->btnListListen->tooltip("Listen for incoming VNC connections");
-  else
-    app->btnListListen->tooltip(NULL);
-
-  if (app->showTooltips == true)
-    app->btnListHelp->tooltip("View About and Help information");
-  else
-    app->btnListHelp->tooltip(NULL);
-
-  if (app->showTooltips == true)
-    app->btnListOptions->tooltip("View / edit app options");
-  else
-    app->btnListOptions->tooltip(NULL);
-
-  if (app->showTooltips == true)
-    app->hostList->tooltip("Double-click a disconnected item to connect to it\n\n"
-      "Right-click a connected item to disconnect from it\n\n"
-      "Right-click a disconnected item to connect, edit or delete it");
-  else
-    app->hostList->tooltip(NULL);
+  // check and set tooltip visibility
+  svEnableDisableTooltips();
 }
 
 
@@ -2727,9 +2840,8 @@ void svShowAboutHelp ()
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create messagebox window
-  Fl_Window * winAboutHelp = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "About / Help"); //NULL);
+  Fl_Window * winAboutHelp = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "About / Help");
   winAboutHelp->set_non_modal();
-  //winAboutHelp->box(FL_GTK_UP_BOX);
 
   Fl_Help_View * hv = new Fl_Help_View(10, 10, nWinWidth - 20, nWinHeight - 70);
 
@@ -2780,11 +2892,8 @@ void svShowAboutHelp ()
   btnOK->shortcut(FL_Escape);
   btnOK->callback(svCloseChildWindow, winAboutHelp);
 
-  // end adding stuff to the options window
+  // end help window layout
   winAboutHelp->end();
-
-  // make this window an embedded window in the parent
-  //app->mainWin->add(winAboutHelp);
 
   // show window
   winAboutHelp->show();
@@ -2804,7 +2913,7 @@ void svShowAppOptions ()
 
   // window size
   int nWinWidth = 650;
-  int nWinHeight = 500;
+  int nWinHeight = 550;  //500
 
   // set window position
   int nX = (app->mainWin->w() / 2) - (nWinWidth / 2);
@@ -2823,7 +2932,7 @@ void svShowAppOptions ()
   // widgetName->user_data() is used to assign the widget's name to itself
   // so it can be easily handled in the callback
 
-  // * general options *
+  // ############ general options ##########################################################
 
   // scan viewer time-out
   Fl_Spinner * spinScanTimeout = new Fl_Spinner(nXPos, nYPos += nYStep,
@@ -2835,8 +2944,7 @@ void svShowAppOptions ()
   spinScanTimeout->maximum(200000);
   spinScanTimeout->user_data(SV_OPTS_SCN_TIMEOUT);
   spinScanTimeout->value(app->nScanTimeout);
-  if (app->showTooltips == true)
-    spinScanTimeout->tooltip("When scanning, this is how long SpiritVNC waits before moving"
+  spinScanTimeout->tooltip("When scanning, this is how long SpiritVNC waits before moving"
       " to the next connected host item");
 
   // starting local ssh port number
@@ -2849,8 +2957,7 @@ void svShowAppOptions ()
   spinLocalSSHPort->maximum(200000);
   spinLocalSSHPort->user_data(SV_OPTS_LOCAL_SSH_PORT);
   spinLocalSSHPort->value(app->nStartingLocalPort);
-  if (app->showTooltips == true)
-    spinLocalSSHPort->tooltip("This is the first SSH port used locally for VNC-over-SSH"
+  spinLocalSSHPort->tooltip("This is the first SSH port used locally for VNC-over-SSH"
       " connections");
 
   // inactive connection timeout
@@ -2863,8 +2970,7 @@ void svShowAppOptions ()
   spinDeadTimeout->maximum(200000);
   spinDeadTimeout->user_data(SV_OPTS_DEAD_TIMEOUT);
   spinDeadTimeout->value(app->nDeadTimeout);
-  if (app->showTooltips == true)
-    spinDeadTimeout->tooltip("This is the time, in seconds, SpiritVNC waits before"
+  spinDeadTimeout->tooltip("This is the time, in seconds, SpiritVNC waits before"
       " disconnecting a remote host due to inactivity");
 
   // ssh command
@@ -2874,10 +2980,12 @@ void svShowAppOptions ()
   inSSHCommand->labelsize(app->nAppFontSize);
   inSSHCommand->user_data(SV_OPTS_SSH_COMMAND);
   inSSHCommand->value(app->sshCommand.c_str());
-  if (app->showTooltips == true)
-    inSSHCommand->tooltip("This is the command to start the SSH client on"
+  inSSHCommand->tooltip("This is the command to start the SSH client on"
       " your system");
 
+  // ############ appearance options section ##########################################################
+
+  // appearance options label
   Fl_Box * lblSep01 = new Fl_Box(nXPos, nYPos += nYStep + 14, 100, 28, "Appearance Options");
   lblSep01->labelsize(app->nAppFontSize);
   lblSep01->align(FL_ALIGN_CENTER);
@@ -2891,8 +2999,7 @@ void svShowAppOptions ()
   char strTmp01[32] = {};
   snprintf(strTmp01, 32, "%i", app->nAppFontSize);
   inAppFontSize->value(strTmp01);
-  if (app->showTooltips == true)
-    inAppFontSize->tooltip("This is the font size used throughout SpiritVNC.  Restart the app to"
+  inAppFontSize->tooltip("This is the font size used throughout SpiritVNC.  Restart the app to"
       " see any changes");
 
   // list font
@@ -2902,8 +3009,7 @@ void svShowAppOptions ()
   inListFont->labelsize(app->nAppFontSize);
   inListFont->user_data(SV_OPTS_LIST_FONT_NAME);
   inListFont->value(app->strListFont.c_str());
-  if (app->showTooltips == true)
-    inListFont->tooltip("This is the font used for the host list.  Restart the app to"
+  inListFont->tooltip("This is the font used for the host list.  Restart the app to"
       " see any changes");
 
   // list font size
@@ -2914,8 +3020,18 @@ void svShowAppOptions ()
   char strTmp02[32] = {};
   snprintf(strTmp02, 32, "%i", app->nListFontSize);
   inListFontSize->value(strTmp02);
-  if (app->showTooltips == true)
-    inListFontSize->tooltip("This is the font size used for the host list.  Restart the app to"
+  inListFontSize->tooltip("This is the font size used for the host list.  Restart the app to"
+      " see any changes");
+
+  // list width
+  SVInput * inListWidth = new SVInput(nXPos, nYPos += nYStep, 210, 28, "List width ");
+  inListWidth->textsize(app->nAppFontSize);
+  inListWidth->labelsize(app->nAppFontSize);
+  inListWidth->user_data(SV_OPTS_LIST_WIDTH);
+  char strTmp03[32] = {};
+  snprintf(strTmp03, 32, "%i", app->requestedListWidth);
+  inListWidth->value(strTmp03);
+  inListWidth->tooltip("Width of the host list.  Restart the app to"
       " see any changes");
 
   // use color-blind icons?
@@ -2923,36 +3039,36 @@ void svShowAppOptions ()
     " Use icons for color-blind users");
   chkCBIcons->labelsize(app->nAppFontSize);
   chkCBIcons->user_data(SV_OPTS_USE_CB_ICONS);
+  chkCBIcons->tooltip("Check this to enable color-blind-friendly icons in the host list."
+      " Restart the app to see any changes");
   if (app->colorBlindIcons == true)
     chkCBIcons->set();
-  if (app->showTooltips == true)
-    chkCBIcons->tooltip("Check this to enable color-blind-friendly icons in the host list."
-      " Restart the app to see any changes");
 
   // show tooltips?
   Fl_Check_Button * chkShowTooltips = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
     " Show tooltips");
   chkShowTooltips->labelsize(app->nAppFontSize);
   chkShowTooltips->user_data(SV_OPTS_SHOW_TOOLTIPS);
+  chkShowTooltips->tooltip("Check this to enable tooltips in SpiritVNC.");
   if (app->showTooltips == true)
-  {
     chkShowTooltips->set();
-    chkShowTooltips->tooltip("Check this to enable tooltips in SpiritVNC.");
-  }
 
   // show reverse connection notification?
   Fl_Check_Button * chkShowReverseConnect = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
     " Show reverse connection notification");
   chkShowReverseConnect->labelsize(app->nAppFontSize);
   chkShowReverseConnect->user_data(SV_OPTS_SHOW_REV_CON);
+  chkShowReverseConnect->tooltip("Check this to show a message window when a reverse"
+      " connection happens.");
   if (app->showReverseConnect == true)
     chkShowReverseConnect->set();
-  if (app->showTooltips == true)
-    chkShowReverseConnect->tooltip("Check this to show a message window when a reverse"
-      " connection happens.");
 
+  // ############ gap and restart advice ##########################################################
+
+  // a little extra vertical gap
   nYPos += nYStep;
 
+  // #### advice to restart SpiritVNC if certain options changed ####
   Fl_Box * boxFontLabel = new Fl_Box(nXPos, nYPos += nYStep, 210, 28,
     "Restart SpiritVNC for font or icon changes");
   boxFontLabel->labelsize(app->nAppFontSize);
@@ -2969,8 +3085,7 @@ void svShowAppOptions ()
   btnCancel->shortcut(FL_Escape);
   btnCancel->user_data(SV_OPTS_CANCEL);
   btnCancel->callback(svHandleAppOptionsButtons);
-  if (app->showTooltips == true)
-    btnCancel->tooltip("Click to abandon any edits and close this window");
+  btnCancel->tooltip("Click to abandon any edits and close this window");
 
   // 'Save' button
   Fl_Button * btnSave = new Fl_Button((nWinWidth - 100 - 10), nWinHeight - (35 + 10), 100, 35,
@@ -2980,14 +3095,10 @@ void svShowAppOptions ()
   btnSave->shortcut(FL_Enter);
   btnSave->user_data(SV_OPTS_SAVE);
   btnSave->callback(svHandleAppOptionsButtons);
-  if (app->showTooltips == true)
-    btnSave->tooltip("Click to save edits and close this window");
+  btnSave->tooltip("Click to save edits and close this window");
 
-  // end adding stuff to the options window
+  // end app options window layout
   winAppOpts->end();
-
-  // make this window an embedded window in the parent
-  //app->mainWin->add(winAppOpts);
 
   // show window
   winAppOpts->show();
@@ -3024,17 +3135,10 @@ void svShowF8Window ()
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create window
-  Fl_Window * winF8 = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Remote host actions"); // NULL);
+  Fl_Window * winF8 = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Remote host actions");
   winF8->set_non_modal();
-  //winF8->box(FL_GTK_UP_BOX);
-  app->childWindowBeingDisplayed = winF8;
 
-  //// add main top label
-  //Fl_Box * bxTopLabel = new Fl_Box(0, 0, nWinWidth, 28, "Remote host actions");
-  //bxTopLabel->align(FL_ALIGN_CENTER);
-  //bxTopLabel->labelfont(1);
-  //bxTopLabel->box(FL_GTK_UP_BOX);
-  //bxTopLabel->color(17);
+  app->childWindowBeingDisplayed = winF8;
 
   // add itm value editors / selectors
   int nXPos = 15;
@@ -3050,36 +3154,31 @@ void svShowF8Window ()
   btnCAD->box(FL_GTK_UP_BOX);
   btnCAD->user_data(SV_F8_BTN_CAD);
   btnCAD->callback(svHandleF8Buttons);
-  if (app->showTooltips == true)
-    btnCAD->tooltip("Click to send Ctrl+Alt+Delete to the current remote host");
+  btnCAD->tooltip("Click to send Ctrl+Alt+Delete to the current remote host");
 
   Fl_Button * btnCSE = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send Ctrl+Shift+Esc");
   btnCSE->box(FL_GTK_UP_BOX);
   btnCSE->user_data(SV_F8_BTN_CSE);
   btnCSE->callback(svHandleF8Buttons);
-  if (app->showTooltips == true)
-    btnCSE->tooltip("Click to send Ctrl+Alt+Delete to the current remote host");
+  btnCSE->tooltip("Click to send Ctrl+Alt+Esc to the current remote host");
 
   Fl_Button * btnRefresh = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send refresh request");
   btnRefresh->box(FL_GTK_UP_BOX);
   btnRefresh->user_data(SV_F8_BTN_REFRESH);
   btnRefresh->callback(svHandleF8Buttons);
-  if (app->showTooltips == true)
-    btnRefresh->tooltip("Click to send a screen refresh request to the current remote host");
+  btnRefresh->tooltip("Click to send a screen refresh request to the current remote host");
 
   Fl_Button * btnSendF8 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F8");
   btnSendF8->box(FL_GTK_UP_BOX);
   btnSendF8->user_data(SV_F8_BTN_SEND_F8);
   btnSendF8->callback(svHandleF8Buttons);
-  if (app->showTooltips == true)
-    btnSendF8->tooltip("Click to press the F8 key on the current remote host");
+  btnSendF8->tooltip("Click to press the F8 key on the current remote host");
 
   Fl_Button * btnSendF12 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F12");
   btnSendF12->box(FL_GTK_UP_BOX);
   btnSendF12->user_data(SV_F8_BTN_SEND_F12);
   btnSendF12->callback(svHandleF8Buttons);
-  if (app->showTooltips == true)
-    btnSendF12->tooltip("Click to press the F12 key on the current remote host");
+  btnSendF12->tooltip("Click to press the F12 key on the current remote host");
 
   // ############ bottom button ##########################################################
 
@@ -3089,14 +3188,10 @@ void svShowF8Window ()
   btnCancel->shortcut(FL_Escape);
   btnCancel->user_data(SV_F8_BTN_CLOSE);
   btnCancel->callback(svHandleF8Buttons);
-  if (app->showTooltips == true)
-    btnCancel->tooltip("Click to close this window");
+  btnCancel->tooltip("Click to close this window");
 
-  // end adding stuff to the F8 window
+  // end F8 window layout
   winF8->end();
-
-  // make this window an embedded window in the parent
-  //app->mainWin->add(winF8);
 
   // show window
   winF8->show();
@@ -3144,7 +3239,7 @@ void svShowItemOptions (HostItem * im)
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create window
-  Fl_Window * itmOptWin = new Fl_Window(nX, nY, nWinWidth, nWinHeight, itm->name.c_str()); //NULL);
+  Fl_Window * itmOptWin = new Fl_Window(nX, nY, nWinWidth, nWinHeight, itm->name.c_str());
   itmOptWin->set_non_modal();
 
   // add itm value editors / selectors
@@ -3155,36 +3250,32 @@ void svShowItemOptions (HostItem * im)
   // widgetName->user_data() is used to assign the widget's name to itself
   // so it can be easily handled in the callbacks
 
-  // * general options *
+  // ############ general options ##########################################################
 
   // connection name
   SVInput * inName = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Connection name ");
   inName->value(itm->name.c_str());
   inName->user_data(SV_ITM_NAME);
-  if (app->showTooltips == true)
-    inName->tooltip("The connection name as displayed in the host connection list");
+  inName->tooltip("The connection name as displayed in the host connection list");
 
   // connection group
   SVInput * inGroup = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Connection group ");
   inGroup->value(itm->group.c_str());
   inGroup->user_data(SV_ITM_GRP);
-  if (app->showTooltips == true)
-    inGroup->tooltip("The group name this connection belongs to");
+  inGroup->tooltip("The group name this connection belongs to");
 
   // remote address
   SVInput * inAddress = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Remote address ");
   inAddress->value(itm->hostAddress.c_str());
   inAddress->user_data(SV_ITM_ADDRESS);
-  if (app->showTooltips == true)
-    inAddress->tooltip("The IP address of the remote host you want to connect to."
+  inAddress->tooltip("The IP address of the remote host you want to connect to."
       "  Do NOT include the VNC port number here");
 
   // f12 macro text
   SVInput * inF12Macro = new SVInput(nXPos, nYPos += nYStep, 210, 28, "F12 macro ");
   inF12Macro->value(itm->f12Macro.c_str());
   inF12Macro->user_data(SV_ITM_F12_MACRO);
-  if (app->showTooltips == true)
-    inF12Macro->tooltip("Key presses that are sent to the remote host when"
+  inF12Macro->tooltip("Key presses that are sent to the remote host when"
       " you press the F12 key");
 
   // * vnc type buttons *
@@ -3193,16 +3284,14 @@ void svShowItemOptions (HostItem * im)
   Fl_Radio_Round_Button * rbVNC = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28, "VNC ");
   rbVNC->user_data(SV_ITM_CON_VNC);
   rbVNC->callback(svItmOptionsRadioButtonsCallback);
-  if (app->showTooltips == true)
-    rbVNC->tooltip("Choose this for VNC connections that don't tunnel through SSH");
+  rbVNC->tooltip("Choose this for VNC connections that don't tunnel through SSH");
 
   // vnc with ssh
   Fl_Radio_Round_Button * rbSVNC = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28,
     "VNC through SSH ");
   rbSVNC->user_data(SV_ITM_CON_SVNC);
   rbSVNC->callback(svItmOptionsRadioButtonsCallback);
-  if (app->showTooltips == true)
-    rbSVNC->tooltip("Choose this for VNC connections that use SSH to tunnel to the host");
+  rbSVNC->tooltip("Choose this for VNC connections that use SSH to tunnel to the host");
 
   // set pre-existing value
   if (itm->hostType == 'v')
@@ -3214,32 +3303,28 @@ void svShowItemOptions (HostItem * im)
   SVInput * inVNCPort = new SVInput(nXPos, nYPos += nYStep, 100, 28, "VNC port ");
   inVNCPort->value(itm->vncPort.c_str());
   inVNCPort->user_data(SV_ITM_VNC_PORT);
-  if (app->showTooltips == true)
-    inVNCPort->tooltip("The VNC port/display number of the host.  Defaults to 5900");
+  inVNCPort->tooltip("The VNC port/display number of the host.  Defaults to 5900");
 
   // vnc password (shows dots, not cleartext password, for 'password' authentication)
   SVSecretInput * inVNCPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
     "VNC password ");
   inVNCPassword->value(itm->vncPassword.c_str());
   inVNCPassword->user_data(SV_ITM_VNC_PASS);
-  if (app->showTooltips == true)
-    inVNCPassword->tooltip("The VNC password for the host");
+  inVNCPassword->tooltip("The VNC password for the host");
 
   // vnc login name (for 'credential' authentication)
   SVInput * inVNCLoginUser = new SVInput(nXPos, nYPos += nYStep, 210, 28,
     "VNC login user name ");
   inVNCLoginUser->value(itm->vncLoginUser.c_str());
   inVNCLoginUser->user_data(SV_ITM_VNC_LOGIN_USER);
-  if (app->showTooltips == true)
-    inVNCLoginUser->tooltip("The VNC login name for the host");
+  inVNCLoginUser->tooltip("The VNC login name for the host");
 
   // vnc login password (shows dots, not cleartext password, for 'credential' authentication)
   SVSecretInput * inVNCLoginPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
     "VNC login password ");
   inVNCLoginPassword->value(itm->vncLoginPassword.c_str());
   inVNCLoginPassword->user_data(SV_ITM_VNC_LOGIN_PASS);
-  if (app->showTooltips == true)
-    inVNCLoginPassword->tooltip("The VNC login password for the host");
+  inVNCLoginPassword->tooltip("The VNC login password for the host");
 
   // vnc compression level
   SVInput * inVNCCompressLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28,
@@ -3248,8 +3333,7 @@ void svShowItemOptions (HostItem * im)
   sprintf(strCompress, "%i", itm->compressLevel);
   inVNCCompressLevel->value(strCompress);
   inVNCCompressLevel->user_data(SV_ITM_VNC_COMP);
-  if (app->showTooltips == true)
-    inVNCCompressLevel->tooltip("The level of compression, from 0 to 9");
+  inVNCCompressLevel->tooltip("The level of compression, from 0 to 9");
 
   // vnc quality level
   SVInput * inVNCQualityLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28, "Quality level (0-9) ");
@@ -3257,18 +3341,18 @@ void svShowItemOptions (HostItem * im)
   sprintf(strQuality, "%i", itm->qualityLevel);
   inVNCQualityLevel->value(strQuality);
   inVNCQualityLevel->user_data(SV_ITM_VNC_QUAL);
-  if (app->showTooltips == true)
-    inVNCQualityLevel->tooltip("The level of image quality, from 0 to 9");
+  inVNCQualityLevel->tooltip("The level of image quality, from 0 to 9");
 
   // inactive connection auto-disconnect
   Fl_Check_Button * chkIgnoreInactive = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
     " Auto-disconnect when inactive");
   chkIgnoreInactive->user_data(SV_ITM_IGN_DEAD);
-  if (app->showTooltips == true)
-    chkIgnoreInactive->tooltip("Check to auto-disconnect due to remote"
+  chkIgnoreInactive->tooltip("Check to auto-disconnect due to remote"
         " server inactivity");
   if (itm->ignoreInactive == false)
     chkIgnoreInactive->set();
+
+  // ##### scaling start #####
 
   // * scaling options group *
   Fl_Group * grpScaling = new Fl_Group(nXPos, nYPos += nYStep, 300, 300);
@@ -3279,8 +3363,7 @@ void svShowItemOptions (HostItem * im)
     " Scale off (scroll)");
   rbScaleOff->user_data(SV_ITM_SCALE_OFF);
   rbScaleOff->callback(svItmOptionsRadioButtonsCallback);
-  if (app->showTooltips == true)
-    rbScaleOff->tooltip("Choose this if you don't want any scaling."
+  rbScaleOff->tooltip("Choose this if you don't want any scaling."
       "  Scrollbars will appear for hosts with screens larger than the viewer");
 
   // scale up and down
@@ -3288,8 +3371,7 @@ void svShowItemOptions (HostItem * im)
     " Scale up and down");
   rbScaleZoom->user_data(SV_ITM_SCALE_ZOOM);
   rbScaleZoom->callback(svItmOptionsRadioButtonsCallback);
-  if (app->showTooltips == true)
-    rbScaleZoom->tooltip("Choose this if you want small host screens scaled up to fit the"
+  rbScaleZoom->tooltip("Choose this if you want small host screens scaled up to fit the"
       " viewer, or large host screens scaled down to fit the viewer");
 
   // scale down only
@@ -3297,8 +3379,7 @@ void svShowItemOptions (HostItem * im)
     " Scale down only");
   rbScaleFit->user_data(SV_ITM_SCALE_FIT);
   rbScaleFit->callback(svItmOptionsRadioButtonsCallback);
-  if (app->showTooltips == true)
-    rbScaleFit->tooltip("Choose this to scale down large host screens to fit the viewer but"
+  rbScaleFit->tooltip("Choose this to scale down large host screens to fit the viewer but"
       " small host screens are not scaled up");
 
   // set pre-existing value
@@ -3315,29 +3396,29 @@ void svShowItemOptions (HostItem * im)
   chkScalingFast->user_data(SV_ITM_FAST_SCALE);
   if (itm->scalingFast == true)
     chkScalingFast->set();
-  if (app->showTooltips == true)
-    chkScalingFast->tooltip("Check to select fast scaling instead of quality scaling");
+  chkScalingFast->tooltip("Check to select fast scaling instead of quality scaling");
 
   // end of scaling group
   grpScaling->end();
+
+  // ##### scaling end #####
 
   // show the host's native cursor under our local static cursor
   Fl_Check_Button * chkShowRemoteCursor = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
     " Use remote cursor locally");
   chkShowRemoteCursor->user_data(SV_ITM_SHW_REM_CURSOR);
-  if (app->showTooltips == true)
-    chkShowRemoteCursor->tooltip("Check to show remote locally");
+  chkShowRemoteCursor->tooltip("Check to show remote locally");
 
   // set pre-existing value
   if (itm->showRemoteCursor == true)
     chkShowRemoteCursor->set();
 
-  // * vnc over ssh options *
+  // ############ vnc-over-ssh options ##########################################################
 
-  // separate these values a little from above controls
+  // a little extra vertical gap
   nYPos += 15;
 
-  // section label
+  // ssh section label
   Fl_Box * bxSSHSection = new Fl_Box(nXPos, nYPos += nYStep, 210, 28, "VNC through SSH options");
   bxSSHSection->labelfont(1);
   bxSSHSection->user_data(SV_ITM_GRP_SSH);
@@ -3346,50 +3427,47 @@ void svShowItemOptions (HostItem * im)
   SVInput * inSSHName = new SVInput(nXPos, nYPos += nYStep, 210, 28, "SSH user name ");
   inSSHName->value(itm->sshUser.c_str());
   inSSHName->user_data(SV_ITM_SSH_NAME);
-  if (app->showTooltips == true)
-    inSSHName->tooltip("The SSH user name for the host");
+  inSSHName->tooltip("The SSH user name for the host");
 
-  // password used for ssh login (if used)
+  // password used for ssh login (if used)   // #### DISABLED RIGHT NOW ####
   SVSecretInput * inSSHPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
     "SSH password (if any) ");
   inSSHPassword->value(itm->sshPass.c_str());
   inSSHPassword->user_data(SV_ITM_SSH_PASS);
-  if (app->showTooltips == true)
-    inSSHPassword->tooltip("The SSH password for the host (usually not necessary when using"
+  inSSHPassword->tooltip("The SSH password for the host (usually not necessary when using"
       " key files)");
+  inSSHPassword->deactivate();  //  <<<--- We can't really do SSH password right now ---<<<
 
   // ssh port (on the remote host)
   SVInput * inSSHPort = new SVInput(nXPos, nYPos += nYStep, 100, 28, "SSH remote port ");
   inSSHPort->value(itm->sshPort.c_str());
   inSSHPort->user_data(SV_ITM_SSH_PORT);
-  if (app->showTooltips == true)
-    inSSHPort->tooltip("The remote host's port number");
+  inSSHPort->tooltip("The remote host's port number");
 
   // ssh private key full path (if used)
   SVInput * inSSHPrvKey = new SVInput(nXPos, nYPos += nYStep, 300, 28, "SSH private key (if any) ");
   inSSHPrvKey->value(itm->sshKeyPrivate.c_str());
   inSSHPrvKey->user_data(SV_ITM_SSH_PRV_KEY);
-  if (app->showTooltips == true)
-    inSSHPrvKey->tooltip("The SSH private key file location (usually not"
+  inSSHPrvKey->tooltip("The SSH private key file location (usually not"
       " necessary when using a SSH password");
 
   // button to select ssh private key
   Fl_Button * btnShowPrvKeyChooser = new Fl_Button(nXPos + 300 + 2, nYPos + 4, 20, 20, "...");
   btnShowPrvKeyChooser->callback(svItmOptionsChoosePrvKeyBtnCallback, inSSHPrvKey);
-  if (app->showTooltips == true)
-    btnShowPrvKeyChooser->tooltip("Click to choose a SSH private key file");
+  btnShowPrvKeyChooser->tooltip("Click to choose a SSH private key file");
 
   // set app vars
   app->childWindowBeingDisplayed = itmOptWin;
   app->itmBeingEdited = itm;
+
+  // ############ bottom buttons ##########################################################
 
   // 'Delete' button
   Fl_Button * btnDel = new Fl_Button(10, nWinHeight - (35 + 10), 100, 35, "Delete");
   btnDel->box(FL_GTK_UP_BOX);
   btnDel->user_data(SV_ITM_BTN_DEL);
   btnDel->callback(svHandleItmOptionsButtons);
-  if (app->showTooltips == true)
-    btnDel->tooltip("Click to permanently delete this host connection"
+  btnDel->tooltip("Click to permanently delete this host connection"
       " (not undoable).  You will be asked to confirm before item is deleted");
 
   // 'Cancel' button
@@ -3399,8 +3477,7 @@ void svShowItemOptions (HostItem * im)
   btnCancel->shortcut(FL_Escape);
   btnCancel->user_data(SV_ITM_BTN_CANCEL);
   btnCancel->callback(svHandleItmOptionsButtons);
-  if (app->showTooltips == true)
-    btnCancel->tooltip("Click to abandon any edits to this connection"
+  btnCancel->tooltip("Click to abandon any edits to this connection"
       " and close this window");
 
   // 'Save' button
@@ -3410,13 +3487,12 @@ void svShowItemOptions (HostItem * im)
   btnSave->shortcut(FL_Enter);
   btnSave->user_data(SV_ITM_BTN_SAVE);
   btnSave->callback(svHandleItmOptionsButtons);
-  if (app->showTooltips == true)
-    btnSave->tooltip("Click to save edits made to this connection and close this window");
+  btnSave->tooltip("Click to save edits made to this connection and close this window");
 
-  // end adding stuff to the options window
+  // end item options window layout
   itmOptWin->end();
 
-  // disable irrelevant things for listening connections
+  // disable irrelevant widgets for listening connections
   if (itm->isListener)
   {
     inName->deactivate();
@@ -3428,7 +3504,7 @@ void svShowItemOptions (HostItem * im)
     inVNCPassword->deactivate();
     bxSSHSection->deactivate();
     inSSHName->deactivate();
-    inSSHPassword->deactivate();
+    //inSSHPassword->deactivate();  //  <<<--- We can't really do SSH password right now ---<<<
     inSSHPort->deactivate();
     inSSHPrvKey->deactivate();
     btnShowPrvKeyChooser->deactivate();
@@ -3445,15 +3521,12 @@ void svShowItemOptions (HostItem * im)
     inVNCPassword->activate();
     bxSSHSection->activate();
     inSSHName->activate();
-    inSSHPassword->activate();
+    //inSSHPassword->activate();  //  <<<--- We can't really do SSH password right now ---<<<
     inSSHPort->activate();
     inSSHPrvKey->activate();
     btnShowPrvKeyChooser->activate();
     btnDel->activate();
   }
-
-  // make this window an embedded window in the parent
-  //app->mainWin->add(itmOptWin);
 
   // focus the first input box and select all text within
   inName->take_focus();

@@ -86,13 +86,13 @@ public:
   rfbClient * vncClient;
   HostItem * itm;
   bool allowDrawing;
-  int waitTime;
+  uint16_t waitTime;
   int nLastClientWidth;
   int nLastClientHeight;
   Fl_RGB_Image * imgCursor;
   int nCursorXHot;
   int nCursorYHot;
-  int inactiveSeconds;
+  uint16_t inactiveSeconds;
   int nLastScrollX;
   int nLastScrollY;
   int centeredX;
