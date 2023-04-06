@@ -6,8 +6,8 @@ Because of changes the last year or two with libssh2, I was forced to develop th
 
 Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  On some OSs the child `ssh` processes won't even close properly.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
 
-#### Windows version?
-While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  Unfortunately I have not had the time to work on this lately due to higher-priority projects.  If anyone needs this, please file an issue.
+#### Does it work on Windows?
+While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code is upcoming, although the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and Windows-specific libvncclient bugs.  Check back often to see what's happening with this.
 
 2016-2023 Will Brokenbourgh
 https://www.pismotek.com/brainout/
@@ -31,14 +31,16 @@ You will need both the libraries and development packages of the following:
 
 The 'pkg-config' program must be installed for building, unless you want to specify locations for includes and libs manually in the Makefile.
 
-[Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  Also, I don't have access to an Apple Silicon Mac (M1, M2, etc) so patches from people who *do* have these machines would be helpful.
+**macOS - Intel** [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  Also, I don't have access to an Apple Silicon Mac (M1, M2, etc) so patches from people who *do* have these machines would be helpful.
+
+**Windows** [MSYS2](https://www.msys2.org/) is the recommended way to install dependencies on x86_64 versions of Windows 10 and 11.  No Windows ARM machines are available to me, so testing is non-existent.  libvncclient has some [Windows-specific bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows) that may not get fixed right away.
 
 
 - - -
 
 __Building__
 
-SpiritVNC - FLTK now requires a compiler that supports C++11.
+SpiritVNC - FLTK requires a compiler that supports C++11.
 
 'cd' into the directory that has the Makefile, then...
 
@@ -87,6 +89,7 @@ $ ./spiritvnc-fltk
 * **Application font size**: The font size used for most labels and text-entry boxes
 * **List font name**: The desired font name (not file name) used to display the server list entries
 * **List font size**: The size of the font used to display the server list entries.  This could be points or pixels, depending on your OS
+* **List width**: The desired width of the server list.  This could be pixels or device units, depending on your OS
 * **Use icons for color-blind users**: Will use uncolored uniquely-shaped connection status icons for those with color-blindness
 * **Show tooltips**: Shows tooltips on most widgets
 * **Show reverse connection notification**: When enabled, pops up a dialog box notifying you of an incoming reverse VNC connection
@@ -113,7 +116,7 @@ $ ./spiritvnc-fltk
 
 *VNC through SSH options*
 * **SSH user name**: The name used when authenticating to the remote SSH server
-* **SSH password**: The password, if any, used when authentication to the remote SSH server
+* ~~**SSH password**: The password, if any, used when authentication to the remote SSH server~~ Currently deprecated and disabled
 * **SSH remote port**: The port used by the remote SSH server (usually 22)
 * **SSH private key**: Private key identity file to use if your account on the remote SSH server requires it.  Use the [...] button to display a file chooser for the desired private key or simply type the full path to it
 
