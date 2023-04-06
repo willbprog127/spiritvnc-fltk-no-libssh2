@@ -7,7 +7,7 @@ Because of changes the last year or two with libssh2, I was forced to develop th
 Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  On some OSs the child `ssh` processes won't even close properly.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
 
 #### Does it work on Windows?
-While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code is upcoming, although the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and Windows-specific libvncclient bugs.  Check back often to see what's happening with this.
+While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code is upcoming, although the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  Check back often to see what's happening with this.
 
 2016-2023 Will Brokenbourgh
 https://www.pismotek.com/brainout/
