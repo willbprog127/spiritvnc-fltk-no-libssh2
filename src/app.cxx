@@ -2221,7 +2221,13 @@ void svQuickInfoSetLabelAndText (HostItem * itm)
   if (itm->quickNote == "")
   {
     app->quickNote->textfont(FL_HELVETICA_ITALIC);
-    app->quickNote->value("(no Quick Note)");
+
+    // listening connections don't save any data, so
+    // best to call the item 'Temporary Note'
+    if (itm->isListener == true)
+      app->quickNote->value("(no Temporary Note)");
+    else
+      app->quickNote->value("(no Quick Note)");
   }
   else
   {
@@ -2247,7 +2253,8 @@ void svQuickInfoSetToEmpty ()
   app->lastConnected->copy_label("");
   app->lastError->value("");
   app->quickNote->textfont(FL_HELVETICA_ITALIC);
-  app->quickNote->value("(no Quick Note)");
+  //app->quickNote->value("(no Quick Note)");
+  app->quickNote->value("-");
 }
 
 
