@@ -676,31 +676,32 @@ void VncObject::masterMessageLoop ()
 
   uint16_t nSize = app->hostList->size();
 
+  // run until it's time to shut down
   while (app->shuttingDown == false)
   {
     // only loop if there are objects alive
     if (app->createdObjects != 0)
     {
       // spend the most time processing the active vnc connection
-      for (uint8_t i = 0; i < 100; i++)
+      for (uint8_t i = 0; i < 250; i++)  //100; i++)
       {
         // keep from making too tight a loop
-        Fl::check();
+        //Fl::check();
+        Fl::wait(0.015);
 
         vnc = app->vncViewer->vnc;
 
         if (vnc != NULL && vnc->itm != NULL)
-            VncObject::checkVNCMessages(vnc);
+          VncObject::checkVNCMessages(vnc);
         else
-            break;
+          break;
       }
 
-      // after current connection looping 100 times,
+      // after current connection looping 250 times, (orig. 100 times)
       // iterate through the host list one time and
       // check each to see if the connection is alive
       nSize = app->hostList->size();
 
-      // for (uint16_t i = 0; i <= app->hostList->size(); i ++)
       for (uint16_t i = 0; i <= nSize; i ++)
       {
         itm = static_cast<HostItem *>(app->hostList->data(i));
@@ -720,9 +721,17 @@ void VncObject::masterMessageLoop ()
         itm = NULL;
         vnc = NULL;
       }
-    }
 
-    Fl::wait(0.250);
+      vnc = app->vncViewer->vnc;
+
+      if (vnc != NULL && vnc->itm != NULL)
+        Fl::wait(0.015);
+      else
+        Fl::wait(1.0);
+    }
+    else
+      Fl::wait(1.0);
+    //Fl::wait(0.250);
   }
 }
 

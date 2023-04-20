@@ -934,18 +934,21 @@ void svCreateGUI ()
   app->quickInfoLabel->labelsize(app->nAppFontSize + 2);
   app->quickInfoLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
   app->quickInfoLabel->labelfont(FL_HELVETICA_BOLD);
+  app->quickInfoLabel->labelcolor(FL_INACTIVE_COLOR);
 
   // last connected label
   app->lastConnectedLabel = new Fl_Box(0, 0, 163, 18);
   app->lastConnectedLabel->labelsize(app->nAppFontSize + 1);
   app->lastConnectedLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE | FL_ALIGN_BOTTOM);
   //app->lastConnectedLabel->labelfont(FL_HELVETICA);
+  app->lastConnectedLabel->labelcolor(FL_INACTIVE_COLOR);
 
   // last connected
   app->lastConnected = new Fl_Box(0, 0, 163, 18);
   app->lastConnected->labelsize(app->nAppFontSize + 1);
   //app->lastConnected->labelfont(FL_HELVETICA);
   app->lastConnected->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE | FL_ALIGN_TOP);
+  app->lastConnected->labelcolor(FL_INACTIVE_COLOR);
 
   // last error message
   app->lastError = new Fl_Multiline_Output(0, 0, 163, 45);
@@ -2361,8 +2364,9 @@ void svHandleThreadConnection (void * data)
     // store connection time
     itm->lastConnectedTime = strTimeTemp;
 
-    // update 'last' and quick note
-    svQuickInfoSetLabelAndText(itm);
+    // only update the quick info if we're on this host item
+    if (app->hostList->value() == svItemNumFromItm(itm))
+      svQuickInfoSetLabelAndText(itm);
 
     svLogToFile("Connected to '" + itm->name + "' - " + itm->hostAddress);
 
@@ -2413,7 +2417,10 @@ void svHandleThreadConnection (void * data)
     if (itm->lastErrorMessage != "")
     {
       itm->icon = app->iconDisconnectedBigError;
-      app->lastError->value(itm->lastErrorMessage.c_str());
+
+      // only update the lastError quick info if we're on this host item
+      if (app->hostList->value() == svItemNumFromItm(itm))
+        app->lastError->value(itm->lastErrorMessage.c_str());
     }
     else
       itm->icon = app->iconNoConnect;
