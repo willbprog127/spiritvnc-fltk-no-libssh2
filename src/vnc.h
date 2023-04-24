@@ -78,7 +78,7 @@ public:
     vncClient->GotXCutText = VncObject::handleRemoteClipboardProc;
     vncClient->FinishedFrameBufferUpdate = VncObject::handleFrameBufferUpdate;
 
-    rfbClientLog = VncObject::libVncLogging;
+    //rfbClientLog = VncObject::libVncLogging;
     rfbClientErr = VncObject::libVncLogging;
   }
 
@@ -103,6 +103,7 @@ public:
   void setObjectVisible ();
   bool fitsScroller ();
   void endViewer ();
+  //void libVncLogging (const char *, ...);
 
   //  static
   static void hideMainViewer ();
@@ -129,11 +130,10 @@ public:
   VncViewer (int x, int y, int w, int h, const char * label = 0) :
   Fl_Box(x, y, w, h, label),
   vnc(NULL)
-  {
-      box(FL_FLAT_BOX);
-  }
+  {}
 
   VncObject * vnc;
+
 private:
   int handle (int);
   void draw ();

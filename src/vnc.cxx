@@ -651,6 +651,7 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
 /* (static function) */
 void VncObject::libVncLogging (const char * format, ...)
 {
+
   if (app->debugMode == true)
   {
     va_list args;
@@ -763,7 +764,7 @@ rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
     return NULL;
   }
 
-  HostItem * itm = svItmFromVnc(vnc);
+  HostItem * itm = vnc->itm;
 
   // itm is null
   if (itm == NULL)
@@ -806,7 +807,7 @@ char * VncObject::handlePassword (rfbClient * cl)
     return NULL;
   }
 
-  HostItem * itm = svItmFromVnc(vnc);
+  HostItem * itm = vnc->itm;
 
   if (itm == NULL)
   {

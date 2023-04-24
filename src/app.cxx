@@ -629,7 +629,6 @@ void svConfigWrite ()
   ofs << "# program options" << std::endl;
 
   // hostlist width
-  //ofs << "hostlistwidth=" << app->hostList->w() << std::endl;
   ofs << "hostlistwidth=" << app->requestedListWidth << std::endl;
 
   // colorblind icons
@@ -850,7 +849,7 @@ bool svConvertStringToBoolean (const std::string& strIn)
 
 
 /* create icons for app */
-void svCreateAppIcons (bool fromAppOptions)
+void svCreateAppIcons (const bool fromAppOptions)
 {
   // do app icon first
   app->iconApp = new Fl_RGB_Image(new Fl_Pixmap(pmSpiritvnc_xpm));
@@ -933,27 +932,24 @@ void svCreateGUI ()
   app->quickInfoLabel = new Fl_Box(0, 0, 163, 18);
   app->quickInfoLabel->labelsize(app->nAppFontSize + 2);
   app->quickInfoLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
-  app->quickInfoLabel->labelfont(FL_HELVETICA_BOLD);
-  app->quickInfoLabel->labelcolor(FL_INACTIVE_COLOR);
+  app->quickInfoLabel->labelfont(FL_HELVETICA);
+  app->quickInfoLabel->labelcolor(fl_rgb_color(SV_QUICK_INFO_FG_COLOR));
 
   // last connected label
   app->lastConnectedLabel = new Fl_Box(0, 0, 163, 18);
   app->lastConnectedLabel->labelsize(app->nAppFontSize + 1);
   app->lastConnectedLabel->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE | FL_ALIGN_BOTTOM);
-  //app->lastConnectedLabel->labelfont(FL_HELVETICA);
-  app->lastConnectedLabel->labelcolor(FL_INACTIVE_COLOR);
+  app->lastConnectedLabel->labelcolor(fl_rgb_color(SV_QUICK_INFO_FG_COLOR));
 
   // last connected
   app->lastConnected = new Fl_Box(0, 0, 163, 18);
   app->lastConnected->labelsize(app->nAppFontSize + 1);
-  //app->lastConnected->labelfont(FL_HELVETICA);
   app->lastConnected->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE | FL_ALIGN_TOP);
-  app->lastConnected->labelcolor(FL_INACTIVE_COLOR);
+  app->lastConnected->labelcolor(fl_rgb_color(SV_QUICK_INFO_FG_COLOR));
 
   // last error message
   app->lastError = new Fl_Multiline_Output(0, 0, 163, 45);
   app->lastError->textsize((app->nAppFontSize + 1));
-  //app->lastError->textfont(FL_HELVETICA_ITALIC);
   app->lastError->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
   app->lastError->box(FL_THIN_DOWN_BOX);
   app->lastError->wrap(1);
@@ -967,6 +963,7 @@ void svCreateGUI ()
   app->quickNote->textfont(FL_HELVETICA_ITALIC);
   app->quickNote->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
   app->quickNote->box(FL_THIN_DOWN_BOX);
+  app->quickNote->textcolor(fl_rgb_color(SV_QUICK_INFO_FG_COLOR));
   app->quickNote->wrap(1);
   app->quickNote->readonly(1);
   app->quickNote->clear_visible_focus();
@@ -1070,7 +1067,7 @@ void svDebugLog (const std::string& strDebugMessage)
 
 
 /* show confirmation and delete item from hostList */
-void svDeleteItem (int nItem)
+void svDeleteItem (const int nItem)
 {
   static bool inDeleteItem;
 
@@ -1182,7 +1179,7 @@ int svFindFreeTcpPort ()
 
 
 /* return config property from input */
-std::string svGetConfigProperty (char * strIn)
+std::string svGetConfigProperty (const char * strIn)
 {
   std::string strTemp;
 
@@ -1199,7 +1196,7 @@ std::string svGetConfigProperty (char * strIn)
 
 
 /* return config value from input */
-std::string svGetConfigValue (char * strIn)
+std::string svGetConfigValue (const char * strIn)
 {
   std::string strTemp;
   int i = 0;
@@ -1522,7 +1519,6 @@ void svHandleHostListButtons (Fl_Widget * button, void *)
     app->scanIsRunning = true;
     svDeselectAllItems();
     svScanTimer(NULL);
-    //Fl::add_timeout(app->nScanTimeout, svScanTimer);
   }
 
   // create a listening vnc object
@@ -2071,7 +2067,7 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
   sends new clipboard text to the currently displayed vnc host
   (void * not used so parameter name removed)
 */
-void svHandleLocalClipboard (int source, void *)
+void svHandleLocalClipboard (const int source, void *)
 {
   // don't process clipboard if there's no remote server being displayed
   // of it's the selection buffer
@@ -2097,14 +2093,14 @@ void svHandleLocalClipboard (int source, void *)
 */
 void svHandleMainWindowEvents (Fl_Widget * window, void *)
 {
-  int event = Fl::event(); //window->when();
+  int event = Fl::event();
 
   // don't close window with Esc key
   if (event == FL_SHORTCUT && Fl::event_key() == FL_Escape)
     return;
 
   // window closing
-  if (event == FL_CLOSE)  //FL_LEAVE)
+  if (event == FL_CLOSE)
   {
     app->shuttingDown = true;
 
@@ -2139,6 +2135,7 @@ void svHideQuickNoteEditWidgets ()
   app->quickNoteInput->value("");
   app->quickNotePack->hide();
 }
+
 
 /* popup edit menu in input widgets and handle choice */
 void svPopUpEditMenu (Fl_Input_ * input)
@@ -2256,7 +2253,6 @@ void svQuickInfoSetToEmpty ()
   app->lastConnected->copy_label("");
   app->lastError->value("");
   app->quickNote->textfont(FL_HELVETICA_ITALIC);
-  //app->quickNote->value("(no Quick Note)");
   app->quickNote->value("-");
 }
 
@@ -2357,7 +2353,7 @@ void svHandleThreadConnection (void * data)
     struct tm * timeinfo = NULL;
     char strTimeTemp[80] = {0};
 
-    time (&rawtime);
+    time(&rawtime);
     timeinfo = localtime (&rawtime);
     strftime(strTimeTemp, 80, "%H:%M:%S--%Y-%m-%d", timeinfo);
 
@@ -2528,7 +2524,7 @@ void svInsertEmptyItem ()
 }
 
 
-/* return hostlist item (integer) that owns host item 'im' */
+/* return hostlist item (integer) that owns host item 'itm' */
 int svItemNumFromItm (const HostItem * itmIn)
 {
   if (itmIn == NULL)
@@ -2551,28 +2547,30 @@ int svItemNumFromItm (const HostItem * itmIn)
 }
 
 
-/* return hostlist itm (HostItem) that owns vnc object 'v' */
-HostItem * svItmFromVnc (const VncObject * vncIn)
+/* return itm (HostItem*) in hostlist that has address 'strAdd' */
+void svItmFromAddress (const std::string& strAdd, HostItem * itmOut)
 {
-  if (vncIn == NULL)
-    return NULL;
-
-  HostItem * itm = NULL;
-  uint16_t nSize = app->hostList->size();
-
-  for (uint16_t i = 0; i <= nSize; i ++)
+  if (strAdd == "")
   {
-      itm = NULL;
-      itm = static_cast<HostItem *>(app->hostList->data(i));
-
-      if (itm != NULL && itm->vnc != NULL)
-      {
-        if (itm->vnc == vncIn)
-          return itm;
-      }
+    itmOut = NULL;
+    return;
   }
 
-  return NULL;
+  HostItem * itm;
+  uint16_t nSize = app->hostList->size();
+
+  // go through hostlist and find item owning matching itmIn
+  for (uint16_t i = 0; i <= nSize; i ++)
+  {
+    itm = NULL;
+    itm = static_cast<HostItem *>(app->hostList->data(i));
+
+    if (itm != NULL && itm->hostAddress == strAdd)
+    {
+      itmOut = itm;
+      return;
+    }
+  }
 }
 
 
@@ -2790,7 +2788,7 @@ void svScanTimer (void *)
 
 
 /* send a stored text string to the vnc host */
-void svSendKeyStrokesToHost (std::string& strIn, VncObject * vnc)
+void svSendKeyStrokesToHost (const std::string& strIn, const VncObject * vnc)
 {
   if (vnc == NULL)
     return;
@@ -2855,7 +2853,7 @@ void svShowAboutHelp ()
 
   // create messagebox window
   Fl_Window * winAboutHelp = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "About / Help");
-  winAboutHelp->set_non_modal();
+  winAboutHelp->set_modal();
 
   Fl_Help_View * hv = new Fl_Help_View(10, 10, nWinWidth - 20, nWinHeight - 70);
 
@@ -2927,15 +2925,15 @@ void svShowAppOptions ()
 
   // window size
   int nWinWidth = 650;
-  int nWinHeight = 550;  //500
+  int nWinHeight = 550;
 
   // set window position
   int nX = (app->mainWin->w() / 2) - (nWinWidth / 2);
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create window
-  Fl_Window * winAppOpts = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Application Options"); //NULL);
-  winAppOpts->set_non_modal();
+  Fl_Window * winAppOpts = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Application Options");
+  winAppOpts->set_modal();
   app->childWindowBeingDisplayed = winAppOpts;
 
   // add itm value editors / selectors
@@ -3010,7 +3008,7 @@ void svShowAppOptions ()
   inAppFontSize->textsize(app->nAppFontSize);
   inAppFontSize->labelsize(app->nAppFontSize);
   inAppFontSize->user_data(SV_OPTS_APP_FONT_SIZE);
-  char strTmp01[32] = {};
+  char strTmp01[32] = {0};
   snprintf(strTmp01, 32, "%i", app->nAppFontSize);
   inAppFontSize->value(strTmp01);
   inAppFontSize->tooltip("This is the font size used throughout SpiritVNC.  Restart the app to"
@@ -3031,7 +3029,7 @@ void svShowAppOptions ()
   inListFontSize->textsize(app->nAppFontSize);
   inListFontSize->labelsize(app->nAppFontSize);
   inListFontSize->user_data(SV_OPTS_LIST_FONT_SIZE);
-  char strTmp02[32] = {};
+  char strTmp02[32] = {0};
   snprintf(strTmp02, 32, "%i", app->nListFontSize);
   inListFontSize->value(strTmp02);
   inListFontSize->tooltip("This is the font size used for the host list.  Restart the app to"
@@ -3042,7 +3040,7 @@ void svShowAppOptions ()
   inListWidth->textsize(app->nAppFontSize);
   inListWidth->labelsize(app->nAppFontSize);
   inListWidth->user_data(SV_OPTS_LIST_WIDTH);
-  char strTmp03[32] = {};
+  char strTmp03[32] = {0};
   snprintf(strTmp03, 32, "%i", app->requestedListWidth);
   inListWidth->value(strTmp03);
   inListWidth->tooltip("Width of the host list.  Restart the app to"
@@ -3150,7 +3148,7 @@ void svShowF8Window ()
 
   // create window
   Fl_Window * winF8 = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Remote host actions");
-  winF8->set_non_modal();
+  winF8->set_modal();
 
   app->childWindowBeingDisplayed = winF8;
 
@@ -3254,7 +3252,7 @@ void svShowItemOptions (HostItem * im)
 
   // create window
   Fl_Window * itmOptWin = new Fl_Window(nX, nY, nWinWidth, nWinHeight, itm->name.c_str());
-  itmOptWin->set_non_modal();
+  itmOptWin->set_modal();
 
   // add itm value editors / selectors
   int nXPos = 195;

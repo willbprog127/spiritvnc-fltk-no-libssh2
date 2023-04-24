@@ -49,6 +49,7 @@
 #define SV_CHOICE_2                 2
 #define SV_LIST_FONT_ID             31
 #define SV_BLINK_TIME               0.6
+#define SV_QUICK_INFO_FG_COLOR      25
 
 // return type for threads
 #define SV_RET_VOID         static_cast<void *>(NULL)
