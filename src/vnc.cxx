@@ -681,6 +681,11 @@ void VncObject::masterMessageLoop ()
     // only loop if there are objects alive
     if (app->createdObjects != 0)
     {
+      vnc = app->vncViewer->vnc;
+
+      if (vnc != NULL && vnc->itm != NULL)
+        VncObject::checkVNCMessages(vnc);
+
       // keep from making too tight a loop
       //Fl::check();
       //Fl::wait(0.015);
@@ -690,14 +695,9 @@ void VncObject::masterMessageLoop ()
       // with a faster rate
       Fl::wait(0.034);
 
-      vnc = app->vncViewer->vnc;
-
-      if (vnc != NULL && vnc->itm != NULL)
-        VncObject::checkVNCMessages(vnc);
-
-      // checking messages of connected but non-visible
-      // items has been removed -- wasn't working
-      // the way I intended all this time.  Whoops!
+      // ## checking messages of connected but non-visible ##
+      // ## items has been removed -- wasn't working       ##
+      // ## the way I intended all this time.  Whoops!     ##
     }
     else
       Fl::wait(0.7);
