@@ -2432,8 +2432,9 @@ void svHandleThreadConnection (void * data)
 
     itm->vnc = NULL;
 
-    if (itm->hostType == 's')
-      svCloseSSHConnection(itm);
+    // ### this stuff commented out because should be done in endViewer, not at this level ###
+    //if (itm->hostType == 's')
+      //svCloseSSHConnection(itm);
   }
 
   // advance and check viewer timeout value
@@ -2458,8 +2459,9 @@ void svHandleThreadConnection (void * data)
       // stop this thread because our 'soft' timeout was reached
       svDebugLog("svConnectionWatcher - Canceling itm->threadRFB");
 
-      if (itm->threadRFB != 0)
-        pthread_cancel(itm->threadRFB);
+      // ### this stuff commented out because should be done in endViewer, not at this level ###
+      //if (itm->threadRFB != 0)
+        //pthread_cancel(itm->threadRFB);
 
       svLogToFile("Could not connect to '" + itm->name + "' - " + itm->hostAddress);
     }
@@ -2754,7 +2756,7 @@ void svScanTimer (void *)
       return;
     }
 
-    // hunt for a new viewer
+    // hunt for next connected viewer
     itm = static_cast<HostItem *>(app->hostList->data(app->nCurrentScanItem));
 
     if (itm == NULL)

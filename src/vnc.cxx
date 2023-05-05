@@ -219,6 +219,8 @@ void VncObject::createVNCObject (HostItem * itm)
     // create, launch and detach call to create our vnc connection
     if (pthread_create(&itm->threadRFB, NULL, VncObject::initVNCConnection, itm) != 0)
     {
+      itm->threadRFBRunning = false;
+
       svLogToFile("ERROR - Couldn't create RFB thread for '" + itm->name +
             "' - " + itm->hostAddress);
       itm->isConnecting = false;
@@ -233,6 +235,8 @@ void VncObject::createVNCObject (HostItem * itm)
       return;
     }
   }
+
+  // threadRFBRunning is set in actual thread
 
   // add to our count of created vncObjects so we
   // can stop 'expensive' stuff in masterMessageLoop
@@ -336,15 +340,12 @@ void VncObject::endViewer ()
     itm->hasEnded = true;
 
     // clean up the client
-    rfbClientCleanup(vncClient);
+    if (vncClient != NULL)
+      rfbClientCleanup(vncClient);
 
     // tell ssh to clean up if a ssh/vnc connection
     if (itm->hostType == 's')
-    {
-      itm->sshReady = false;
-
       svCloseSSHConnection(itm);
-    }
   }
 }
 
@@ -672,10 +673,7 @@ void VncObject::libVncLogging (const char * format, ...)
 /* (static function) */
 void VncObject::masterMessageLoop ()
 {
-  HostItem * itm = NULL;
   VncObject * vnc = NULL;
-
-  uint16_t nSize = app->hostList->size();
 
   // run until it's time to shut down
   while (app->shuttingDown == false)
@@ -683,55 +681,26 @@ void VncObject::masterMessageLoop ()
     // only loop if there are objects alive
     if (app->createdObjects != 0)
     {
-      // spend the most time processing the active vnc connection
-      for (uint8_t i = 0; i < 250; i++)  //100; i++)
-      {
-        // keep from making too tight a loop
-        //Fl::check();
-        Fl::wait(0.015);
+      // keep from making too tight a loop
+      //Fl::check();
+      //Fl::wait(0.015);
 
-        vnc = app->vncViewer->vnc;
-
-        if (vnc != NULL && vnc->itm != NULL)
-          VncObject::checkVNCMessages(vnc);
-        else
-          break;
-      }
-
-      // after current connection looping 250 times, (orig. 100 times)
-      // iterate through the host list one time and
-      // check each to see if the connection is alive
-      nSize = app->hostList->size();
-
-      for (uint16_t i = 0; i <= nSize; i ++)
-      {
-        itm = static_cast<HostItem *>(app->hostList->data(i));
-
-        if (itm == NULL)
-          continue;
-
-        vnc = itm->vnc;
-
-        if (vnc == NULL)
-          continue;
-
-        // if this vnc object is connected and is active, process vnc messages
-        if (itm->isConnected == true && itm->hasEnded == false && app->shuttingDown == false)
-          VncObject::checkVNCMessages(vnc);
-
-        itm = NULL;
-        vnc = NULL;
-      }
+      // 0.034 is ~30 frames-per-second
+      // we don't want to lag the computer
+      // with a faster rate
+      Fl::wait(0.034);
 
       vnc = app->vncViewer->vnc;
 
       if (vnc != NULL && vnc->itm != NULL)
-        Fl::wait(0.015);
-      else
-        Fl::wait(1.0);
+        VncObject::checkVNCMessages(vnc);
+
+      // checking messages of connected but non-visible
+      // items has been removed -- wasn't working
+      // the way I intended all this time.  Whoops!
     }
     else
-      Fl::wait(1.0);
+      Fl::wait(0.7);
     //Fl::wait(0.250);
   }
 }

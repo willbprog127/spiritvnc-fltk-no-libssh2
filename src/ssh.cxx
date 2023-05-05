@@ -52,12 +52,14 @@ void * svSSHCloseHelper (void * itmData)
 
   // send 'exit' control-char sequence
   fprintf(itm->sshCmdStream, "\r\n%s", "~.");
-  fflush(itm->sshCmdStream);
+
   // send extra CRLF, just for fun
   fprintf(itm->sshCmdStream, "\r\n");
 
   // close the ssh process stream
   pclose(itm->sshCmdStream);
+
+  itm->sshReady = false;
 
   return SV_RET_VOID;
 }
@@ -76,14 +78,17 @@ void svCloseSSHConnection (void * itmData)
   {
     svLogToFile("ERROR - Couldn't create SSH closer thread for '" + itm->name +
           "' - " + itm->hostAddress);
-    itm->isConnecting = false;
+    //itm->isConnecting = false;
     itm->hasCouldntConnect = true;
     itm->hasError = true;
 
-    svHandleThreadConnection(itm);
+    //svHandleThreadConnection(itm);
 
-    return;
+    //return;
   }
+
+  itm->isConnecting = false;
+  svHandleThreadConnection(itm);
 }
 
 
@@ -96,6 +101,8 @@ void svCreateSSHConnection (void * data)
 
   if (itm == NULL)
     return;
+
+  itm->sshCmdStream = NULL;
 
   std::string sshCheck = "which " + app->sshCommand + " > /dev/null";
 
