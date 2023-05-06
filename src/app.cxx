@@ -794,29 +794,35 @@ void svConnectionWatcher (void *)
     }
   }
 
-  // do an inactive connection check
-  nSize = app->hostList->size();
+  // #### the code below is commented out until further notice.     ####
+  // #### with removal of checking connected but non-visible        ####
+  // #### hosts, the ability to check for unresponsive              ####
+  // #### hosts is now disabled until some other method is found.   ####
+  // #### will leave 'plumbing' in place in case I find a way later ####
 
-  // iterate through hostlist items
-  for (uint16_t i = 0; i <= nSize; i ++)
-  {
-    itm = static_cast<HostItem *>(app->hostList->data(i));
+  //// do an inactive connection check
+  //nSize = app->hostList->size();
 
-    if (itm == NULL)
-      continue;
+  //// iterate through hostlist items
+  //for (uint16_t i = 0; i <= nSize; i ++)
+  //{
+    //itm = static_cast<HostItem *>(app->hostList->data(i));
 
-    vnc = itm->vnc;
+    //if (itm == NULL)
+      //continue;
 
-    if (vnc == NULL || itm->isConnected == false)
-      continue;
+    //vnc = itm->vnc;
 
-    // check if connection has been inactive, unless this itm is ignoring
-    if (vnc->inactiveSeconds >= app->nDeadTimeout && itm->ignoreInactive == false)
-      // remote host hasn't responded in time allotted, disconnect
-      VncObject::endAndDeleteViewer(&vnc);
-    else
-      vnc->inactiveSeconds ++;
-  }
+    //if (vnc == NULL || itm->isConnected == false)
+      //continue;
+
+    //// check if connection has been inactive, unless this itm is ignoring
+    //if (vnc->inactiveSeconds >= app->nDeadTimeout && itm->ignoreInactive == false)
+      //// remote host hasn't responded in time allotted, disconnect
+      //VncObject::endAndDeleteViewer(&vnc);
+    //else
+      //vnc->inactiveSeconds ++;
+  //}
 
   // set timer to call this function again in 1 second
   // (do NOT change this interval as connection timeout

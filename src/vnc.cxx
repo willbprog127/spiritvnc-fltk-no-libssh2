@@ -133,6 +133,12 @@ void VncObject::createVNCObject (HostItem * itm)
       vnc->vncClient->GotCursorShape = VncObject::handleCursorShapeChange;
     }
 
+    // inactive timeout  !!!! #### readTimeout doesn't seem to work (sigh) ####
+    if (itm->ignoreInactive == true)
+      vnc->vncClient->readTimeout = 0;
+    else
+      vnc->vncClient->readTimeout = app->nDeadTimeout;
+
     // set up vnc compression and quality levels
     vnc->vncClient->appData.compressLevel = itm->compressLevel;
     vnc->vncClient->appData.qualityLevel = itm->qualityLevel;
@@ -445,14 +451,20 @@ void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int
 
 
 /* (static method) */
-void VncObject::handleFrameBufferUpdate (rfbClient * cl) //, int x, int y, int w, int h)
+void VncObject::handleFrameBufferUpdate (rfbClient * cl)
 {
-  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
-
-  if (vnc == NULL || vnc->allowDrawing == false)
+  if (cl == NULL)
     return;
 
-  app->vncViewer->redraw();
+  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
+
+  if (vnc == NULL)
+    return;
+
+  //vnc->inactiveSeconds = 0;
+
+  if (vnc->allowDrawing == true)
+    app->vncViewer->redraw();
 }
 
 
@@ -894,7 +906,7 @@ void VncObject::checkVNCMessages (VncObject * vnc)
   if (nMsg)
   {
     // reset inactive seconds so we don't automatically disconnect
-    vnc->inactiveSeconds = 0;
+    //vnc->inactiveSeconds = 0;
 
     if (HandleRFBServerMessage(vnc->vncClient) == FALSE)
     {

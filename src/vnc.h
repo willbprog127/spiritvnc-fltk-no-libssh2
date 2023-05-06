@@ -59,7 +59,7 @@ public:
     imgCursor(NULL),
     nCursorXHot(0),
     nCursorYHot(0),
-    inactiveSeconds(0),
+    //inactiveSeconds(0),
     nLastScrollX(0),
     nLastScrollY(0),
     centeredX(0),
@@ -92,7 +92,7 @@ public:
   Fl_RGB_Image * imgCursor;
   int nCursorXHot;
   int nCursorYHot;
-  uint16_t inactiveSeconds;
+  //uint16_t inactiveSeconds;
   int nLastScrollX;
   int nLastScrollY;
   int centeredX;
