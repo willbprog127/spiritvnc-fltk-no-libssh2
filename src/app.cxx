@@ -1115,6 +1115,7 @@ void svDeleteItem (const int nItem)
   {
     app->hostList->remove(nItem);
     app->hostList->redraw();
+    svQuickInfoSetToEmpty();
   }
 
   inDeleteItem = false;
