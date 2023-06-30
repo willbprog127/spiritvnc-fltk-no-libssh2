@@ -74,7 +74,7 @@ int main (int argc, char **argv)
   if (app->hostList->size() == 0)
   {
     svInsertEmptyItem();
-    app->hostList->size(170, 0);
+    app->hostList->size(170, app->hostList->h());
   }
 
   // set app icons
