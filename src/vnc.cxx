@@ -133,11 +133,11 @@ void VncObject::createVNCObject (HostItem * itm)
       vnc->vncClient->GotCursorShape = VncObject::handleCursorShapeChange;
     }
 
-    // inactive timeout  !!!! #### readTimeout doesn't seem to work (sigh) ####
-    if (itm->ignoreInactive == true)
-      vnc->vncClient->readTimeout = 0;
-    else
-      vnc->vncClient->readTimeout = app->nDeadTimeout;
+    //// inactive timeout  !!!! #### readTimeout doesn't seem to work (sigh) ####
+    //if (itm->ignoreInactive == true)
+      //vnc->vncClient->readTimeout = 0;
+    //else
+      //vnc->vncClient->readTimeout = app->nDeadTimeout;
 
     // set up vnc compression and quality levels
     vnc->vncClient->appData.compressLevel = itm->compressLevel;

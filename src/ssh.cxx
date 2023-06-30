@@ -1,6 +1,6 @@
 /*
  * ssh.cxx - part of SpiritVNC - FLTK
- * 2016-2022 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2023 Will Brokenbourgh https://www.pismotek.com/brainout/
  */
 
 /*
