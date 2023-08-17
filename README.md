@@ -6,6 +6,9 @@ Because of changes the last year or two with libssh2, I was forced to develop th
 
 Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  On some OSs the child `ssh` processes won't even close properly.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
 
+#### New feature: Fullscreen
+A new feature has been added -- fullscreen.  Pressing the F11 key will put SpiritVNC-FLTK into fullscreen mode when viewing a remote server.  Pressing F11 again will take the app out of fullscreen.  This feature may be rough around the edges, so if any issues, please file a problem report
+
 #### Does it work on Windows?
 While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code is upcoming, although the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  Check back often to see what's happening with this.
 
@@ -69,7 +72,11 @@ $ ./spiritvnc-fltk
 * Right-click a connected server entry to close the connection *(except 'Listening' entries)*
 * Right-click a disconnected server entry to display a pop-up menu with various actions you can perform
 * Click a server entry, then click in the Quick Note box near the bottom left of SpiritVNC's window to enter a brief message.  Press Enter to save or Esc to cancel.  Any notes entered for 'Listening' connections are temporary and will not be saved
-* When viewing a remote VNC server, press the F8 key to display some common key combinations to send or to send F8 or F12 keys
+
+When viewing a remote VNC server:
+* Pressing the F8 key will display F8, F11, F12 and common key combinations that can be sent to the remote host
+* Pressing the F11 key will toggle fullscreen mode.  Fullscreen can be *disabled* even when not connected to a remote host
+* If the current connection has an F12 macro, pressing the F12 key will send it, otherwise the F12 key itself will be sent
 
 ##### Server entry list buttons
 * Click the [+] button to add a new server entry, click the [-] button to delete the selected server entry
@@ -100,7 +107,7 @@ $ ./spiritvnc-fltk
 * **Connection name**: The unique name you enter to recognize this connection in the list
 * **Connection group**: Use the same group name for all computers in one location (Home, Office, Customer1, etc)
 * **Remote address**: The IPv4 address of the remote VNC or VNC-over-SSH server (IPv6 not supported by libvncclient yet https://github.com/LibVNC/libvncserver/issues/436)
-* **F12 macro**: Use F12 when viewing a remote server to send this text, such as frequently-used phrases, passwords, etc
+* **F12 macro**: Press F12 when viewing a remote server to send this text, such as frequently-used phrases, passwords, etc
 * **VNC**: This connection connects directly to a VNC server
 * **VNC through SSH**: This connection connects to a VNC server through SSH port forwarding
 * **VNC port**: The port that the remote VNC server is listening on
