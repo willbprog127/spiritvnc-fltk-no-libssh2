@@ -1425,6 +1425,13 @@ void svHandleF8Buttons (Fl_Widget * widget, void *)
       SendKeyEvent(vnc->vncClient, XK_F8, false);
     }
 
+    // send F11 key
+    if (strcmp(strName, SV_F8_BTN_SEND_F11) == 0)
+    {
+      SendKeyEvent(vnc->vncClient, XK_F11, true);
+      SendKeyEvent(vnc->vncClient, XK_F11, false);
+    }
+
     // send F12 key
     if (strcmp(strName, SV_F8_BTN_SEND_F12) == 0)
     {
@@ -2282,8 +2289,9 @@ void svPositionWidgets ()
   // readjust quickInfoPack width
   app->quickInfoPack->size(app->requestedListWidth, app->packButtons->y() - 3);
 
-  // set scroller x
-  app->scroller->position(app->hostList->x() + app->hostList->w() + 3, app->scroller->y());
+  // set scroller scroll position and size
+  app->scroller->position(0, 0);  // 'position' is the scroll position, NOT X, Y
+  app->scroller->size(app->hostList->x() + app->hostList->w() + 3, app->scroller->y()); // was 'position', for some strange reason
   app->scroller->redraw();
 
   VncObject * vnc = app->vncViewer->vnc;
@@ -3149,7 +3157,7 @@ void svShowF8Window ()
 
   // window size
   int nWinWidth = 230;
-  int nWinHeight = 300;
+  int nWinHeight = 335;
 
   // set window position
   int nX = (app->mainWin->w() / 2) - (nWinWidth / 2);
@@ -3194,6 +3202,12 @@ void svShowF8Window ()
   btnSendF8->user_data(SV_F8_BTN_SEND_F8);
   btnSendF8->callback(svHandleF8Buttons);
   btnSendF8->tooltip("Click to press the F8 key on the current remote host");
+
+  Fl_Button * btnSendF11 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F11");
+  btnSendF11->box(FL_GTK_UP_BOX);
+  btnSendF11->user_data(SV_F8_BTN_SEND_F11);
+  btnSendF11->callback(svHandleF8Buttons);
+  btnSendF11->tooltip("Click to press the F11 key on the current remote host");
 
   Fl_Button * btnSendF12 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F12");
   btnSendF12->box(FL_GTK_UP_BOX);

@@ -129,10 +129,16 @@ class VncViewer : public Fl_Box
 public:
   VncViewer (int x, int y, int w, int h, const char * label = 0) :
   Fl_Box(x, y, w, h, label),
-  vnc(NULL)
+  vnc(NULL),
+  fullscreen(false)
   {}
 
   VncObject * vnc;
+  bool fullscreen;
+
+  // public
+  void setFullScreen ();
+  void unsetFullScreen ();
 
 private:
   int handle (int);

@@ -294,7 +294,10 @@ void VncObject::endViewer ()
   {
     // only hide main viewer if this is the currently-displayed itm
     if (app->vncViewer->vnc != NULL && itm == app->vncViewer->vnc->itm)
+    {
+      app->vncViewer->unsetFullScreen();
       hideMainViewer();
+    }
 
     // host disconnected unexpectedly / interrupted connection
     if (itm->isConnected == true && itm->hasDisconnectRequest == false)
@@ -374,6 +377,9 @@ void VncObject::endAndDeleteViewer (VncObject ** vnc)
 /* (instance method) */
 bool VncObject::fitsScroller ()
 {
+  if (app->vncViewer->fullscreen == true)
+    return true;
+
   const HostItem * itm = static_cast<HostItem *>(this->itm);
 
   if (itm == NULL || itm->vnc == NULL)
@@ -848,7 +854,9 @@ void VncObject::setObjectVisible ()
         static_cast<int>(static_cast<float>(app->vncViewer->w()) / dRatio));
   }
 
-  svResizeScroller();
+  // only use when not in fullscreen
+  if (app->vncViewer->fullscreen != true)
+    svResizeScroller();
 
   app->scroller->scroll_to(nLastScrollX, nLastScrollY);
 
@@ -1229,16 +1237,57 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
     return;
 
   // F8 window
-  if (nK == XK_F8 && downState == false)
+  if (nK == XK_F8)
   {
-    svShowF8Window();
+    if (downState == false)
+      svShowF8Window();
+
+    return;
+  }
+
+  // F11 fullscreen
+  if (nK == XK_F11)
+  {
+    if (downState == false)
+    {
+      // toggle vncViewer's fullscreen state
+      if (app->vncViewer != NULL)
+      {
+        // we can disable fullscreen no matter what
+        if (app->vncViewer->fullscreen == true)
+        {
+          app->vncViewer->unsetFullScreen();
+          return;
+        }
+
+        // only enable fullscreen if we're displaying a connection
+        if (app->vncViewer->fullscreen != true && app->vncViewer->vnc != NULL)
+        {
+          app->vncViewer->setFullScreen();
+          return;
+        }
+      }
+    }
+
     return;
   }
 
   // F12 macro
-  if (nK == XK_F12 && downState == false)
+  if (nK == XK_F12)
   {
-    svSendKeyStrokesToHost(itm->f12Macro, vnc);
+    if (downState == false)
+    {
+      // send the F12 macro for this connection, if any,
+      // if there isn't an F12 macro, send the F12 key itself
+      if (itm->f12Macro != "")
+        svSendKeyStrokesToHost(itm->f12Macro, vnc);
+      else
+      {
+        SendKeyEvent(vnc->vncClient, XK_F12, true);
+        SendKeyEvent(vnc->vncClient, XK_F12, false);
+      }
+    }
+
     return;
   }
 
@@ -1247,4 +1296,46 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
     SendKeyEvent(cl, strIn[0], downState);
   else
     SendKeyEvent(cl, nK, downState);
+}
+
+
+/* enable fullscreen */
+void VncViewer::setFullScreen ()
+{
+  app->mainWin->fullscreen();
+  app->vncViewer->fullscreen = true;
+
+  app->hostList->resize(-3, app->hostList->y(), 0, app->hostList->h());
+  app->hostList->redraw();
+
+  app->scroller->position(0, 0);
+  app->scroller->size(app->mainWin->w(), app->mainWin->h());
+  app->scroller->redraw();
+
+  app->vncViewer->size(app->scroller->w(), app->scroller->h());
+  app->vncViewer->vnc->setObjectVisible();
+
+  Fl::redraw();
+  Fl::check();
+}
+
+
+/* disable fullscreen */
+void VncViewer::unsetFullScreen ()
+{
+  app->mainWin->fullscreen_off();
+  app->vncViewer->fullscreen = false;
+
+  app->hostList->resize(0, app->hostList->y(), app->requestedListWidth, app->hostList->h());
+  app->hostList->redraw();
+
+  app->scroller->position(app->hostList->x() + app->hostList->w() + 3, app->scroller->y());
+  app->scroller->size(app->mainWin->w(), app->mainWin->h());
+  app->scroller->redraw();
+  svResizeScroller();
+
+  app->vncViewer->vnc->setObjectVisible();
+
+  Fl::redraw();
+  Fl::check();
 }

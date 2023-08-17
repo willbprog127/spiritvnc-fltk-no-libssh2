@@ -104,6 +104,7 @@
 #define SV_F8_BTN_CSE       const_cast<char *>("btnCSE")
 #define SV_F8_BTN_REFRESH   const_cast<char *>("btnRefresh")
 #define SV_F8_BTN_SEND_F8   const_cast<char *>("btnSendF8")
+#define SV_F8_BTN_SEND_F11  const_cast<char *>("btnSendF11")
 #define SV_F8_BTN_SEND_F12  const_cast<char *>("btnSendF12")
 #define SV_F8_BTN_CLOSE     const_cast<char *>("btnClose")
 
