@@ -10,7 +10,7 @@ Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you
 A new feature has been added -- fullscreen.  Pressing the F11 key will put SpiritVNC-FLTK into fullscreen mode when viewing a remote server.  Pressing F11 again will take the app out of fullscreen.  This feature may be rough around the edges, so if any issues, please file a problem report
 
 #### Does it work on Windows?
-While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK working on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code is upcoming, although the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  Check back often to see what's happening with this.
+While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK compiling and running on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code has just been added, but please note that the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  In addition, SpiritVNC-FLTK will *only* compile and run *under the MSYS2 system* for now.  Double-clicking the compiled exe from Explorer will yield an error because *all* of SpiritVNC-FLTK's dependencies need to be copied to the same folder where `spiritvnc-fltk.exe` is located.  A pre-compiled Windows installer is planned but not yet available.
 
 2016-2023 Will Brokenbourgh
 https://www.pismotek.com/brainout/
@@ -21,7 +21,7 @@ SpiritVNC - FLTK has a 3-Clause BSD License
 
 ![SpiritVNC - FLTK screenshot](https://www.pismotek.com/media/spiritvnc-fltk-screenshot-2023-04-07--10-55.png)
 
-
+![SpiritVNC - FLTK screenshot on Windows 11](https://www.pismotek.com/media/spiritvnc-fltk-screenshot-windows-2023-08-22.png)
 
 - - - -
 
@@ -47,10 +47,10 @@ SpiritVNC - FLTK requires a compiler that supports C++11.
 
 'cd' into the directory that has the Makefile, then...
 
-On most Linux distros and macOS:
+On most Linux distros, macOS and MSYS2 on Windows:
 ```sh
 $ make [debug]
-$ sudo make install   # (don't use this command when building on macOS)
+$ sudo make install   # (don't use this command on macOS or Windows)
 ```
 
 On FreeBSD, OpenBSD and others (OpenIndiana?):
