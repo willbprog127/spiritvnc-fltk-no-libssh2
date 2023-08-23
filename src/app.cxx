@@ -235,7 +235,11 @@ void svConfigCreateNew ()
 
   if (stat(app->configPath.c_str(), &st) == -1)
   {
+    #ifdef _WIN32
+    if (mkdir(app->configPath.c_str()) == -1)
+    #else
     if (mkdir(app->configPath.c_str(), 0700) == -1)
+    #endif
     {
       std::cout << "SpiritVNC ERROR - Cannot create config file directory" << std::endl;
       exit(-1);
@@ -982,7 +986,7 @@ void svCreateGUI ()
 
   // =============== host list buttons start ====================
   // button size constant
-  const uint nBtnSize = 20;
+  const u_int nBtnSize = 20;
 
   app->packButtons = new Fl_Pack(0, 747, 170, nBtnSize);
   app->packButtons->type(Fl_Pack::HORIZONTAL);

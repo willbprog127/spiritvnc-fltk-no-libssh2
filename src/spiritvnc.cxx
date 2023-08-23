@@ -42,6 +42,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !defined __APPLE__ && !defined _WIN32
+#include <X11/xpm.h>
+#endif
+
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_PNG_Image.H>
@@ -92,7 +96,9 @@ int main (int argc, char **argv)
 
   // ignore SIGPIPE from libvncclient socket calls
   // (not sure if this does anything...?)
+  #ifndef _WIN32
   signal(SIGPIPE, SIG_IGN);
+  #endif
 
   // start up the connection 'supervisor' timer callback
   // do NOT change the interval of this timer
@@ -106,8 +112,8 @@ int main (int argc, char **argv)
   svResizeScroller();
 
   // restore main window saved position and size on
-  // Mac OS X / macOS immediately
-  #ifdef __APPLE__
+  // Mac OS X / macOS, Windows immediately
+  #if defined __APPLE__ || defined _WIN32
   svRestoreWindowSizePosition(NULL);
   #endif
 
@@ -115,7 +121,7 @@ int main (int argc, char **argv)
   Fl::wait();
 
   // restore main window saved postition and size
-  #ifndef __APPLE__
+  #if !defined __APPLE__ && !defined _WIN32
   // x11 window managers usually need delayed repositioning
   Fl::add_timeout(0.7, svRestoreWindowSizePosition);
   #endif

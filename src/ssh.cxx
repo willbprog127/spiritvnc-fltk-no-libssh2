@@ -102,20 +102,31 @@ void svCreateSSHConnection (void * data)
   if (itm == NULL)
     return;
 
-  itm->sshCmdStream = NULL;
+  #ifdef _WIN32
+  AllocConsole();
+  ShowWindow(GetConsoleWindow(), SW_HIDE);
 
+  std::string sshCheck = app->sshCommand;
+  #else
   std::string sshCheck = "which " + app->sshCommand + " > /dev/null";
+  #endif
+
+  svLogToFile("check command is: " + sshCheck);
 
   // first check to see if the ssh command is working
-  if (system(sshCheck.c_str()) != 0)
+  //int nResult = system(sshCheck.c_str());
+  FILE * fResult = popen(sshCheck.c_str(), "w");
+
+  //if (nResult != 0)
+  if (fResult == NULL)
   {
+    int nResult = errno;
+
+    svLogToFile("ssh check result is: " + std::to_string(nResult));
+
     fl_beep(FL_BEEP_DEFAULT);
-    std::string sshEMsg = "Error: This connection requires SSH and the\n"
-        "SSH command isn't working\n\n"
-        "The SSH command is set to:\n" + app->sshCommand + "\n\n"
-        "Check that the SSH command is set correctly and an\n"
-        "SSH client program is properly installed on your system";
-    svMessageWindow(sshEMsg, "SpiritVNC - FLTK");
+    svMessageWindow("Error: This connection requires SSH and \nthe SSH command isn't working."
+        "\n\nCheck that the SSH client program is installed", "SpiritVNC - FLTK");
 
     svLogToFile("SSH command not working for connection '"
         + itm->name + "' - " + itm->hostAddress);

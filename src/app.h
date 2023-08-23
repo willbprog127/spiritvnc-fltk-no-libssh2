@@ -35,6 +35,11 @@
 #ifndef APP_H
 #define APP_H
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #include <FL/Fl.H>
 #include <FL/fl_ask.H>
 #include <FL/Fl_Button.H>
@@ -60,13 +65,17 @@
 #include <FL/Fl_Window.H>
 
 #include <fstream>
+
+#ifndef _WIN32
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/select.h>
+#endif
+
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/select.h>
 #include <stdlib.h>
 #include <signal.h>
 
@@ -161,6 +170,11 @@ public:
     if (userName.empty() == true && getenv("LOGNAME") != NULL)
       userName = getenv("LOGNAME");
 
+    #ifdef _WIN32
+    if (userName.empty() == true && getenv("USERNAME") != NULL)
+      userName = getenv("USERNAME");
+    #endif
+    
     // uh-oh, can't figure out user's name
     if (userName.empty() == true)
     {
@@ -178,7 +192,7 @@ public:
     // set up config file path and file
 
     // for macOS / OS X
-  #if defined __APPLE__
+    #if defined __APPLE__ || defined _WIN32
     configPath = "/Users/" + userName + "/.spiritvnc/";
     #elif defined __sun__
     // for solaris or openindiana
