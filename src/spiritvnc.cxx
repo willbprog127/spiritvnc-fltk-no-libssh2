@@ -42,10 +42,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined __APPLE__ && !defined _WIN32
-#include <X11/xpm.h>
-#endif
-
 #include <FL/Fl.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_PNG_Image.H>

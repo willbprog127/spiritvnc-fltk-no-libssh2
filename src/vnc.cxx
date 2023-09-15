@@ -1315,6 +1315,8 @@ void VncViewer::setFullScreen ()
   app->vncViewer->size(app->scroller->w(), app->scroller->h());
   app->vncViewer->vnc->setObjectVisible();
 
+  app->vncViewer->set_visible_focus();
+
   Fl::redraw();
   Fl::check();
 }
@@ -1335,6 +1337,8 @@ void VncViewer::unsetFullScreen ()
   svResizeScroller();
 
   app->vncViewer->vnc->setObjectVisible();
+
+  app->vncViewer->set_visible_focus();
 
   Fl::redraw();
   Fl::check();
