@@ -2076,6 +2076,13 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
     app->childWindowBeingDisplayed = NULL;
     app->itmBeingEdited = NULL;
 
+    // refresh any visual changes for connected listeners
+    if (itm->isListener == true)
+    {
+      if (itm->vnc != NULL)
+        itm->vnc->setObjectVisible();
+    }
+
     svConfigWrite();
   }
 }
