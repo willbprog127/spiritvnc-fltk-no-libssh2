@@ -146,6 +146,7 @@ public:
     savedY(0),
     savedW(800),
     savedH(600),
+    maximized(false),
     createdObjects(0),
     msgThread(0),
     strF12ClipVar(""),
@@ -174,7 +175,7 @@ public:
     if (userName.empty() == true && getenv("USERNAME") != NULL)
       userName = getenv("USERNAME");
     #endif
-    
+
     // uh-oh, can't figure out user's name
     if (userName.empty() == true)
     {
@@ -255,6 +256,7 @@ public:
   int savedY;
   int savedW;
   int savedH;
+  bool maximized;
   int createdObjects;
   pthread_t msgThread;
   std::string strF12ClipVar;

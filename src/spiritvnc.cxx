@@ -122,6 +122,11 @@ int main (int argc, char **argv)
   Fl::add_timeout(0.7, svRestoreWindowSizePosition);
   #endif
 
+  //// maximize window if last state was maximized
+  //// (I guess FLTK can't do 'maximize' yet!?)
+  //if (app->maximized)
+    //app->mainWin->maximize();
+
   VncObject::masterMessageLoop();
 
   return Fl::run();

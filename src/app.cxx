@@ -419,6 +419,10 @@ void svConfigReadCreateHostList ()
         if (strProp == "showreverseconnect")
           app->showReverseConnect = svConvertStringToBoolean(strVal);
 
+        // maximize if last window state was maximized
+        if (strProp == "maximized")
+          app->maximized = svConvertStringToBoolean(strVal);
+
         // #############################################################################
         // ######## per-connection options #############################################
         // #############################################################################
@@ -671,6 +675,8 @@ void svConfigWrite ()
   ofs << "savedy=" << app->savedY << std::endl;
   ofs << "savedw=" << app->savedW << std::endl;
   ofs << "savedh=" << app->savedH << std::endl;
+
+  ofs << "maximized=" << app->maximized << std::endl;
 
   // blank line
   ofs << std::endl;
@@ -1641,6 +1647,7 @@ void svHandleHostListEvents (Fl_Widget *, void *)
   if (Fl::event_button() == FL_RIGHT_MOUSE)
   {
     int nF12Flags;
+    int nF12Flags2;
 
     if (app->childWindowVisible == true)
       return;
@@ -1765,12 +1772,19 @@ void svHandleHostListEvents (Fl_Widget *, void *)
         else
           nF12Flags = 0;
 
+        // enable / disable 'Clear F12 macro' item in menu
+        if (itm->f12Macro == "")
+          nF12Flags2 = FL_MENU_INACTIVE;
+        else
+          nF12Flags2 = 0;
+
         // create context menu
         // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
         const Fl_Menu_Item miMain[] = {
-          {"Disconnect",      0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
-          {"Edit",            0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
-          {"Paste F12 macro", 0, 0, 0, nF12Flags, 0, FL_HELVETICA, app->nMenuFontSize},
+          {"Disconnect",      0, 0, 0, 0,          0, FL_HELVETICA, app->nMenuFontSize},
+          {"Edit",            0, 0, 0, 0,          0, FL_HELVETICA, app->nMenuFontSize},
+          {"Paste F12 macro", 0, 0, 0, nF12Flags,  0, FL_HELVETICA, app->nMenuFontSize},
+          {"Clear F12 macro", 0, 0, 0, nF12Flags2, 0, FL_HELVETICA, app->nMenuFontSize},
           {0}
         };
 
@@ -1808,6 +1822,10 @@ void svHandleHostListEvents (Fl_Widget *, void *)
               itm->f12Macro = app->strF12ClipVar;
               app->strF12ClipVar = "";
             }
+
+            // clear F12 macro variable of listening item
+            if (strcmp(strRes, "Clear F12 macro") == 0)
+              itm->f12Macro = "";
           }
         }
 
