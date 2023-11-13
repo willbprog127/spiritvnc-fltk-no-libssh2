@@ -9,6 +9,18 @@ Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you
 #### New feature: Fullscreen
 A new feature has been added -- fullscreen.  Pressing the F11 key will put SpiritVNC-FLTK into fullscreen mode when viewing a remote server.  Pressing F11 again will take the app out of fullscreen.  This feature may be rough around the edges, so if any issues, please file a problem report
 
+#### Why FLTK?
+FLTK seems to have the best balance of being lightweight, capable and cross-platform.  While FLTK *does* look fairly dated, that doesn't bother me right now.  Maybe FLTK 1.4 will have some more modern-looking themes...?  The FLTK community and contributors are very helpful, understanding and accommodating while the teams for other toolkits have often been abrasive and unhelpful.
+
+#### Why not GTK or Qt?
+I'm not a big fan of how the GNOME and GTK projects are being run, so I have no *immediate* plans to create a GTK version.  This may change if those projects come to their senses.  Qt licensing has always been perplexing to me, so I'd rather not invest a whole bunch of time into a Qt version only to be sued by them for some weird reason.
+
+#### How about a native macOS Cocoa version?
+Just -- no.  Build on macOS as shown below.  I worked tirelessly (quite literally) on a native Cocoa version and, while it was getting there, it didn't meet my standards.  Developing for macOS is like working for a merciless and unrelenting taskmaster.  When macOS development becomes more sane, I'll take a look, but I'm not planning on purchasing any more Apple hardware unless it's donated.
+
+#### Why C++ and not *(Rust, Go, Lua, Free Pascal, Java, Xojo, Bash, Python, assembly, etc)*
+I only have *half* a brain -- come on! 😉  I did make an earlier private version of SpiritVNC using Python and GObject introspection, but each Linux distro packaged things differently and I grew tired of the GTK project's silliness.
+
 #### Does it work on Windows?
 While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK compiling and running on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code has just been added, but please note that the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  In addition, SpiritVNC-FLTK will *only* compile and run *under the MSYS2 system* for now.  Double-clicking the compiled exe from Explorer will yield an error because *all* of SpiritVNC-FLTK's dependencies need to be copied to the same folder where `spiritvnc-fltk.exe` is located.  A pre-compiled Windows installer is planned but not yet available.
 
@@ -34,10 +46,13 @@ You will need both the libraries and development packages of the following:
 
 The 'pkg-config' program must be installed for building, unless you want to specify locations for includes and libs manually in the Makefile.
 
-**macOS - Intel** [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  Also, I don't have access to an Apple Silicon Mac (M1, M2, etc) so patches from people who *do* have these machines would be helpful.
+**macOS Intel** - [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  
 
-**Windows** [MSYS2](https://www.msys2.org/) is the recommended way to install dependencies on x86_64 versions of Windows 10 and 11.  No Windows ARM machines are available to me, so testing is non-existent.  libvncclient has some [Windows-specific bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows) that may not get fixed right away.
+**macOS Apple Silicon** - I don't have access to an Apple Silicon Mac (M1, M2, etc), so testing is non-existent.
 
+**Windows Intel** - [MSYS2](https://www.msys2.org/) is the recommended way to install dependencies on x86_64 versions of Windows 10 and 11.  libvncclient has some [Windows-specific bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows) that may not get fixed right away.  
+
+**Windows ARM** - No Windows ARM machines are available to me, so testing is non-existent.
 
 - - -
 
