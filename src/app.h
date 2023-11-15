@@ -109,7 +109,6 @@ public:
     iconNoConnect(NULL),
     iconConnecting(NULL),
     libVncVncPointer((void *)"VncObject"),
-    userName(""),
     configPath(""),
     configPathAndFile(""),
     requestedListWidth(170),
@@ -136,14 +135,22 @@ public:
     nStartingLocalPort(15000),
     showTooltips(true),
     debugMode(false),
+    #ifdef _WIN32
+    nAppFontSize(12),
+    #else
     nAppFontSize(10),
+    #endif
     strListFont("Sans"),
+    #ifdef _WIN32
+    nListFontSize(12),
+    #else
     nListFontSize(10),
+    #endif
     nMenuFontSize(11),
     blockLocalClipboardHandling(false),
     showReverseConnect(true),
-    savedX(0),
-    savedY(0),
+    savedX(64),
+    savedY(64),
     savedW(800),
     savedH(600),
     maximized(false),
@@ -161,6 +168,8 @@ public:
     quickNoteInput(NULL),
     packButtons(NULL)
   {
+    std::string userName = "";
+
     // get user's login name for reading/writing config file
 
     // linux / bsd
@@ -168,16 +177,15 @@ public:
       userName = getenv("USER");
 
     // solaris / openindiana / ?
-    if (userName.empty() == true && getenv("LOGNAME") != NULL)
+    if (userName == "" && getenv("LOGNAME") != NULL)
       userName = getenv("LOGNAME");
 
-    #ifdef _WIN32
-    if (userName.empty() == true && getenv("USERNAME") != NULL)
+    // Windows 10+
+    if (userName == "" && getenv("USERNAME") != NULL)
       userName = getenv("USERNAME");
-    #endif
 
     // uh-oh, can't figure out user's name
-    if (userName.empty() == true)
+    if (userName == "")
     {
       std::cout << "SpiritVNC - FLTK: CRITICAL - Could not get user's login name"
           " from environment\n\nExiting\n";
@@ -193,8 +201,11 @@ public:
     // set up config file path and file
 
     // for macOS / OS X
-    #if defined __APPLE__ || defined _WIN32
+    #if defined __APPLE__
     configPath = "/Users/" + userName + "/.spiritvnc/";
+    // Windows 10+
+    #elif defined _WIN32
+    configPath = std::string(getenv("APPDATA")) + "\\SpiritVNC\\";
     #elif defined __sun__
     // for solaris or openindiana
     configPath = "/export/home/" + userName + "/.spiritvnc/";
@@ -219,7 +230,6 @@ public:
   Fl_Image * iconNoConnect;
   Fl_Image * iconConnecting;
   void * libVncVncPointer;
-  std::string userName;
   std::string configPath;
   std::string configPathAndFile;
   int requestedListWidth;

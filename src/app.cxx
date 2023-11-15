@@ -360,7 +360,11 @@ void svConfigReadCreateHostList ()
           app->nAppFontSize = atoi(strVal.c_str());
 
           if (app->nAppFontSize < 1)
+            #ifdef _WIN32
             app->nAppFontSize = 10;
+            #else
+            app->nAppFontSize = 12;
+            #endif
         }
 
         // list font
@@ -376,7 +380,11 @@ void svConfigReadCreateHostList ()
           app->nListFontSize = atoi(strVal.c_str());
 
           if (app->nListFontSize < 1)
+            #ifdef _WIN32
             app->nListFontSize = 10;
+            #else
+            app->nListFontSize = 12;
+            #endif
         }
 
         // saved x position
@@ -536,7 +544,7 @@ void svConfigReadCreateHostList ()
           itm->compressLevel = atoi(strVal.c_str());
 
           if (itm->compressLevel < 0)
-            itm->compressLevel = 0;
+            itm->compressLevel = 5;
 
           if (itm->compressLevel > 9)
             itm->compressLevel = 9;
@@ -548,7 +556,7 @@ void svConfigReadCreateHostList ()
           itm->qualityLevel = atoi(strVal.c_str());
 
           if (itm->qualityLevel < 0)
-            itm->qualityLevel = 0;
+            itm->qualityLevel = 5;
 
           if (itm->qualityLevel > 9)
             itm->qualityLevel = 9;
@@ -592,11 +600,12 @@ void svConfigReadCreateHostList ()
 
   ifs.close();
 
-  // set host list font face and size
-  Fl::set_font(SV_LIST_FONT_ID, app->strListFont.c_str());
-  app->hostList->textfont(SV_LIST_FONT_ID);
-  app->hostList->textsize(app->nListFontSize);
-  app->nMenuFontSize = app->nListFontSize;
+  ///// ****** moved to spiritvnc.cxx ******
+  //// set host list font face and size
+  //Fl::set_font(SV_LIST_FONT_ID, app->strListFont.c_str());
+  //app->hostList->textfont(SV_LIST_FONT_ID);
+  //app->hostList->textsize(app->nListFontSize);
+  //app->nMenuFontSize = app->nListFontSize;
 }
 
 
@@ -713,8 +722,8 @@ void svConfigWrite ()
     ofs << "scalefast=" << svConvertBooleanToString(itm->scalingFast) << std::endl;
     ofs << "f12macro=" << itm->f12Macro << std::endl;
     ofs << "showremotecursor=" << svConvertBooleanToString(itm->showRemoteCursor) << std::endl;
-    ofs << "compression=" << itm->compressLevel << std::endl;
-    ofs << "quality=" << itm->qualityLevel << std::endl;
+    ofs << "compression=" << std::to_string(itm->compressLevel) << std::endl;
+    ofs << "quality=" << std::to_string(itm->qualityLevel) << std::endl;
     ofs << "ignoreinactive=" << svConvertBooleanToString(itm->ignoreInactive) << std::endl;
     ofs << "centerx=" << svConvertBooleanToString(itm->centerX) << std::endl;
     ofs << "centery=" << svConvertBooleanToString(itm->centerY) << std::endl;

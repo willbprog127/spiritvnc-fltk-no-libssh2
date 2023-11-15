@@ -36,14 +36,13 @@
 #define CONSTS_H
 
 /* constants */
-#define SV_APP_VERSION  "0.5.4"  //"0.4.16"
+#define SV_APP_VERSION  "0.5.5"
 
 #define SV_CURRENT_YEAR "2023"
 
 #define SV_CONNECTION_TIMEOUT_SECS  30
 #define SV_ONE_SECOND               1.00
 #define SV_PROP_LINE_MAX            4096
-#define SV_APP_FONT_SIZE            14
 #define SV_MAX_PROP_LEN             1024
 #define SV_MAX_HOSTLIST_ENTRIES     65000
 #define SV_CHOICE_2                 2

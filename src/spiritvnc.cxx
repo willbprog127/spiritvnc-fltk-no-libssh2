@@ -77,6 +77,12 @@ int main (int argc, char **argv)
     app->hostList->size(170, app->hostList->h());
   }
 
+  // set host list font face and size
+  Fl::set_font(SV_LIST_FONT_ID, app->strListFont.c_str());
+  app->hostList->textfont(SV_LIST_FONT_ID);
+  app->hostList->textsize(app->nListFontSize);
+  app->nMenuFontSize = app->nListFontSize;
+
   // set app icons
   svCreateAppIcons();
 
