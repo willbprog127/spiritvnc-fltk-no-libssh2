@@ -24,6 +24,9 @@ I only have *half* a brain -- come on! 😉  I did make an earlier private versi
 #### Does it work on Windows?
 While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK compiling and running on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code has just been added, but please note that the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  In addition, SpiritVNC-FLTK will *only* compile and run *under the MSYS2 system* for now.  Double-clicking the compiled exe from Explorer will yield an error because *all* of SpiritVNC-FLTK's dependencies need to be copied to the same folder where `spiritvnc-fltk.exe` is located.  A pre-compiled Windows installer is planned but not yet available.
 
+#### Is it localized for my language?
+Unless your language is English, no.  It is NOT out of disrespect for your particular language, I just don't have the time or resources to maintain different localizations and I feel adding a localization mechanism to SpiritVNC-FLTK would add complexity and increase executable size.  If anyone has any feedback or ideas for _lightweight_ localization, just create an issue.
+
 2016-2023 Will Brokenbourgh
 https://www.pismotek.com/brainout/
 
@@ -40,11 +43,11 @@ SpiritVNC - FLTK has a 3-Clause BSD License
 __Dependencies__
 
 You will need both the libraries and development packages of the following:
-- fltk 1.3.4, 1.3.5 or newer
+- fltk 1.3.4 or newer
 - libvncserver / libvncclient (if separate, you only need libvncclient)
+- pkg-config program must be installed unless you want to specify locations for includes and libs manually in the Makefile
 - An installed SSH client runable with the `ssh` command or similar (adjustable within program settings)
-
-The 'pkg-config' program must be installed for building, unless you want to specify locations for includes and libs manually in the Makefile.
+- GNU make must be installed on OpenIndiana and FreeBSD
 
 **macOS Intel** - [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  
 
@@ -62,17 +65,16 @@ SpiritVNC - FLTK requires a compiler that supports C++11.
 
 'cd' into the directory that has the Makefile, then...
 
-On most Linux distros, macOS and MSYS2 on Windows:
+On most Linux distros, macOS and MSYS2 on Windows (where GNU make is default):
 ```sh
 $ make [debug]
-$ sudo make install   # (don't use this command on macOS or Windows)
 ```
 
-On FreeBSD, OpenBSD and others (OpenIndiana?):
+On FreeBSD, OpenBSD, OpenIndiana (GNU make must be installed first):
 ```sh
 $ gmake [debug]
-$ sudo gmake install
 ```
+ℹ️ Using `make install` or `gmake install` is not recommended on any OS right now.
 - - -
 __Usage__
 
