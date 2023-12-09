@@ -12,10 +12,10 @@ OSNAME   = $(shell uname -s)
 
 spiritvnc-fltk:
   @echo "Building on '$(OSNAME)'"
-  @echo ""
+  @echo
 
 ifeq ($(PKGCONF),)
-  @echo " "
+  @echo
   @echo "**** ERROR: Unable to run 'pkg-config' ****"
   @exit 1
 endif
@@ -25,10 +25,10 @@ endif
 
 debug:
   @echo "Building debug on '$(OSNAME)'"
-  @echo ""
+  @echo
 
 ifeq ($(PKGCONF),)
-  @echo " "
+  @echo
   @echo "**** ERROR: Unable to run 'pkg-config' ****"
   @exit 1
 endif
