@@ -34,6 +34,71 @@
 
 #include "app.h"
 
+/* app options controls */
+struct AppOptionsControls
+{
+  Fl_Spinner * spinScanTimeout;
+  Fl_Spinner * spinLocalSSHPort;
+  //Fl_Spinner * spinDeadTimeout;
+  SVInput * inSSHCommand;
+  Fl_Check_Button * chkLogToFile;
+  SVInput * inAppFontSize;
+  SVInput * inListFont;
+  SVInput * inListFontSize;
+  SVInput * inListWidth;
+  Fl_Check_Button * chkCBIcons;
+  Fl_Check_Button * chkShowTooltips;
+  Fl_Check_Button * chkShowReverseConnect;
+  Fl_Button * btnCancel;
+  Fl_Button * btnSave;
+} AppOpts;
+
+/* F8 window controls */
+struct F8Controls
+{
+  Fl_Button * btnCAD;
+  Fl_Button * btnCSE;
+  Fl_Button * btnRefresh;
+  Fl_Button * btnSendF8;
+  Fl_Button * btnSendF11;
+  Fl_Button * btnSendF12;
+  Fl_Button * btnCancel;
+} F8Opts;
+
+/* itm option controls */
+struct ItemOptionsControls
+{
+  SVInput * inName;
+  SVInput * inGroup;
+  SVInput * inAddress;
+  SVInput * inF12Macro;
+  Fl_Radio_Round_Button * rbVNC;
+  Fl_Radio_Round_Button * rbSVNC;
+  SVInput * inVNCPort;
+  SVSecretInput * inVNCPassword;
+  SVInput * inVNCLoginUser;
+  SVSecretInput * inVNCLoginPassword;
+  SVInput * inVNCCompressLevel;
+  SVInput * inVNCQualityLevel;
+  //Fl_Check_Button * chkIgnoreInactive = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
+  Fl_Group * grpScaling;
+  Fl_Radio_Round_Button * rbScaleOff;
+  Fl_Radio_Round_Button * rbScaleZoom;
+  Fl_Radio_Round_Button * rbScaleFit;
+  Fl_Check_Button * chkScalingFast;
+  Fl_Check_Button * chkShowRemoteCursor;
+  Fl_Box * bxSSHSection;
+  SVInput * inSSHName;
+  //SVSecretInput * inSSHPassword;
+  SVInput * inSSHPort;
+  SVInput * inSSHPrvKey;
+  Fl_Button * btnShowPrvKeyChooser;
+  // 'Delete' button
+  Fl_Button * btnDel;
+  Fl_Button * btnCancel;
+  Fl_Button * btnSave;
+} ItmOpts;
+
 
 /* handle method for SVInput
  * (instance method)
@@ -75,10 +140,7 @@ int SVSecretInput::handle (int evt)
 int SVQuickNotePack::handle (int evt)
 {
   // we will accept focus by returning non-zero
-  if (evt == FL_FOCUS)
-    return 1;
-
-  if (evt == FL_UNFOCUS)
+  if (evt == FL_FOCUS || evt == FL_UNFOCUS)
     return 1;
 
   return Fl_Pack::handle(evt);
@@ -124,10 +186,7 @@ int SVQuickNoteInput::handle (int evt)
   }
 
   // we will accept focus by returning non-zero
-  if (evt == FL_FOCUS)
-    return 1;
-
-  if (evt == FL_UNFOCUS)
+  if (evt == FL_FOCUS || evt == FL_UNFOCUS)
     return 1;
 
   return SVInput::handle(evt);
@@ -155,7 +214,7 @@ int SVQuickNoteBox::handle (int evt)
         app->quickNoteInput->value(itm->quickNote.c_str());
 
         // show editor stuff
-        app->quickNotePack->position(app->quickNote->x(), app->quickNote->y());
+        app->quickNotePack->position(app->quickNoteBox->x(), app->quickNoteBox->y());
 
         // show the quick note edit widgets (hopefully)
         app->quickNotePack->show();
@@ -229,7 +288,7 @@ void svCloseChildWindow (Fl_Widget *, void * data)
 
 
 /* creates new configuration if none is found */
-void svConfigCreateNew ()
+void svConfigCreateNewDir ()
 {
   struct stat st;
 
@@ -269,7 +328,7 @@ void svConfigReadCreateHostList ()
   if (ifs.fail())
   {
     std::cout << "SpiritVNC - Could not open config file.  Using defaults" << std::endl;
-    svConfigCreateNew();
+    svConfigCreateNewDir();
     return;
   }
 
@@ -315,16 +374,17 @@ void svConfigReadCreateHostList ()
           app->nScanTimeout = w;
         }
 
-        // dead connection timeout in seconds
-        if (strProp == "deadtimeout")
-        {
-          int w = atoi(strVal.c_str());
+        //// dead connection timeout in seconds
+        //// **** preserving for possible future use ****
+        //if (strProp == "deadtimeout")
+        //{
+          //int w = atoi(strVal.c_str());
 
-          if (w < 1)
-              w = 100;
+          //if (w < 1)
+              //w = 100;
 
-          app->nDeadTimeout = w;
-        }
+          //app->nDeadTimeout = w;
+        //}
 
         // ssh command
         if (strProp == "sshcommand")
@@ -349,6 +409,10 @@ void svConfigReadCreateHostList ()
         // display tooltips?
         if (strProp == "showtooltips")
           app->showTooltips = svConvertStringToBoolean(strVal);
+
+        // log app events to file?
+        if (strProp == "logtofile")
+          app->enableLogToFile = svConvertStringToBoolean(strVal);
 
         // display debug messages?
         if (strProp == "debugmode")
@@ -427,9 +491,9 @@ void svConfigReadCreateHostList ()
         if (strProp == "showreverseconnect")
           app->showReverseConnect = svConvertStringToBoolean(strVal);
 
-        // maximize if last window state was maximized
-        if (strProp == "maximized")
-          app->maximized = svConvertStringToBoolean(strVal);
+        //// maximize if last window state was maximized
+        //if (strProp == "maximized")
+          //app->maximized = svConvertStringToBoolean(strVal);
 
         // #############################################################################
         // ######## per-connection options #############################################
@@ -492,9 +556,9 @@ void svConfigReadCreateHostList ()
         if (strProp == "sshuser")
           itm->sshUser = strVal;
 
-        // ssh password
-        if (strProp == "sshpass")
-          itm->sshPass = strVal;
+        //// ssh password
+        //if (strProp == "sshpass")
+          //itm->sshPass = strVal;
 
         // vnc password (password authentication)
         if (strProp == "vncpass")
@@ -562,17 +626,17 @@ void svConfigReadCreateHostList ()
             itm->qualityLevel = 9;
         }
 
-        // ignore inactive disconnect?
-        if (strProp == "ignoreinactive")
-          itm->ignoreInactive = svConvertStringToBoolean(strVal);
+        //// ignore inactive disconnect?
+        //if (strProp == "ignoreinactive")
+          //itm->ignoreInactive = svConvertStringToBoolean(strVal);
 
-        // center x?
-        if (strProp == "centerx")
-          itm->centerX = svConvertStringToBoolean(strVal);
+        //// center x?
+        //if (strProp == "centerx")
+          //itm->centerX = svConvertStringToBoolean(strVal);
 
-        // center y?
-        if (strProp == "centery")
-          itm->centerY = svConvertStringToBoolean(strVal);
+        //// center y?
+        //if (strProp == "centery")
+          //itm->centerY = svConvertStringToBoolean(strVal);
 
         // quicknote
         if (strProp == "quicknote")
@@ -599,13 +663,6 @@ void svConfigReadCreateHostList ()
   }
 
   ifs.close();
-
-  ///// ****** moved to spiritvnc.cxx ******
-  //// set host list font face and size
-  //Fl::set_font(SV_LIST_FONT_ID, app->strListFont.c_str());
-  //app->hostList->textfont(SV_LIST_FONT_ID);
-  //app->hostList->textsize(app->nListFontSize);
-  //app->nMenuFontSize = app->nListFontSize;
 }
 
 
@@ -636,13 +693,13 @@ void svConfigWrite ()
   // write header
   ofs << "# SpiritVNC-FLTK config file" <<  std::endl;
   ofs << "#" << std::endl;
-  ofs << "# option names / properties should always be lower-case without"
-      " spaces" << std::endl;
+  ofs << "# option names / properties should always be lower-case without spaces" << std::endl;
   ofs << "# host type can be 'v' for vnc and 's' for vnc through ssh" << std::endl;
   ofs << "# scale can be 's' for scrolled, 'z' for scale up/down and 'f' for scale"
       " down only" << std::endl;
   ofs << std::endl;
 
+  // app options
   ofs << "# program options" << std::endl;
 
   // hostlist width
@@ -654,8 +711,8 @@ void svConfigWrite ()
   // scan timeout in seconds
   ofs << "scantimeout=" << app->nScanTimeout << std::endl;
 
-  // dead connection timeout
-  ofs << "deadtimeout=" << app->nDeadTimeout << std::endl;
+  //// dead connection timeout
+  //ofs << "deadtimeout=" << app->nDeadTimeout << std::endl;
 
   // starting local port number (+99) for ssh connections
   ofs << "startinglocalport=" << app->nStartingLocalPort << std::endl;
@@ -665,6 +722,9 @@ void svConfigWrite ()
 
   // show tool tips
   ofs << "showtooltips=" << svConvertBooleanToString(app->showTooltips) << std::endl;
+
+  // log app events to file
+  ofs << "logtofile=" << svConvertBooleanToString(app->enableLogToFile) << std::endl;
 
   // show debugging messages
   ofs << "debugmode=" << svConvertBooleanToString(app->debugMode) << std::endl;
@@ -685,7 +745,7 @@ void svConfigWrite ()
   ofs << "savedw=" << app->savedW << std::endl;
   ofs << "savedh=" << app->savedH << std::endl;
 
-  ofs << "maximized=" << app->maximized << std::endl;
+  //ofs << "maximized=" << app->maximized << std::endl;
 
   // blank line
   ofs << std::endl;
@@ -717,16 +777,16 @@ void svConfigWrite ()
     ofs << "type=" << itm->hostType << std::endl;
     ofs << "sshkeyprivate=" << itm->sshKeyPrivate << std::endl;
     ofs << "sshuser=" << itm->sshUser << std::endl;
-    ofs << "sshpass=" << itm->sshPass << std::endl;
+    //ofs << "sshpass=" << itm->sshPass << std::endl;
     ofs << "scale=" << itm->scaling << std::endl;
     ofs << "scalefast=" << svConvertBooleanToString(itm->scalingFast) << std::endl;
     ofs << "f12macro=" << itm->f12Macro << std::endl;
     ofs << "showremotecursor=" << svConvertBooleanToString(itm->showRemoteCursor) << std::endl;
     ofs << "compression=" << std::to_string(itm->compressLevel) << std::endl;
     ofs << "quality=" << std::to_string(itm->qualityLevel) << std::endl;
-    ofs << "ignoreinactive=" << svConvertBooleanToString(itm->ignoreInactive) << std::endl;
-    ofs << "centerx=" << svConvertBooleanToString(itm->centerX) << std::endl;
-    ofs << "centery=" << svConvertBooleanToString(itm->centerY) << std::endl;
+    //ofs << "ignoreinactive=" << svConvertBooleanToString(itm->ignoreInactive) << std::endl;
+    //ofs << "centerx=" << svConvertBooleanToString(itm->centerX) << std::endl;
+    //ofs << "centery=" << svConvertBooleanToString(itm->centerY) << std::endl;
     ofs << "quicknote=" << base64Encode(reinterpret_cast<const unsigned char *>
       (itm->quickNote.c_str()), itm->quickNote.size()) << std::endl;
     ofs << "lastconnecttime=" << itm->lastConnectedTime << std::endl;
@@ -774,42 +834,18 @@ void svConnectionWatcher (void *)
       if (vnc == NULL)
         continue;
 
-      // advance and check viewer timeout value
-      if (itm->isConnecting == true)
-      {
-        svDebugLog("svConnectionWatcher - itm still 'isConnecting'");
-
-        vnc->waitTime ++;
-
-        // 'soft' time-out reached
-        if (vnc->waitTime > app->nConnectionTimeout && itm->isListener == false)
-        {
-          svDebugLog("svConnectionWatcher - 'Soft' timeout reached, giving up");
-
-          VncObject::endAndDeleteViewer(&vnc);
-
-          app->nViewersWaiting --;
-
-          itm->isConnected = false;
-
-          // set host list item status icon
-          itm->icon = app->iconNoConnect;
-          svHandleListItemIconChange(NULL);
-
-          svLogToFile(std::string(std::string("Could not connect to '") +
-            itm->name + "' - " + itm->hostAddress).c_str());
-        }
-      }
-
       // if ssh connection faltered, shut down the vnc viewer
-      if (itm->isConnected == true
-          && (itm->hostType == 's'
-          && itm->sshReady == false))
+      if (itm->isConnected == true && (itm->hostType == 's' && itm->sshReady == false))
       {
         app->nViewersWaiting --;
         svDebugLog("svConnectionWatcher - SSH problem during connection, ending");
-        VncObject::endAndDeleteViewer(&itm->vnc);
+
+        itm->vnc->endViewer();
       }
+
+      // cleanup vnc client structure and delete vnc object
+      if (itm->vncNeedsCleanup == true)
+        VncObject::cleanupVNCObject(itm);
     }
   }
 
@@ -838,7 +874,7 @@ void svConnectionWatcher (void *)
     //// check if connection has been inactive, unless this itm is ignoring
     //if (vnc->inactiveSeconds >= app->nDeadTimeout && itm->ignoreInactive == false)
       //// remote host hasn't responded in time allotted, disconnect
-      //VncObject::endAndDeleteViewer(&vnc);
+      //vnc->endViewer();
     //else
       //vnc->inactiveSeconds ++;
   //}
@@ -973,25 +1009,25 @@ void svCreateGUI ()
   app->lastConnected->labelcolor(fl_rgb_color(SV_QUICK_INFO_FG_COLOR));
 
   // last error message
-  app->lastError = new Fl_Multiline_Output(0, 0, 163, 45);
-  app->lastError->textsize((app->nAppFontSize + 1));
-  app->lastError->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
-  app->lastError->box(FL_THIN_DOWN_BOX);
-  app->lastError->wrap(1);
-  app->lastError->textcolor(FL_DARK_RED);
-  app->lastError->readonly(1);
-  app->lastError->clear_visible_focus();
+  app->lastErrorBox = new Fl_Multiline_Output(0, 0, 163, 45);
+  app->lastErrorBox->textsize((app->nAppFontSize + 1));
+  app->lastErrorBox->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
+  app->lastErrorBox->box(FL_THIN_DOWN_BOX);
+  app->lastErrorBox->wrap(1);
+  app->lastErrorBox->textcolor(FL_DARK_RED);
+  app->lastErrorBox->readonly(1);
+  app->lastErrorBox->clear_visible_focus();
 
   // note - very brief item info
-  app->quickNote = new SVQuickNoteBox(0, 0, 163, 190);
-  app->quickNote->textsize((app->nAppFontSize + 2));
-  app->quickNote->textfont(FL_HELVETICA_ITALIC);
-  app->quickNote->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
-  app->quickNote->box(FL_THIN_DOWN_BOX);
-  app->quickNote->textcolor(fl_rgb_color(SV_QUICK_INFO_FG_COLOR));
-  app->quickNote->wrap(1);
-  app->quickNote->readonly(1);
-  app->quickNote->clear_visible_focus();
+  app->quickNoteBox = new SVQuickNoteBox(0, 0, 163, 190);
+  app->quickNoteBox->textsize((app->nAppFontSize + 2));
+  app->quickNoteBox->textfont(FL_HELVETICA_ITALIC);
+  app->quickNoteBox->align(FL_ALIGN_TOP_LEFT | FL_ALIGN_INSIDE);
+  app->quickNoteBox->box(FL_THIN_DOWN_BOX);
+  app->quickNoteBox->textcolor(fl_rgb_color(SV_QUICK_INFO_FG_COLOR));
+  app->quickNoteBox->wrap(1);
+  app->quickNoteBox->readonly(1);
+  app->quickNoteBox->clear_visible_focus();
 
   app->quickInfoPack->end();
 
@@ -1061,8 +1097,8 @@ void svCreateGUI ()
 void svCreateQuickNoteEditWidgets ()
 {
   // quick note parent container (fl_pack)
-  app->quickNotePack = new SVQuickNotePack(app->quickNote->x(), app->quickNote->y(),
-    app->quickNote->w(), app->quickNote->h() - 3);
+  app->quickNotePack = new SVQuickNotePack(app->quickNoteBox->x(), app->quickNoteBox->y(),
+    app->quickNoteBox->w(), app->quickNoteBox->h() - 3);
 
   // quick note multi-line wrapped input widget
   app->quickNoteInput = new SVQuickNoteInput(0, 0, app->quickNotePack->w(), app->quickNotePack->h());
@@ -1125,7 +1161,7 @@ void svDeleteItem (const int nItem)
     fl_message_hotspot(0);
     fl_message_title("SpiritVNC - Delete Item");
 
-    if (fl_choice("%s", "Cancel", "No", "Yes", strConfirm.c_str()) == SV_CHOICE_2)
+    if (fl_choice("%s", "Cancel", "No", "Yes", strConfirm.c_str()) == SV_CHOICE_BTN_3)
       okayToDelete = true;
   }
 
@@ -1265,14 +1301,8 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
     return;
   }
 
-  // get the widget's name through user_data()
-  const char * strCtlName = static_cast<char *>(widget->user_data());
-
-  if (strCtlName == NULL)
-    return;
-
   // cancel button clicked
-  if (strcmp(strCtlName, "btnCancel") == 0)
+  if (btn == AppOpts.btnCancel)
   {
     childWindow->hide();
     app->childWindowVisible = false;
@@ -1280,98 +1310,60 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
   }
 
   // save button clicked
-  if (strcmp(strCtlName, "btnSave") == 0)
+  if (btn == AppOpts.btnSave)
   {
-    Fl_Widget * wid = NULL;
+    // scan timeout spinner
+    app->nScanTimeout = AppOpts.spinScanTimeout->value();
 
-    int nChildCount = childWindow->children();
+    // local ssh start port number spinner
+    app->nStartingLocalPort = AppOpts.spinLocalSSHPort->value();
 
-    char * strTemp = NULL;
-    std::string strName = strCtlName;
+    //// inactive connection timeout spinner
+   //app->nDeadTimeout = AppOpts.spinDeadTimeout->value();
 
-    for (int i = 0; i < nChildCount; i ++)
-    {
-      wid = childWindow->child(i);
+    // ssh command input
+    app->sshCommand = AppOpts.inSSHCommand->value();
 
-      if (wid != NULL)
-      {
-        strTemp = static_cast<char *>(wid->user_data());
+    // app font size input
+    app->nAppFontSize = atoi(AppOpts.inAppFontSize->value());
 
-        if (strTemp == NULL || strTemp[0] == '\0')
-          continue;
+    // hostlist font name input
+    app->strListFont = AppOpts.inListFont->value();
 
-        strName = strTemp;
+    // hostlist font size input
+    app->nListFontSize = atoi(AppOpts.inListFontSize->value());
 
-        if (strName == "")
-          continue;
+    // hostlist requested width input
+    app->requestedListWidth = atoi(AppOpts.inListWidth->value());
+    svPositionWidgets();
 
-        // scan timeout spinner
-        if (strName == "spinScanTimeout")
-          app->nScanTimeout = static_cast<Fl_Spinner *>(wid)->value();
+    // user color-blind icons checkbutton
+    if (AppOpts.chkCBIcons->value() == 1)
+      app->colorBlindIcons = true;
+    else
+      app->colorBlindIcons = false;
 
-        // local ssh start port number spinner
-        if (strName == "spinLocalSSHPort")
-          app->nStartingLocalPort = static_cast<Fl_Spinner *>(wid)->value();
+    svCreateAppIcons(true);
 
-        // inactive connection timeout spinner
-        if (strName == "spinDeadTimeout")
-          app->nDeadTimeout = static_cast<Fl_Spinner *>(wid)->value();
+    // show tooltips checkbutton
+    if (AppOpts.chkShowTooltips->value() == 1)
+      app->showTooltips = true;
+    else
+      app->showTooltips = false;
 
-        // ssh command input
-        if (strName == "inSSHCommand")
-          app->sshCommand = static_cast<SVInput *>(wid)->value();
+    svEnableDisableTooltips();
 
-        // app font size input
-        if (strName == "inAppFontSize")
-          app->nAppFontSize = atoi(static_cast<SVInput *>(wid)->value());
+    // show reverse notification checkbutton
+    if (AppOpts.chkShowReverseConnect->value() == 1)
+      app->showReverseConnect = true;
+    else
+      app->showReverseConnect = false;
 
-        // hostlist font name input
-        if (strName == "inListFont")
-          app->strListFont = static_cast<SVInput *>(wid)->value();
-
-        // hostlist font size input
-        if (strName == "inListFontSize")
-          app->nListFontSize = atoi(static_cast<SVInput *>(wid)->value());
-
-        // hostlist requested width input
-        if (strName == "inListWidth")
-        {
-          app->requestedListWidth = atoi(static_cast<SVInput *>(wid)->value());
-          svPositionWidgets();
-        }
-
-        // user color-blind icons checkbutton
-        if (strName == "chkCBIcons")
-        {
-          if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
-            app->colorBlindIcons = true;
-          else
-            app->colorBlindIcons = false;
-
-          svCreateAppIcons(true);
-        }
-
-        // show tooltips checkbutton
-        if (strName == "chkShowTooltips")
-        {
-          if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
-            app->showTooltips = true;
-          else
-            app->showTooltips = false;
-
-          svEnableDisableTooltips();
-        }
-
-        // show reverse notification checkbutton
-        if (strName == "chkShowReverseConnect")
-        {
-          if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
-            app->showReverseConnect = true;
-          else
-            app->showReverseConnect = false;
-        }
-      }
-    }
+    // log app events to file
+    if (AppOpts.chkLogToFile->value() == 1)
+      app->enableLogToFile = true;
+    else
+      app->enableLogToFile = false;
 
     Fl::redraw();
     childWindow->hide();
@@ -1390,26 +1382,21 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
 void svHandleF8Buttons (Fl_Widget * widget, void *)
 {
   Fl_Window * childWindow = app->childWindowBeingDisplayed;
+  Fl_Button * btn = static_cast<Fl_Button *>(widget);
 
-  if (childWindow == NULL || widget == NULL)
+  if (childWindow == NULL || widget == NULL || btn == NULL)
   {
     app->childWindowVisible = false;
     app->childWindowBeingDisplayed = NULL;
     return;
   }
 
-  // get the widget's name through user_data()
-  const char * strName = static_cast<char *>(widget->user_data());
-
-  if (strName == NULL)
-    return;
-
   VncObject * vnc = app->vncViewer->vnc;
 
   if (vnc != NULL)
   {
-    // ctrl+alt+delete button clicked
-    if (strcmp(strName, SV_F8_BTN_CAD) == 0)
+    // ctrl + alt + delete button clicked
+    if (btn == F8Opts.btnCAD)
     {
       SendKeyEvent(vnc->vncClient, XK_Control_L, true);
       SendKeyEvent(vnc->vncClient, XK_Alt_L, true);
@@ -1420,8 +1407,8 @@ void svHandleF8Buttons (Fl_Widget * widget, void *)
       SendKeyEvent(vnc->vncClient, XK_Delete, false);
     }
 
-    // ctrl+shift+esc button clicked
-    if (strcmp(strName, SV_F8_BTN_CSE) == 0)
+    // ctrl + shift + esc button clicked
+    if (btn == F8Opts.btnCSE)
     {
       SendKeyEvent(vnc->vncClient, XK_Control_L, true);
       SendKeyEvent(vnc->vncClient, XK_Shift_L, true);
@@ -1433,26 +1420,26 @@ void svHandleF8Buttons (Fl_Widget * widget, void *)
     }
 
     // ask server for a screen refresh
-    if (strcmp(strName, SV_F8_BTN_REFRESH) == 0)
+    if (btn == F8Opts.btnRefresh)
       SendFramebufferUpdateRequest(vnc->vncClient, 0, 0,
         vnc->vncClient->width, vnc->vncClient->height, false);
 
     // send F8 key
-    if (strcmp(strName, SV_F8_BTN_SEND_F8) == 0)
+    if (btn == F8Opts.btnSendF8)
     {
       SendKeyEvent(vnc->vncClient, XK_F8, true);
       SendKeyEvent(vnc->vncClient, XK_F8, false);
     }
 
     // send F11 key
-    if (strcmp(strName, SV_F8_BTN_SEND_F11) == 0)
+    if (btn == F8Opts.btnSendF11)
     {
       SendKeyEvent(vnc->vncClient, XK_F11, true);
       SendKeyEvent(vnc->vncClient, XK_F11, false);
     }
 
     // send F12 key
-    if (strcmp(strName, SV_F8_BTN_SEND_F12) == 0)
+    if (btn == F8Opts.btnSendF12)
     {
       SendKeyEvent(vnc->vncClient, XK_F12, true);
       SendKeyEvent(vnc->vncClient, XK_F12, false);
@@ -1675,7 +1662,7 @@ void svHandleHostListEvents (Fl_Widget *, void *)
     {
       itm->hasDisconnectRequest = true;
 
-      VncObject::endAndDeleteViewer(&vnc);
+      vnc->endViewer();
 
       return;
     }
@@ -1813,7 +1800,7 @@ void svHandleHostListEvents (Fl_Widget *, void *)
             {
               int iIndx = svItemNumFromItm(itm);
 
-              VncObject::endAndDeleteViewer(&vnc);
+              vnc->endViewer();
               svDeleteItem(iIndx);
 
               menuUp = false;
@@ -1864,14 +1851,8 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
     return;
   }
 
-  // get the widget's name through user_data()
-  const char * strCtlName = static_cast<char *>(widget->user_data());
-
-  if (strCtlName == NULL)
-    return;
-
   // cancel button clicked
-  if (strcmp(strCtlName, SV_ITM_BTN_CANCEL) == 0)
+  if (btn == ItmOpts.btnCancel)
   {
     childWindow->hide();
     app->childWindowVisible = false;
@@ -1880,12 +1861,12 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
   }
 
   // delete button clicked
-  if (strcmp(strCtlName, SV_ITM_BTN_DEL) == 0)
+  if (btn == ItmOpts.btnDel)
   {
     fl_message_hotspot(0);
     fl_message_title("SpiritVNC - Delete Item");
 
-    if (fl_choice("Are you sure you want to delete this?", "Cancel", "No", "Yes") == SV_CHOICE_2)
+    if (fl_choice("Are you sure you want to delete this?", "Cancel", "No", "Yes") == SV_CHOICE_BTN_3)
     {
       int nItem = svItemNumFromItm(itm);
 
@@ -1904,176 +1885,99 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
   }
 
   // save button clicked
-  if (strcmp(strCtlName, SV_ITM_BTN_SAVE) == 0)
+  if (btn == ItmOpts.btnSave)
   {
-    Fl_Widget * wid = NULL;
+    // connection name text input
+    itm->name = ItmOpts.inName->value();
 
-    int nChildCount = childWindow->children();
+    // connection group text input
+    itm->group = ItmOpts.inGroup->value();
 
-    char * strTemp = NULL;
-    std::string strName = strCtlName;
+    // connection address text input
+    itm->hostAddress = ItmOpts.inAddress->value();
 
-    // iterate through child controls and save their settings
-    for (int i = 0; i < nChildCount; i ++)
-    {
-      wid = childWindow->child(i);
+    // f12 macro text input
+    itm->f12Macro = ItmOpts.inF12Macro->value();
 
-      if (wid != NULL)
-      {
-        strTemp = static_cast<char *>(wid->user_data());
+    // vnc connection radio button
+    if (ItmOpts.rbVNC->value() == 1)
+      itm->hostType = 'v';
 
-        if (strTemp == NULL || strTemp[0] == '\0')
-          continue;
+    // vnc-through-ssh radio button
+    if (ItmOpts.rbSVNC->value() == 1)
+      itm->hostType = 's';
 
-        strName = strTemp;
+    // vnc port text input
+    itm->vncPort = ItmOpts.inVNCPort->value();
 
-        if (strName == "")
-          continue;
+    // vnc password secret input
+    itm->vncPassword = ItmOpts.inVNCPassword->value();
 
-        // connection name text input
-        if (strName == SV_ITM_NAME)
-          itm->name = static_cast<SVInput *>(wid)->value();
+    // vnc login name input
+    itm->vncLoginUser = ItmOpts.inVNCLoginUser->value();
 
-        // connection group text input
-        if (strName == SV_ITM_GRP)
-          itm->group = static_cast<SVInput *>(wid)->value();
+    // vnc login password secret input
+    itm->vncLoginPassword = ItmOpts.inVNCLoginPassword->value();
 
-        // connection address text input
-        if (strName == SV_ITM_ADDRESS)
-          itm->hostAddress = static_cast<SVInput *>(wid)->value();
+    // vnc compression level text input
+    itm->compressLevel = atoi(ItmOpts.inVNCCompressLevel->value());
 
-        // f12 macro text input
-        if (strName == SV_ITM_F12_MACRO)
-          itm->f12Macro = static_cast<SVInput *>(wid)->value();
+    if (itm->compressLevel < 0)
+      itm->compressLevel = 0;
 
-        // vnc connection radio button
-        if (strName == SV_ITM_CON_VNC)
-          if (static_cast<Fl_Radio_Round_Button *>(wid)->value() == 1)
-            itm->hostType = 'v';
+    if (itm->compressLevel > 9)
+      itm->compressLevel = 9;
 
-        // vnc-through-ssh radio button
-        if (strName == SV_ITM_CON_SVNC)
-          if (static_cast<Fl_Radio_Round_Button *>(wid)->value() == 1)
-            itm->hostType = 's';
+    // vnc quality level text input
+    itm->qualityLevel = atoi(ItmOpts.inVNCQualityLevel->value());
 
-        // vnc port text input
-        if (strName == SV_ITM_VNC_PORT)
-          itm->vncPort = static_cast<SVInput *>(wid)->value();
+    if (itm->qualityLevel < 0)
+      itm->qualityLevel = 0;
 
-        // vnc password secret input
-        if (strName == SV_ITM_VNC_PASS)
-          itm->vncPassword = static_cast<Fl_Secret_Input *>(wid)->value();
+    if (itm->qualityLevel > 9)
+      itm->qualityLevel = 9;
 
-        // vnc login name input
-        if (strName == SV_ITM_VNC_LOGIN_USER)
-          itm->vncLoginUser = static_cast<Fl_Input *>(wid)->value();
+    //// ignore inactive connection checkbutton
+    //if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
+      //itm->ignoreInactive = false;
+    //else
+      //itm->ignoreInactive = true;
 
-        // vnc login password secret input
-        if (strName == SV_ITM_VNC_LOGIN_PASS)
-          itm->vncLoginPassword = static_cast<Fl_Secret_Input *>(wid)->value();
+    // scroll only / no scaling radio button
+    if (ItmOpts.rbScaleOff->value() == 1)
+      itm->scaling = 's';
 
-        // vnc compression level text input
-        if (strName == SV_ITM_VNC_COMP)
-        {
-          itm->compressLevel = atoi(static_cast<SVInput *>(wid)->value());
-          if (itm->compressLevel < 0)
-            itm->compressLevel = 0;
+    // zoom radio button
+    if (ItmOpts.rbScaleZoom->value() == 1)
+      itm->scaling = 'z';
 
-          if (itm->compressLevel > 9)
-            itm->compressLevel = 9;
-        }
+    // fit radio button
+    if (ItmOpts.rbScaleFit->value() == 1)
+      itm->scaling = 'f';
 
-        // vnc quality level text input
-        if (strName == SV_ITM_VNC_QUAL)
-        {
-          itm->qualityLevel = atoi(static_cast<SVInput *>(wid)->value());
+    // fast (jaggy) scaling checkbutton
+    if (ItmOpts.chkScalingFast->value() == 1)
+      itm->scalingFast = true;
+    else
+      itm->scalingFast = false;
 
-          if (itm->qualityLevel < 0)
-            itm->qualityLevel = 0;
+    // show remote cursor checkbutton
+    if (ItmOpts.chkShowRemoteCursor->value() == 1)
+      itm->showRemoteCursor = true;
+    else
+      itm->showRemoteCursor = false;
 
-          if (itm->qualityLevel > 9)
-            itm->qualityLevel = 9;
-        }
+    // ssh username
+    itm->sshUser = ItmOpts.inSSHName->value();
 
-        // ignore inactive connection checkbutton
-        if (strName == SV_ITM_IGN_DEAD)
-        {
-          if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
-            itm->ignoreInactive = false;
-          else
-            itm->ignoreInactive = true;
-        }
+    // ssh password
+    //itm->sshPass = ItmOpts.inSSHPassword->value();
 
-        // scaling options group
-        if (strName == SV_ITM_GRP_SCALE)
-        {
-          Fl_Group * grp = static_cast<Fl_Group *>(wid);
-          int nGrpChildCount = grp->children();
-          Fl_Widget * chld = NULL;
+    // ssh port
+    itm->sshPort = ItmOpts.inSSHPort->value();
 
-          // iterate through this group's children and save their settings
-          for (uint8_t j = 0; j < nGrpChildCount; j ++)
-          {
-            chld = grp->child(j);
-
-            char * strChildTemp = static_cast<char *>(chld->user_data());
-
-            if (strChildTemp == NULL || strChildTemp[0] == '\0')
-              continue;
-
-            std::string strChildName = strChildTemp;
-
-            if (strChildName == "")
-              continue;
-
-            // scroll only / no scaling radio button
-            if (strChildName == SV_ITM_SCALE_OFF)
-              if (static_cast<Fl_Radio_Round_Button *>(chld)->value() == 1)
-                itm->scaling = 's';
-
-            // zoom radio button
-            if (strChildName == SV_ITM_SCALE_ZOOM)
-              if (static_cast<Fl_Radio_Round_Button *>(chld)->value() == 1)
-                itm->scaling = 'z';
-
-            // fit radio button
-            if (strChildName == SV_ITM_SCALE_FIT)
-              if (static_cast<Fl_Radio_Round_Button *>(chld)->value() == 1)
-                itm->scaling = 'f';
-
-            // fast (jaggy) scaling checkbutton
-            if (strChildName == SV_ITM_FAST_SCALE)
-            {
-              if (static_cast<Fl_Check_Button *>(chld)->value() == 1)
-                itm->scalingFast = true;
-              else
-                itm->scalingFast = false;
-            }
-          }
-        }
-
-        // show remote cursor checkbutton
-        if (strName == SV_ITM_SHW_REM_CURSOR)
-        {
-          if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
-            itm->showRemoteCursor = true;
-          else
-            itm->showRemoteCursor = false;
-        }
-
-        if (strName == SV_ITM_SSH_NAME)
-          itm->sshUser = static_cast<SVInput *>(wid)->value();
-
-        if (strName == SV_ITM_SSH_PASS)
-          itm->sshPass = static_cast<SVInput *>(wid)->value();
-
-        if (strName == SV_ITM_SSH_PORT)
-          itm->sshPort = static_cast<SVInput *>(wid)->value();
-
-        if (strName == SV_ITM_SSH_PRV_KEY)
-          itm->sshKeyPrivate = static_cast<SVInput *>(wid)->value();
-      }
-    }
+    // ssh private key
+    itm->sshKeyPrivate = ItmOpts.inSSHPrvKey->value();
 
     // add item to host list if new
     if (svItemNumFromItm(itm) == 0 && app->hostList->size() < SV_MAX_HOSTLIST_ENTRIES)
@@ -2104,11 +2008,8 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
     app->itmBeingEdited = NULL;
 
     // refresh any visual changes for connected listeners
-    if (itm->isListener == true)
-    {
-      if (itm->vnc != NULL)
-        itm->vnc->setObjectVisible();
-    }
+    if (itm->isListener == true && itm->vnc != NULL)
+      itm->vnc->setObjectVisible();
 
     svConfigWrite();
   }
@@ -2121,6 +2022,10 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
 */
 void svHandleLocalClipboard (const int source, void *)
 {
+  // The selection buffer (source is 0) is used for middle-mouse pastes and
+  // for drag-and-drop selections. The clipboard (source is 1) is used for
+  // copy/cut/paste operations.
+
   // don't process clipboard if there's no remote server being displayed
   // of it's the selection buffer
   if (app->vncViewer->vnc == NULL || source != 1)
@@ -2267,24 +2172,24 @@ void svQuickInfoSetLabelAndText (HostItem * itm)
   }
 
   // set last error text, if any
-  app->lastError->value(itm->lastErrorMessage.c_str());
+  app->lastErrorBox->value(itm->lastErrorMessage.c_str());
 
   // set appropriate text style and quick note text
   if (itm->quickNote == "")
   {
-    app->quickNote->textfont(FL_HELVETICA_ITALIC);
+    app->quickNoteBox->textfont(FL_HELVETICA_ITALIC);
 
     // listening connections don't save any data, so
     // best to call the item 'Temporary Note'
     if (itm->isListener == true)
-      app->quickNote->value("(no Temporary Note)");
+      app->quickNoteBox->value("(no Temporary Note)");
     else
-      app->quickNote->value("(no Quick Note)");
+      app->quickNoteBox->value("(no Quick Note)");
   }
   else
   {
-    app->quickNote->textfont(FL_HELVETICA);
-    app->quickNote->value(itm->quickNote.c_str());
+    app->quickNoteBox->textfont(FL_HELVETICA);
+    app->quickNoteBox->value(itm->quickNote.c_str());
   }
 }
 
@@ -2303,9 +2208,9 @@ void svQuickInfoSetToEmpty ()
   app->quickInfoLabel->copy_label("-");
   app->lastConnectedLabel->copy_label("");
   app->lastConnected->copy_label("");
-  app->lastError->value("");
-  app->quickNote->textfont(FL_HELVETICA_ITALIC);
-  app->quickNote->value("-");
+  app->lastErrorBox->value("");
+  app->quickNoteBox->textfont(FL_HELVETICA_ITALIC);
+  app->quickNoteBox->value("-");
 }
 
 
@@ -2390,8 +2295,7 @@ void svHandleThreadConnection (void * data)
   // set viewer as connected
   if (itm->isWaitingForShow == true)
   {
-    svDebugLog("svConnectionWatcher - itm changing from"
-      " 'isWaitingToShow' to 'isConnected'");
+    svDebugLog("svConnectionWatcher - itm changing from 'isWaitingToShow' to 'isConnected'");
 
     itm->isWaitingForShow = false;
 
@@ -2438,7 +2342,7 @@ void svHandleThreadConnection (void * data)
       strHostViewName.append(vnc->vncClient->desktopName);
       itm->name = strHostViewName;
 
-      app->hostList->text(nListeningItem, itm->name.c_str()); // strHostViewName.c_str());
+      app->hostList->text(nListeningItem, itm->name.c_str());
 
       // (try to) create another listener
       svDebugLog("svConnectionWatcher - Creating Listener object");
@@ -2446,10 +2350,8 @@ void svHandleThreadConnection (void * data)
       VncObject::createVNCListener();
 
       if (app->showReverseConnect == true)
-      {
         svMessageWindow("A remote VNC host has just reverse-connected"
           "\n\nClick the 'Listen' item(s) in the host list to view");
-      }
     }
   }
 
@@ -2469,7 +2371,7 @@ void svHandleThreadConnection (void * data)
 
       // only update the lastError quick info if we're on this host item
       if (app->hostList->value() == svItemNumFromItm(itm))
-        app->lastError->value(itm->lastErrorMessage.c_str());
+        app->lastErrorBox->value(itm->lastErrorMessage.c_str());
     }
     else
       itm->icon = app->iconNoConnect;
@@ -2483,41 +2385,8 @@ void svHandleThreadConnection (void * data)
         "\n\nTry exiting the program, then restarting");
     }
 
-    itm->vnc = NULL;
-
-    // ### this stuff commented out because should be done in endViewer, not at this level ###
-    //if (itm->hostType == 's')
-      //svCloseSSHConnection(itm);
-  }
-
-  // advance and check viewer timeout value
-  if (itm->isConnecting == true)
-  {
-    svDebugLog("svConnectionWatcher - itm still 'isConnecting'");
-
-    vnc->waitTime ++;
-
-    if (vnc->waitTime > app->nConnectionTimeout && itm->isListener == false)
-    {
-      svDebugLog("svConnectionWatcher - 'Soft' timeout reached, giving up");
-
-      VncObject::endAndDeleteViewer(&vnc);
-
-      app->nViewersWaiting --;
-
-      // set host list item status icon
-      itm->icon = app->iconNoConnect;
-      svHandleListItemIconChange(NULL);
-
-      // stop this thread because our 'soft' timeout was reached
-      svDebugLog("svConnectionWatcher - Canceling itm->threadRFB");
-
-      // ### this stuff commented out because should be done in endViewer, not at this level ###
-      //if (itm->threadRFB != 0)
-        //pthread_cancel(itm->threadRFB);
-
-      svLogToFile("Could not connect to '" + itm->name + "' - " + itm->hostAddress);
-    }
+    // set cleanup flag so svConnectionWatcher will do the thing
+    itm->vncNeedsCleanup = true;
   }
 }
 
@@ -2602,33 +2471,6 @@ int svItemNumFromItm (const HostItem * itmIn)
 }
 
 
-/* return itm (HostItem*) in hostlist that has address 'strAdd' */
-void svItmFromAddress (const std::string& strAdd, HostItem * itmOut)
-{
-  if (strAdd == "")
-  {
-    itmOut = NULL;
-    return;
-  }
-
-  HostItem * itm;
-  uint16_t nSize = app->hostList->size();
-
-  // go through hostlist and find item owning matching itmIn
-  for (uint16_t i = 0; i <= nSize; i ++)
-  {
-    itm = NULL;
-    itm = static_cast<HostItem *>(app->hostList->data(i));
-
-    if (itm != NULL && itm->hostAddress == strAdd)
-    {
-      itmOut = itm;
-      return;
-    }
-  }
-}
-
-
 /*
   handle itm option window choose prvkey button presses
   (Fl_Widget * not used so parameter name removed)
@@ -2678,6 +2520,9 @@ void svLogToFile (const std::string& strMessage)
   char timeBuf[50] = {0};
   time_t logClock = 0;
   std::string strLineEnd;
+
+  if (app->enableLogToFile == false)
+    return;
 
   if (strMessage.size() == 0 || strMessage == "")
     return;
@@ -2880,8 +2725,8 @@ void svSetAppTooltips ()
     "Right-click a disconnected item to connect, edit or delete it");
   app->quickInfoLabel->tooltip("The current item's name");
   app->lastConnected->tooltip("The last time this connection was successfully made");
-  app->lastError->tooltip("The last error when trying to connect to the current item");
-  app->quickNote->tooltip("Click here to enter a brief note about the current item");
+  app->lastErrorBox->tooltip("The last error when trying to connect to the current item");
+  app->quickNoteBox->tooltip("Click here to enter a brief note about the current item");
 
   // check and set tooltip visibility
   svEnableDisableTooltips();
@@ -2899,16 +2744,17 @@ void svShowAboutHelp ()
   app->childWindowVisible = true;
 
   // window size
-  int nWinWidth = 700;
-  int nWinHeight = 740;
+  int nWinWidth = 765;
+  int nWinHeight = 595; //740;
 
   // set window position
   int nX = (app->mainWin->w() / 2) - (nWinWidth / 2);
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create messagebox window
-  Fl_Window * winAboutHelp = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "About / Help");
+  Fl_Window * winAboutHelp = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "About SpiritVNC-FLTK / Help");
   winAboutHelp->set_modal();
+  winAboutHelp->callback(svCloseChildWindow, winAboutHelp);
 
   Fl_Help_View * hv = new Fl_Help_View(10, 10, nWinWidth - 20, nWinHeight - 70);
 
@@ -2916,38 +2762,54 @@ void svShowAboutHelp ()
   hv->textsize(app->nAppFontSize);
   hv->textfont(0);
 
-  const char strHelp[] = "<center><strong><h3>SpiritVNC"
-      " - FLTK</strong></center></font>"
-      "<p><center><font face='sans'>&copy; 2016-" SV_CURRENT_YEAR " Will Brokenbourgh - <a"
-      " href='https://www.pismotek.com/brainout/'>"
-      "https://www.pismotek.com/brainout/</a></font></center></p>"
-      "<p><center><font face='sans'>Version " SV_APP_VERSION "<br>"
-      "Built " __DATE__ "&nbsp;&bull;&nbsp;" __TIME__ "</font></center></p>"
-      "<p><center><font face='sans'>SpiritVNC is a multi-viewer VNC client for *nix systems"
+  const char strHelp[] = "<center><font face='sans'><h5>SpiritVNC - FLTK</h5></font></center>"
+
+      "<p><center>"
+      "&copy; 2016-" SV_CURRENT_YEAR " Will Brokenbourgh - <a href='https://www.pismotek.com/brainout/'>"
+      "https://www.pismotek.com/brainout/</a>"
+      "</center></p>"
+      // -
+      "<p><center>"
+      "Version " SV_APP_VERSION "&nbsp;&bull;&nbsp;"
+      "Built " __DATE__ "&nbsp;&bull;&nbsp;" __TIME__
+      "</center></p>"
+      // -
+      "<p><center>"
+      "SpiritVNC is a multi-viewer VNC client for *nix systems"
       " based on FLTK.  SpiritVNC features VNC-through-SSH, reverse VNC (listening)"
       " connections and automatic timed scanning of each connected viewer."
-      "</center></font></p>"
-      "<hr>"
+      "</center></p>"
+      // ---
+      "<p><center><font color='gray'>- - -</font></center></p>"
       "<p><center><strong>Instructions</strong></center><br>"
-      "<ul><li>To add a new connection, click the [+] button</li>"
-      "<li>To delete a connection, click it one time, then click the [-] button</li>"
+      // -
+      "<ul>"
+      "<li>To add a new connection, click the [+] button</li>"
+      "<li>To delete a connection, single-click it then click the [-] button</li>"
       "<li>To connect a connection, double-click it</li>"
       "<li>To disconnect a normal connection, right-click it while connected</li>"
-      "<li>To Connect, Edit, Delete or copy the F12 macro of a connection, right-click the connection when"
+      "<li>To Connect, Edit, Delete, or 'copy' the F12 macro of a connection, right-click the connection when"
       " not connected</li>"
-      "<li>To move a connection up or down in the list, click the 'up' or 'down'"
-      " arrow buttons</li>"
       "<li>To scan automatically through all connected viewers, click the 'clock' button</li>"
       "<li>To 'listen' for an incoming VNC connection, click the 'ear' button</li>"
-      "<li>To disconnect or edit a 'listening' connection, right-click it while connected</li>"
+      "<li>To disconnect, edit or 'paste' a F12 macro to a 'listening' connection, right-click it while connected</li>"
       "<li>To change application options, click the settings button (looks like three control sliders)</li>"
-      "<li>To perform remote actions, press F8 when a remote host is being displayed</li></ul>"
-      "<hr>"
-      "<p><center>Many thanks to the <em>FLTK</em> and <em>libvncserver</em>"
-      " projects for their libraries and example code.</center></p>"
-      "<p><center>&nbsp;If you have any questions, need to report a bug or have suggestions, please"
+      "<li>To perform remote actions, press F8 when a remote host is being displayed</li>"
+      "<li>See the README file for more detailed instructions</li>"
+      "</ul>"
+      // ---
+      "<p><center><font color='gray'>- - -</font></center></p>"
+      "<p><center>"
+      "Many thanks to the <em>FLTK</em> and <em>libvncserver</em> projects for their libraries "
+      "and example code."
+      "</center></p>"
+      // -
+      "<p><center>"
+      "&nbsp;If you have any questions, need to report a bug or have suggestions, please"
       " <a href='https://www.pismotek.com/brainout/content/spiritvnc.php'>visit the SpiritVNC page</a>"
-      "&nbsp;</center></p>"
+      "&nbsp;"
+      "</center></p>"
+      // -
       "<p><center><strong>To God be the glory! :-D</strong></center></p>";
 
   // set helpview's text
@@ -2983,18 +2845,20 @@ void svShowAppOptions ()
   int nWinHeight = 550;
 
   // set window position
-  int nX = (app->mainWin->w() / 2) - (nWinWidth / 2);
+  int nX = app->hostList->w() + 50;
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
   // create window
   Fl_Window * winAppOpts = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Application Options");
   winAppOpts->set_modal();
+  winAppOpts->callback(svCloseChildWindow, winAppOpts);
+
   app->childWindowBeingDisplayed = winAppOpts;
 
   // add itm value editors / selectors
   int nXPos = 300;
-  int nYStep = 31;
-  int nYPos = 20;
+  int nYStep = 32; //31;
+  int nYPos = -(nYStep / 2);  //20;
 
   // widgetName->user_data() is used to assign the widget's name to itself
   // so it can be easily handled in the callback
@@ -3002,53 +2866,55 @@ void svShowAppOptions ()
   // ############ general options ##########################################################
 
   // scan viewer time-out
-  Fl_Spinner * spinScanTimeout = new Fl_Spinner(nXPos, nYPos += nYStep,
+  AppOpts.spinScanTimeout = new Fl_Spinner(nXPos, nYPos += nYStep,
     100, 28, "Scan wait time (seconds) ");
-  spinScanTimeout->textsize(app->nAppFontSize);
-  spinScanTimeout->labelsize(app->nAppFontSize);
-  spinScanTimeout->step(1);
-  spinScanTimeout->minimum(1);
-  spinScanTimeout->maximum(200000);
-  spinScanTimeout->user_data(SV_OPTS_SCN_TIMEOUT);
-  spinScanTimeout->value(app->nScanTimeout);
-  spinScanTimeout->tooltip("When scanning, this is how long SpiritVNC waits before moving"
+  AppOpts.spinScanTimeout->textsize(app->nAppFontSize);
+  AppOpts.spinScanTimeout->labelsize(app->nAppFontSize);
+  AppOpts.spinScanTimeout->step(1);
+  AppOpts.spinScanTimeout->minimum(1);
+  AppOpts.spinScanTimeout->maximum(200000);
+  AppOpts.spinScanTimeout->value(app->nScanTimeout);
+  AppOpts.spinScanTimeout->tooltip("When scanning, this is how long SpiritVNC waits before moving"
       " to the next connected host item");
 
   // starting local ssh port number
-  Fl_Spinner * spinLocalSSHPort = new Fl_Spinner(nXPos, nYPos += nYStep,
+  AppOpts.spinLocalSSHPort = new Fl_Spinner(nXPos, nYPos += nYStep,
     100, 28, "Starting local SSH port number ");
-  spinLocalSSHPort->textsize(app->nAppFontSize);
-  spinLocalSSHPort->labelsize(app->nAppFontSize);
-  spinLocalSSHPort->step(1);
-  spinLocalSSHPort->minimum(1);
-  spinLocalSSHPort->maximum(200000);
-  spinLocalSSHPort->user_data(SV_OPTS_LOCAL_SSH_PORT);
-  spinLocalSSHPort->value(app->nStartingLocalPort);
-  spinLocalSSHPort->tooltip("This is the first SSH port used locally for VNC-over-SSH"
-      " connections");
+  AppOpts.spinLocalSSHPort->textsize(app->nAppFontSize);
+  AppOpts.spinLocalSSHPort->labelsize(app->nAppFontSize);
+  AppOpts.spinLocalSSHPort->step(1);
+  AppOpts.spinLocalSSHPort->minimum(1);
+  AppOpts.spinLocalSSHPort->maximum(200000);
+  AppOpts.spinLocalSSHPort->value(app->nStartingLocalPort);
+  AppOpts.spinLocalSSHPort->tooltip("This is the first SSH port used locally for VNC-over-SSH connections");
 
-  // inactive connection timeout
-  Fl_Spinner * spinDeadTimeout = new Fl_Spinner(nXPos, nYPos += nYStep,
-    100, 28, "Inactive connection timeout (seconds) ");
-  spinDeadTimeout->textsize(app->nAppFontSize);
-  spinDeadTimeout->labelsize(app->nAppFontSize);
-  spinDeadTimeout->step(1);
-  spinDeadTimeout->minimum(1);
-  spinDeadTimeout->maximum(200000);
-  spinDeadTimeout->user_data(SV_OPTS_DEAD_TIMEOUT);
-  spinDeadTimeout->value(app->nDeadTimeout);
-  spinDeadTimeout->tooltip("This is the time, in seconds, SpiritVNC waits before"
-      " disconnecting a remote host due to inactivity");
+  //// inactive connection timeout
+  //AppOpts.spinDeadTimeout = new Fl_Spinner(nXPos, nYPos += nYStep,
+    //100, 28, "Inactive connection timeout (seconds) ");
+  //AppOpts.spinDeadTimeout->textsize(app->nAppFontSize);
+  //AppOpts.spinDeadTimeout->labelsize(app->nAppFontSize);
+  //AppOpts.spinDeadTimeout->step(1);
+  //AppOpts.spinDeadTimeout->minimum(1);
+  //AppOpts.spinDeadTimeout->maximum(200000);
+  //AppOpts.spinDeadTimeout->value(app->nDeadTimeout);
+  //AppOpts.spinDeadTimeout->tooltip("This is the time, in seconds, SpiritVNC waits before"
+      //" disconnecting a remote host due to inactivity");
 
   // ssh command
-  SVInput * inSSHCommand = new SVInput(nXPos, nYPos += nYStep, 210, 28,
+  AppOpts.inSSHCommand = new SVInput(nXPos, nYPos += nYStep, 210, 28,
     "SSH command (eg: ssh or /usr/bin/ssh) ");
-  inSSHCommand->textsize(app->nAppFontSize);
-  inSSHCommand->labelsize(app->nAppFontSize);
-  inSSHCommand->user_data(SV_OPTS_SSH_COMMAND);
-  inSSHCommand->value(app->sshCommand.c_str());
-  inSSHCommand->tooltip("This is the command to start the SSH client on"
-      " your system");
+  AppOpts.inSSHCommand->textsize(app->nAppFontSize);
+  AppOpts.inSSHCommand->labelsize(app->nAppFontSize);
+  AppOpts.inSSHCommand->value(app->sshCommand.c_str());
+  AppOpts.inSSHCommand->tooltip("This is the command to start the SSH client on your system");
+
+  // log app events to file?
+  AppOpts.chkLogToFile = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
+    " Log app events to a file");
+  AppOpts.chkLogToFile->labelsize(app->nAppFontSize);
+  AppOpts.chkLogToFile->tooltip("Check this to log app events to a file");
+  if (app->enableLogToFile == true)
+    AppOpts.chkLogToFile->set();
 
   // ############ appearance options section ##########################################################
 
@@ -3059,76 +2925,62 @@ void svShowAppOptions ()
   lblSep01->labelfont(1);
 
   // app font size
-  SVInput * inAppFontSize = new SVInput(nXPos, nYPos += nYStep, 42, 28, "Application font size ");
-  inAppFontSize->textsize(app->nAppFontSize);
-  inAppFontSize->labelsize(app->nAppFontSize);
-  inAppFontSize->user_data(SV_OPTS_APP_FONT_SIZE);
-  char strTmp01[32] = {0};
-  snprintf(strTmp01, 32, "%i", app->nAppFontSize);
-  inAppFontSize->value(strTmp01);
-  inAppFontSize->tooltip("This is the font size used throughout SpiritVNC.  Restart the app to"
+  AppOpts.inAppFontSize = new SVInput(nXPos, nYPos += nYStep, 42, 28, "Application font size ");
+  AppOpts.inAppFontSize->textsize(app->nAppFontSize);
+  AppOpts.inAppFontSize->labelsize(app->nAppFontSize);
+  AppOpts.inAppFontSize->value(std::to_string(app->nAppFontSize).c_str());
+  AppOpts.inAppFontSize->tooltip("This is the font size used throughout SpiritVNC.  Restart the app to"
       " see any changes");
 
   // list font
-  SVInput * inListFont = new SVInput(nXPos, nYPos += nYStep, 210, 28,
+  AppOpts.inListFont = new SVInput(nXPos, nYPos += nYStep, 210, 28,
     "List font name (eg: Lucida Sans) ");
-  inListFont->textsize(app->nAppFontSize);
-  inListFont->labelsize(app->nAppFontSize);
-  inListFont->user_data(SV_OPTS_LIST_FONT_NAME);
-  inListFont->value(app->strListFont.c_str());
-  inListFont->tooltip("This is the font used for the host list.  Restart the app to"
+  AppOpts.inListFont->textsize(app->nAppFontSize);
+  AppOpts.inListFont->labelsize(app->nAppFontSize);
+  AppOpts.inListFont->value(app->strListFont.c_str());
+  AppOpts.inListFont->tooltip("This is the font used for the host list.  Restart the app to"
       " see any changes");
 
   // list font size
-  SVInput * inListFontSize = new SVInput(nXPos + 260, nYPos, 42, 28, "Size:");
-  inListFontSize->textsize(app->nAppFontSize);
-  inListFontSize->labelsize(app->nAppFontSize);
-  inListFontSize->user_data(SV_OPTS_LIST_FONT_SIZE);
-  char strTmp02[32] = {0};
-  snprintf(strTmp02, 32, "%i", app->nListFontSize);
-  inListFontSize->value(strTmp02);
-  inListFontSize->tooltip("This is the font size used for the host list.  Restart the app to"
+  AppOpts.inListFontSize = new SVInput(nXPos + 260, nYPos, 42, 28, "Size:");
+  AppOpts.inListFontSize->textsize(app->nAppFontSize);
+  AppOpts.inListFontSize->labelsize(app->nAppFontSize);
+  AppOpts.inListFontSize->value(std::to_string(app->nListFontSize).c_str());
+  AppOpts.inListFontSize->tooltip("This is the font size used for the host list.  Restart the app to"
       " see any changes");
 
   // list width
-  SVInput * inListWidth = new SVInput(nXPos, nYPos += nYStep, 210, 28, "List width ");
-  inListWidth->textsize(app->nAppFontSize);
-  inListWidth->labelsize(app->nAppFontSize);
-  inListWidth->user_data(SV_OPTS_LIST_WIDTH);
-  char strTmp03[32] = {0};
-  snprintf(strTmp03, 32, "%i", app->requestedListWidth);
-  inListWidth->value(strTmp03);
-  inListWidth->tooltip("Width of the host list.  Restart the app to"
-      " see any changes");
+  AppOpts.inListWidth = new SVInput(nXPos, nYPos += nYStep, 210, 28, "List width ");
+  AppOpts.inListWidth->textsize(app->nAppFontSize);
+  AppOpts.inListWidth->labelsize(app->nAppFontSize);
+  AppOpts.inListWidth->value(std::to_string(app->requestedListWidth).c_str());
+  AppOpts.inListWidth->tooltip("Width of the host list.  Restart the app to see any changes");
 
   // use color-blind icons?
-  Fl_Check_Button * chkCBIcons = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
+  AppOpts.chkCBIcons = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
     " Use icons for color-blind users");
-  chkCBIcons->labelsize(app->nAppFontSize);
-  chkCBIcons->user_data(SV_OPTS_USE_CB_ICONS);
-  chkCBIcons->tooltip("Check this to enable color-blind-friendly icons in the host list."
+  AppOpts.chkCBIcons->labelsize(app->nAppFontSize);
+  AppOpts.chkCBIcons->tooltip("Check this to enable color-blind-friendly icons in the host list."
       " Restart the app to see any changes");
   if (app->colorBlindIcons == true)
-    chkCBIcons->set();
+    AppOpts.chkCBIcons->set();
 
   // show tooltips?
-  Fl_Check_Button * chkShowTooltips = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
+  AppOpts.chkShowTooltips = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
     " Show tooltips");
-  chkShowTooltips->labelsize(app->nAppFontSize);
-  chkShowTooltips->user_data(SV_OPTS_SHOW_TOOLTIPS);
-  chkShowTooltips->tooltip("Check this to enable tooltips in SpiritVNC.");
+  AppOpts.chkShowTooltips->labelsize(app->nAppFontSize);
+  AppOpts.chkShowTooltips->tooltip("Check this to enable tooltips in SpiritVNC.");
   if (app->showTooltips == true)
-    chkShowTooltips->set();
+    AppOpts.chkShowTooltips->set();
 
   // show reverse connection notification?
-  Fl_Check_Button * chkShowReverseConnect = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
+  AppOpts.chkShowReverseConnect = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
     " Show reverse connection notification");
-  chkShowReverseConnect->labelsize(app->nAppFontSize);
-  chkShowReverseConnect->user_data(SV_OPTS_SHOW_REV_CON);
-  chkShowReverseConnect->tooltip("Check this to show a message window when a reverse"
+  AppOpts.chkShowReverseConnect->labelsize(app->nAppFontSize);
+  AppOpts.chkShowReverseConnect->tooltip("Check this to show a message window when a reverse"
       " connection happens.");
   if (app->showReverseConnect == true)
-    chkShowReverseConnect->set();
+    AppOpts.chkShowReverseConnect->set();
 
   // ############ gap and restart advice ##########################################################
 
@@ -3145,24 +2997,22 @@ void svShowAppOptions ()
   // ############ bottom buttons ##########################################################
 
   // 'Cancel' button
-  Fl_Button * btnCancel = new Fl_Button((nWinWidth - 210 - 10), nWinHeight - (35 + 10), 100, 35,
+  AppOpts.btnCancel = new Fl_Button((nWinWidth - 210 - 10), nWinHeight - (35 + 10), 100, 35,
     "Cancel");
-  btnCancel->labelsize(app->nAppFontSize);
-  btnCancel->box(FL_GTK_UP_BOX);
-  btnCancel->shortcut(FL_Escape);
-  btnCancel->user_data(SV_OPTS_CANCEL);
-  btnCancel->callback(svHandleAppOptionsButtons);
-  btnCancel->tooltip("Click to abandon any edits and close this window");
+  AppOpts.btnCancel->labelsize(app->nAppFontSize);
+  AppOpts.btnCancel->box(FL_GTK_UP_BOX);
+  AppOpts.btnCancel->shortcut(FL_Escape);
+  AppOpts.btnCancel->callback(svHandleAppOptionsButtons);
+  AppOpts.btnCancel->tooltip("Click to abandon any edits and close this window");
 
   // 'Save' button
-  Fl_Button * btnSave = new Fl_Button((nWinWidth - 100 - 10), nWinHeight - (35 + 10), 100, 35,
+  AppOpts.btnSave = new Fl_Button((nWinWidth - 100 - 10), nWinHeight - (35 + 10), 100, 35,
     "Save");
-  btnSave->labelsize(app->nAppFontSize);
-  btnSave->box(FL_GTK_UP_BOX);
-  btnSave->shortcut(FL_Enter);
-  btnSave->user_data(SV_OPTS_SAVE);
-  btnSave->callback(svHandleAppOptionsButtons);
-  btnSave->tooltip("Click to save edits and close this window");
+  AppOpts.btnSave->labelsize(app->nAppFontSize);
+  AppOpts.btnSave->box(FL_GTK_UP_BOX);
+  AppOpts.btnSave->shortcut(FL_Enter);
+  AppOpts.btnSave->callback(svHandleAppOptionsButtons);
+  AppOpts.btnSave->tooltip("Click to save edits and close this window");
 
   // end app options window layout
   winAppOpts->end();
@@ -3171,10 +3021,10 @@ void svShowAppOptions ()
   winAppOpts->show();
 
   // focus the first spinner control
-  spinScanTimeout->take_focus();
+  AppOpts.spinScanTimeout->take_focus();
 
   // silly code to select all characters in first spinner's text input
-  Fl_Input_ * inTemp = static_cast<Fl_Input_ *>(spinScanTimeout->child(0));
+  Fl_Input_ * inTemp = static_cast<Fl_Input_ *>(AppOpts.spinScanTimeout->child(0));
 
   if (inTemp != NULL && inTemp->type() == FL_INT_INPUT)
     inTemp->position(0, 1000);
@@ -3204,64 +3054,58 @@ void svShowF8Window ()
   // create window
   Fl_Window * winF8 = new Fl_Window(nX, nY, nWinWidth, nWinHeight, "Remote host actions");
   winF8->set_modal();
+  winF8->callback(svCloseChildWindow, winF8);
 
   app->childWindowBeingDisplayed = winF8;
 
   // add itm value editors / selectors
   int nXPos = 15;
-  int nYStep = 40;
-  int nYPos = 20;
+  int nYStep = 38;
+  int nYPos = -(nYStep / 2);  //10; //20;
 
   // widgetName->user_data() is used to assign the widget's name to itself
   // so it can be easily handled in the callback
 
   // =========================
 
-  Fl_Button * btnCAD = new Fl_Button(nXPos, nYPos += 20, 200, 35, "Send Ctrl+Alt+Del");
-  btnCAD->box(FL_GTK_UP_BOX);
-  btnCAD->user_data(SV_F8_BTN_CAD);
-  btnCAD->callback(svHandleF8Buttons);
-  btnCAD->tooltip("Click to send Ctrl+Alt+Delete to the current remote host");
+  F8Opts.btnCAD = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send Ctrl+Alt+Del");
+  F8Opts.btnCAD->box(FL_GTK_UP_BOX);
+  F8Opts.btnCAD->callback(svHandleF8Buttons);
+  F8Opts.btnCAD->tooltip("Click to send Ctrl+Alt+Delete to the current remote host");
 
-  Fl_Button * btnCSE = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send Ctrl+Shift+Esc");
-  btnCSE->box(FL_GTK_UP_BOX);
-  btnCSE->user_data(SV_F8_BTN_CSE);
-  btnCSE->callback(svHandleF8Buttons);
-  btnCSE->tooltip("Click to send Ctrl+Alt+Esc to the current remote host");
+  F8Opts.btnCSE = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send Ctrl+Shift+Esc");
+  F8Opts.btnCSE->box(FL_GTK_UP_BOX);
+  F8Opts.btnCSE->callback(svHandleF8Buttons);
+  F8Opts.btnCSE->tooltip("Click to send Ctrl+Alt+Esc to the current remote host");
 
-  Fl_Button * btnRefresh = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send refresh request");
-  btnRefresh->box(FL_GTK_UP_BOX);
-  btnRefresh->user_data(SV_F8_BTN_REFRESH);
-  btnRefresh->callback(svHandleF8Buttons);
-  btnRefresh->tooltip("Click to send a screen refresh request to the current remote host");
+  F8Opts.btnRefresh = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send refresh request");
+  F8Opts.btnRefresh->box(FL_GTK_UP_BOX);
+  F8Opts.btnRefresh->callback(svHandleF8Buttons);
+  F8Opts.btnRefresh->tooltip("Click to send a screen refresh request to the current remote host");
 
-  Fl_Button * btnSendF8 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F8");
-  btnSendF8->box(FL_GTK_UP_BOX);
-  btnSendF8->user_data(SV_F8_BTN_SEND_F8);
-  btnSendF8->callback(svHandleF8Buttons);
-  btnSendF8->tooltip("Click to press the F8 key on the current remote host");
+  F8Opts.btnSendF8 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F8");
+  F8Opts.btnSendF8->box(FL_GTK_UP_BOX);
+  F8Opts.btnSendF8->callback(svHandleF8Buttons);
+  F8Opts.btnSendF8->tooltip("Click to press the F8 key on the current remote host");
 
-  Fl_Button * btnSendF11 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F11");
-  btnSendF11->box(FL_GTK_UP_BOX);
-  btnSendF11->user_data(SV_F8_BTN_SEND_F11);
-  btnSendF11->callback(svHandleF8Buttons);
-  btnSendF11->tooltip("Click to press the F11 key on the current remote host");
+  F8Opts.btnSendF11 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F11");
+  F8Opts.btnSendF11->box(FL_GTK_UP_BOX);
+  F8Opts.btnSendF11->callback(svHandleF8Buttons);
+  F8Opts.btnSendF11->tooltip("Click to press the F11 key on the current remote host");
 
-  Fl_Button * btnSendF12 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F12");
-  btnSendF12->box(FL_GTK_UP_BOX);
-  btnSendF12->user_data(SV_F8_BTN_SEND_F12);
-  btnSendF12->callback(svHandleF8Buttons);
-  btnSendF12->tooltip("Click to press the F12 key on the current remote host");
+  F8Opts.btnSendF12 = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send F12");
+  F8Opts.btnSendF12->box(FL_GTK_UP_BOX);
+  F8Opts.btnSendF12->callback(svHandleF8Buttons);
+  F8Opts.btnSendF12->tooltip("Click to press the F12 key on the current remote host");
 
   // ############ bottom button ##########################################################
 
   // 'Close' button
-  Fl_Button * btnCancel = new Fl_Button((nWinWidth - 110), nWinHeight - (35 + 10), 100, 35, "Close");
-  btnCancel->box(FL_GTK_UP_BOX);
-  btnCancel->shortcut(FL_Escape);
-  btnCancel->user_data(SV_F8_BTN_CLOSE);
-  btnCancel->callback(svHandleF8Buttons);
-  btnCancel->tooltip("Click to close this window");
+  F8Opts.btnCancel = new Fl_Button((nWinWidth - 110), nWinHeight - (35 + 10), 100, 35, "Close");
+  F8Opts.btnCancel->box(FL_GTK_UP_BOX);
+  F8Opts.btnCancel->shortcut(FL_Escape);
+  F8Opts.btnCancel->callback(svHandleF8Buttons);
+  F8Opts.btnCancel->tooltip("Click to close this window");
 
   // end F8 window layout
   winF8->end();
@@ -3270,7 +3114,7 @@ void svShowF8Window ()
   winF8->show();
 
   // focus the first spinner control
-  btnCAD->take_focus();
+  F8Opts.btnCAD->take_focus();
 
   Fl::redraw();
 }
@@ -3305,186 +3149,178 @@ void svShowItemOptions (HostItem * im)
 
   // window size
   int nWinWidth = 545;
-  int nWinHeight = 750;
+  int nWinHeight = 595;
 
   // set window position
   int nX = app->hostList->w() + 50;
   int nY = (app->mainWin->h() / 2) - (nWinHeight / 2);
 
+  std::string strWinTitle = "Editing '" + itm->name + "'";
+
   // create window
-  Fl_Window * itmOptWin = new Fl_Window(nX, nY, nWinWidth, nWinHeight, itm->name.c_str());
+  Fl_Window * itmOptWin = new Fl_Window(nX, nY, nWinWidth, nWinHeight, strWinTitle.c_str());
   itmOptWin->set_modal();
+  itmOptWin->callback(svCloseChildWindow, itmOptWin);
+
+  // create scroller
+  Fl_Scroll * itmOptScroller = new Fl_Scroll(0, 0, nWinWidth, nWinHeight - 56);
+  itmOptScroller->type(Fl_Scroll::VERTICAL_ALWAYS);
 
   // add itm value editors / selectors
   int nXPos = 195;
   int nYStep = 28;
-  int nYPos = -5;
+  int nYPos = -(nYStep / 2);  //-10;
 
   // widgetName->user_data() is used to assign the widget's name to itself
   // so it can be easily handled in the callbacks
 
+  // start adding things to the scroller
+  itmOptScroller->begin();
+
+  // spacer needed because scroller 'eats' some of the top margin
+  // when scrolled down, then back up.  Weird.
+  Fl_Box * spacer = new Fl_Box(nXPos, nYPos += nYStep, 5, 5, "");
+  (void)spacer;
+
   // ############ general options ##########################################################
 
   // connection name
-  SVInput * inName = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Connection name ");
-  inName->value(itm->name.c_str());
-  inName->user_data(SV_ITM_NAME);
-  inName->tooltip("The connection name as displayed in the host connection list");
+  ItmOpts.inName = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Connection name ");
+  ItmOpts.inName->value(itm->name.c_str());
+  ItmOpts.inName->tooltip("The connection name as displayed in the host connection list");
 
   // connection group
-  SVInput * inGroup = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Connection group ");
-  inGroup->value(itm->group.c_str());
-  inGroup->user_data(SV_ITM_GRP);
-  inGroup->tooltip("The group name this connection belongs to");
+  ItmOpts.inGroup = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Connection group ");
+  ItmOpts.inGroup->value(itm->group.c_str());
+  ItmOpts.inGroup->tooltip("The group name this connection belongs to");
 
   // remote address
-  SVInput * inAddress = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Remote address ");
-  inAddress->value(itm->hostAddress.c_str());
-  inAddress->user_data(SV_ITM_ADDRESS);
-  inAddress->tooltip("The IP address of the remote host you want to connect to."
+  ItmOpts.inAddress = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Remote address ");
+  ItmOpts.inAddress->value(itm->hostAddress.c_str());
+  ItmOpts.inAddress->tooltip("The IP address of the remote host you want to connect to."
       "  Do NOT include the VNC port number here");
 
   // f12 macro text
-  SVInput * inF12Macro = new SVInput(nXPos, nYPos += nYStep, 210, 28, "F12 macro ");
-  inF12Macro->value(itm->f12Macro.c_str());
-  inF12Macro->user_data(SV_ITM_F12_MACRO);
-  inF12Macro->tooltip("Key presses that are sent to the remote host when"
+  ItmOpts.inF12Macro = new SVInput(nXPos, nYPos += nYStep, 210, 28, "F12 macro ");
+  ItmOpts.inF12Macro->value(itm->f12Macro.c_str());
+  ItmOpts.inF12Macro->tooltip("Key presses that are sent to the remote host when"
       " you press the F12 key");
 
   // * vnc type buttons *
 
   // vnc without ssh
-  Fl_Radio_Round_Button * rbVNC = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28, "VNC ");
-  rbVNC->user_data(SV_ITM_CON_VNC);
-  rbVNC->callback(svItmOptionsRadioButtonsCallback);
-  rbVNC->tooltip("Choose this for VNC connections that don't tunnel through SSH");
+  ItmOpts.rbVNC = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28, "VNC ");
+  ItmOpts.rbVNC->callback(svItmOptionsRadioButtonsCallback);
+  ItmOpts.rbVNC->tooltip("Choose this for VNC connections that don't tunnel through SSH");
 
   // vnc with ssh
-  Fl_Radio_Round_Button * rbSVNC = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28,
+  ItmOpts.rbSVNC = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28,
     "VNC through SSH ");
-  rbSVNC->user_data(SV_ITM_CON_SVNC);
-  rbSVNC->callback(svItmOptionsRadioButtonsCallback);
-  rbSVNC->tooltip("Choose this for VNC connections that use SSH to tunnel to the host");
+  ItmOpts.rbSVNC->callback(svItmOptionsRadioButtonsCallback);
+  ItmOpts.rbSVNC->tooltip("Choose this for VNC connections that use SSH to tunnel to the host");
 
-  // set pre-existing value
+  // set current value
   if (itm->hostType == 'v')
-    rbVNC->set();
+    ItmOpts.rbVNC->set();
   else
-    rbSVNC->set();
+    ItmOpts.rbSVNC->set();
 
   // vnc port
-  SVInput * inVNCPort = new SVInput(nXPos, nYPos += nYStep, 100, 28, "VNC port ");
-  inVNCPort->value(itm->vncPort.c_str());
-  inVNCPort->user_data(SV_ITM_VNC_PORT);
-  inVNCPort->tooltip("The VNC port/display number of the host.  Defaults to 5900");
+  ItmOpts.inVNCPort = new SVInput(nXPos, nYPos += nYStep, 100, 28, "VNC port ");
+  ItmOpts.inVNCPort->value(itm->vncPort.c_str());
+  ItmOpts.inVNCPort->tooltip("The VNC port/display number of the host.  Defaults to 5900");
 
   // vnc password (shows dots, not cleartext password, for 'password' authentication)
-  SVSecretInput * inVNCPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
+  ItmOpts.inVNCPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
     "VNC password ");
-  inVNCPassword->value(itm->vncPassword.c_str());
-  inVNCPassword->user_data(SV_ITM_VNC_PASS);
-  inVNCPassword->tooltip("The VNC password for the host");
+  ItmOpts.inVNCPassword->value(itm->vncPassword.c_str());
+  ItmOpts.inVNCPassword->tooltip("The VNC password for the host");
 
   // vnc login name (for 'credential' authentication)
-  SVInput * inVNCLoginUser = new SVInput(nXPos, nYPos += nYStep, 210, 28,
+  ItmOpts.inVNCLoginUser = new SVInput(nXPos, nYPos += nYStep, 210, 28,
     "VNC login user name ");
-  inVNCLoginUser->value(itm->vncLoginUser.c_str());
-  inVNCLoginUser->user_data(SV_ITM_VNC_LOGIN_USER);
-  inVNCLoginUser->tooltip("The VNC login name for the host");
+  ItmOpts.inVNCLoginUser->value(itm->vncLoginUser.c_str());
+  ItmOpts.inVNCLoginUser->tooltip("The VNC login name for the host");
 
   // vnc login password (shows dots, not cleartext password, for 'credential' authentication)
-  SVSecretInput * inVNCLoginPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
+  ItmOpts.inVNCLoginPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
     "VNC login password ");
-  inVNCLoginPassword->value(itm->vncLoginPassword.c_str());
-  inVNCLoginPassword->user_data(SV_ITM_VNC_LOGIN_PASS);
-  inVNCLoginPassword->tooltip("The VNC login password for the host");
+  ItmOpts.inVNCLoginPassword->value(itm->vncLoginPassword.c_str());
+  ItmOpts.inVNCLoginPassword->tooltip("The VNC login password for the host");
 
   // vnc compression level
-  SVInput * inVNCCompressLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28,
+  ItmOpts.inVNCCompressLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28,
     "Compression level (0-9) ");
-  char strCompress[15] = {0};
-  sprintf(strCompress, "%i", itm->compressLevel);
-  inVNCCompressLevel->value(strCompress);
-  inVNCCompressLevel->user_data(SV_ITM_VNC_COMP);
-  inVNCCompressLevel->tooltip("The level of compression, from 0 to 9");
+  ItmOpts.inVNCCompressLevel->value(std::to_string(itm->compressLevel).c_str());
+  ItmOpts.inVNCCompressLevel->tooltip("The level of compression, from 0 to 9");
 
   // vnc quality level
-  SVInput * inVNCQualityLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28, "Quality level (0-9) ");
-  char strQuality[15] = {0};
-  sprintf(strQuality, "%i", itm->qualityLevel);
-  inVNCQualityLevel->value(strQuality);
-  inVNCQualityLevel->user_data(SV_ITM_VNC_QUAL);
-  inVNCQualityLevel->tooltip("The level of image quality, from 0 to 9");
+  ItmOpts.inVNCQualityLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28, "Quality level (0-9) ");
+  ItmOpts.inVNCQualityLevel->value(std::to_string(itm->qualityLevel).c_str());
+  ItmOpts.inVNCQualityLevel->tooltip("The level of image quality, from 0 to 9");
 
-  // inactive connection auto-disconnect
-  Fl_Check_Button * chkIgnoreInactive = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
-    " Auto-disconnect when inactive");
-  chkIgnoreInactive->user_data(SV_ITM_IGN_DEAD);
-  chkIgnoreInactive->tooltip("Check to auto-disconnect due to remote"
-        " server inactivity");
-  if (itm->ignoreInactive == false)
-    chkIgnoreInactive->set();
+  //// inactive connection auto-disconnect
+  //ItmOpts.chkIgnoreInactive = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
+    //" Auto-disconnect when inactive");
+  //ItmOpts.chkIgnoreInactive->tooltip("Check to auto-disconnect due to remote"
+        //" server inactivity");
+  //if (itm->ignoreInactive == false)
+    //ItmOpts.chkIgnoreInactive->set();
 
   // ##### scaling start #####
 
   // * scaling options group *
-  Fl_Group * grpScaling = new Fl_Group(nXPos, nYPos += nYStep, 300, 300);
-  grpScaling->user_data(SV_ITM_GRP_SCALE);
+  ItmOpts.grpScaling = new Fl_Group(nXPos, nYPos += nYStep, 300, 300);
 
   // scaling off - scroll only
-  Fl_Radio_Round_Button * rbScaleOff = new Fl_Radio_Round_Button(nXPos, nYPos, 100, 28,
+  ItmOpts.rbScaleOff = new Fl_Radio_Round_Button(nXPos, nYPos, 100, 28,
     " Scale off (scroll)");
-  rbScaleOff->user_data(SV_ITM_SCALE_OFF);
-  rbScaleOff->callback(svItmOptionsRadioButtonsCallback);
-  rbScaleOff->tooltip("Choose this if you don't want any scaling."
+  ItmOpts.rbScaleOff->callback(svItmOptionsRadioButtonsCallback);
+  ItmOpts.rbScaleOff->tooltip("Choose this if you don't want any scaling."
       "  Scrollbars will appear for hosts with screens larger than the viewer");
 
   // scale up and down
-  Fl_Radio_Round_Button * rbScaleZoom = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28,
+  ItmOpts.rbScaleZoom = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28,
     " Scale up and down");
-  rbScaleZoom->user_data(SV_ITM_SCALE_ZOOM);
-  rbScaleZoom->callback(svItmOptionsRadioButtonsCallback);
-  rbScaleZoom->tooltip("Choose this if you want small host screens scaled up to fit the"
+  ItmOpts.rbScaleZoom->callback(svItmOptionsRadioButtonsCallback);
+  ItmOpts.rbScaleZoom->tooltip("Choose this if you want small host screens scaled up to fit the"
       " viewer, or large host screens scaled down to fit the viewer");
 
   // scale down only
-  Fl_Radio_Round_Button * rbScaleFit = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28,
+  ItmOpts.rbScaleFit = new Fl_Radio_Round_Button(nXPos, nYPos += nYStep, 100, 28,
     " Scale down only");
-  rbScaleFit->user_data(SV_ITM_SCALE_FIT);
-  rbScaleFit->callback(svItmOptionsRadioButtonsCallback);
-  rbScaleFit->tooltip("Choose this to scale down large host screens to fit the viewer but"
+  ItmOpts.rbScaleFit->callback(svItmOptionsRadioButtonsCallback);
+  ItmOpts.rbScaleFit->tooltip("Choose this to scale down large host screens to fit the viewer but"
       " small host screens are not scaled up");
 
-  // set pre-existing value
+  // set current value
   if (itm->scaling == 's')
-    rbScaleOff->set();
+    ItmOpts.rbScaleOff->set();
   else if (itm->scaling == 'z')
-    rbScaleZoom->set();
+    ItmOpts.rbScaleZoom->set();
   else if (itm->scaling == 'f')
-    rbScaleFit->set();
+    ItmOpts.rbScaleFit->set();
 
   // fast scaling (instead of the default 'quality' scaling)
-  Fl_Check_Button * chkScalingFast = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
+  ItmOpts.chkScalingFast = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
     " Fast scaling (low quality)");
-  chkScalingFast->user_data(SV_ITM_FAST_SCALE);
   if (itm->scalingFast == true)
-    chkScalingFast->set();
-  chkScalingFast->tooltip("Check to select fast scaling instead of quality scaling");
+    ItmOpts.chkScalingFast->set();
+  ItmOpts.chkScalingFast->tooltip("Check to select fast scaling instead of quality scaling");
 
   // end of scaling group
-  grpScaling->end();
+  ItmOpts.grpScaling->end();
 
   // ##### scaling end #####
 
   // show the host's native cursor under our local static cursor
-  Fl_Check_Button * chkShowRemoteCursor = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
+  ItmOpts.chkShowRemoteCursor = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
     " Use remote cursor locally");
-  chkShowRemoteCursor->user_data(SV_ITM_SHW_REM_CURSOR);
-  chkShowRemoteCursor->tooltip("Check to show remote locally");
+  ItmOpts.chkShowRemoteCursor->tooltip("Check to show remote locally");
 
-  // set pre-existing value
+  // set current value
   if (itm->showRemoteCursor == true)
-    chkShowRemoteCursor->set();
+    ItmOpts.chkShowRemoteCursor->set();
 
   // ############ vnc-over-ssh options ##########################################################
 
@@ -3492,75 +3328,75 @@ void svShowItemOptions (HostItem * im)
   nYPos += 15;
 
   // ssh section label
-  Fl_Box * bxSSHSection = new Fl_Box(nXPos, nYPos += nYStep, 210, 28, "VNC through SSH options");
-  bxSSHSection->labelfont(1);
-  bxSSHSection->user_data(SV_ITM_GRP_SSH);
+  ItmOpts.bxSSHSection = new Fl_Box(nXPos, nYPos += nYStep, 210, 28, "VNC through SSH options");
+  ItmOpts.bxSSHSection->labelfont(1);
 
   // name used for ssh login
-  SVInput * inSSHName = new SVInput(nXPos, nYPos += nYStep, 210, 28, "SSH user name ");
-  inSSHName->value(itm->sshUser.c_str());
-  inSSHName->user_data(SV_ITM_SSH_NAME);
-  inSSHName->tooltip("The SSH user name for the host");
+  ItmOpts.inSSHName = new SVInput(nXPos, nYPos += nYStep, 210, 28, "SSH user name ");
+  ItmOpts.inSSHName->value(itm->sshUser.c_str());
+  ItmOpts.inSSHName->tooltip("The SSH user name for the host");
 
-  // password used for ssh login (if used)   // #### DISABLED RIGHT NOW ####
-  SVSecretInput * inSSHPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
-    "SSH password (if any) ");
-  inSSHPassword->value(itm->sshPass.c_str());
-  inSSHPassword->user_data(SV_ITM_SSH_PASS);
-  inSSHPassword->tooltip("The SSH password for the host (usually not necessary when using"
-      " key files)");
-  inSSHPassword->deactivate();  //  <<<--- We can't really do SSH password right now ---<<<
+  //// password used for ssh login (if used)   // #### DISABLED RIGHT NOW ####
+  //ItmOpts.inSSHPassword = new SVSecretInput(nXPos, nYPos += nYStep, 210, 28,
+    //"SSH password (if any) ");
+  //ItmOpts.inSSHPassword->value(itm->sshPass.c_str());
+  //ItmOpts.inSSHPassword->tooltip("The SSH password for the host (usually not necessary when using"
+      //" key files)");
+  //ItmOpts.inSSHPassword->deactivate();  //  <<<--- We can't really do SSH password right now ---<<<
 
   // ssh port (on the remote host)
-  SVInput * inSSHPort = new SVInput(nXPos, nYPos += nYStep, 100, 28, "SSH remote port ");
-  inSSHPort->value(itm->sshPort.c_str());
-  inSSHPort->user_data(SV_ITM_SSH_PORT);
-  inSSHPort->tooltip("The remote host's port number");
+  ItmOpts.inSSHPort = new SVInput(nXPos, nYPos += nYStep, 100, 28, "SSH remote port ");
+  ItmOpts.inSSHPort->value(itm->sshPort.c_str());
+  ItmOpts.inSSHPort->tooltip("The remote host's port number");
 
   // ssh private key full path (if used)
-  SVInput * inSSHPrvKey = new SVInput(nXPos, nYPos += nYStep, 300, 28, "SSH private key (if any) ");
-  inSSHPrvKey->value(itm->sshKeyPrivate.c_str());
-  inSSHPrvKey->user_data(SV_ITM_SSH_PRV_KEY);
-  inSSHPrvKey->tooltip("The SSH private key file location (usually not"
+  ItmOpts.inSSHPrvKey = new SVInput(nXPos, nYPos += nYStep, 300, 28, "SSH private key (if any) ");
+  ItmOpts.inSSHPrvKey->value(itm->sshKeyPrivate.c_str());
+  ItmOpts.inSSHPrvKey->tooltip("The SSH private key file location (usually not"
       " necessary when using a SSH password");
 
   // button to select ssh private key
-  Fl_Button * btnShowPrvKeyChooser = new Fl_Button(nXPos + 300 + 2, nYPos + 4, 20, 20, "...");
-  btnShowPrvKeyChooser->callback(svItmOptionsChoosePrvKeyBtnCallback, inSSHPrvKey);
-  btnShowPrvKeyChooser->tooltip("Click to choose a SSH private key file");
+  ItmOpts.btnShowPrvKeyChooser = new Fl_Button(nXPos + 300 + 2, nYPos + 4, 20, 20, "...");
+  ItmOpts.btnShowPrvKeyChooser->callback(svItmOptionsChoosePrvKeyBtnCallback, ItmOpts.inSSHPrvKey);
+  ItmOpts.btnShowPrvKeyChooser->tooltip("Click to choose a SSH private key file");
 
   // set app vars
   app->childWindowBeingDisplayed = itmOptWin;
   app->itmBeingEdited = itm;
 
+  // done adding things to the scroller
+  itmOptScroller->end();
+
   // ############ bottom buttons ##########################################################
 
+  // make a divider line between the scroller and the buttons
+  Fl_Box * sepr = new Fl_Box(0, nWinHeight - (35 + 18), nWinWidth, 1);
+  sepr->box(FL_FLAT_BOX);
+  sepr->color(fl_lighter(FL_FOREGROUND_COLOR));
+
   // 'Delete' button
-  Fl_Button * btnDel = new Fl_Button(10, nWinHeight - (35 + 10), 100, 35, "Delete");
-  btnDel->box(FL_GTK_UP_BOX);
-  btnDel->user_data(SV_ITM_BTN_DEL);
-  btnDel->callback(svHandleItmOptionsButtons);
-  btnDel->tooltip("Click to permanently delete this host connection"
+  ItmOpts.btnDel = new Fl_Button(10, nWinHeight - (35 + 7), 100, 35, "Delete");
+  ItmOpts.btnDel->box(FL_GTK_UP_BOX);
+  ItmOpts.btnDel->callback(svHandleItmOptionsButtons);
+  ItmOpts.btnDel->tooltip("Click to permanently delete this host connection"
       " (not undoable).  You will be asked to confirm before item is deleted");
 
   // 'Cancel' button
-  Fl_Button * btnCancel = new Fl_Button((nWinWidth - 210 - 10), nWinHeight - (35 + 10), 100, 35,
+  ItmOpts.btnCancel = new Fl_Button((nWinWidth - 210 - 10), nWinHeight - (35 + 7), 100, 35,
     "Cancel");
-  btnCancel->box(FL_GTK_UP_BOX);
-  btnCancel->shortcut(FL_Escape);
-  btnCancel->user_data(SV_ITM_BTN_CANCEL);
-  btnCancel->callback(svHandleItmOptionsButtons);
-  btnCancel->tooltip("Click to abandon any edits to this connection"
+  ItmOpts.btnCancel->box(FL_GTK_UP_BOX);
+  ItmOpts.btnCancel->shortcut(FL_Escape);
+  ItmOpts.btnCancel->callback(svHandleItmOptionsButtons);
+  ItmOpts.btnCancel->tooltip("Click to abandon any edits to this connection"
       " and close this window");
 
   // 'Save' button
-  Fl_Button * btnSave = new Fl_Button((nWinWidth - 100 - 10), nWinHeight - (35 + 10), 100, 35,
+  ItmOpts.btnSave = new Fl_Button((nWinWidth - 100 - 10), nWinHeight - (35 + 7), 100, 35,
     "Save");
-  btnSave->box(FL_GTK_UP_BOX);
-  btnSave->shortcut(FL_Enter);
-  btnSave->user_data(SV_ITM_BTN_SAVE);
-  btnSave->callback(svHandleItmOptionsButtons);
-  btnSave->tooltip("Click to save edits made to this connection and close this window");
+  ItmOpts.btnSave->box(FL_GTK_UP_BOX);
+  ItmOpts.btnSave->shortcut(FL_Enter);
+  ItmOpts.btnSave->callback(svHandleItmOptionsButtons);
+  ItmOpts.btnSave->tooltip("Click to save edits made to this connection and close this window");
 
   // end item options window layout
   itmOptWin->end();
@@ -3568,42 +3404,42 @@ void svShowItemOptions (HostItem * im)
   // disable irrelevant widgets for listening connections
   if (itm->isListener)
   {
-    inName->deactivate();
-    inGroup->deactivate();
-    inAddress->deactivate();
-    rbVNC->deactivate();
-    rbSVNC->deactivate();
-    inVNCPort->deactivate();
-    inVNCPassword->deactivate();
-    bxSSHSection->deactivate();
-    inSSHName->deactivate();
-    //inSSHPassword->deactivate();  //  <<<--- We can't really do SSH password right now ---<<<
-    inSSHPort->deactivate();
-    inSSHPrvKey->deactivate();
-    btnShowPrvKeyChooser->deactivate();
-    btnDel->deactivate();
+    ItmOpts.inName->deactivate();
+    ItmOpts.inGroup->deactivate();
+    ItmOpts.inAddress->deactivate();
+    ItmOpts.rbVNC->deactivate();
+    ItmOpts.rbSVNC->deactivate();
+    ItmOpts.inVNCPort->deactivate();
+    ItmOpts.inVNCPassword->deactivate();
+    ItmOpts.bxSSHSection->deactivate();
+    ItmOpts.inSSHName->deactivate();
+    //ItmOpts.inSSHPassword->deactivate();  //  <<<--- We can't really do SSH password right now ---<<<
+    ItmOpts.inSSHPort->deactivate();
+    ItmOpts.inSSHPrvKey->deactivate();
+    ItmOpts.btnShowPrvKeyChooser->deactivate();
+    ItmOpts.btnDel->deactivate();
   }
   else
   {
-    inName->activate();
-    inGroup->activate();
-    inAddress->activate();
-    rbVNC->activate();
-    rbSVNC->activate();
-    inVNCPort->activate();
-    inVNCPassword->activate();
-    bxSSHSection->activate();
-    inSSHName->activate();
-    //inSSHPassword->activate();  //  <<<--- We can't really do SSH password right now ---<<<
-    inSSHPort->activate();
-    inSSHPrvKey->activate();
-    btnShowPrvKeyChooser->activate();
-    btnDel->activate();
+    ItmOpts.inName->activate();
+    ItmOpts.inGroup->activate();
+    ItmOpts.inAddress->activate();
+    ItmOpts.rbVNC->activate();
+    ItmOpts.rbSVNC->activate();
+    ItmOpts.inVNCPort->activate();
+    ItmOpts.inVNCPassword->activate();
+    ItmOpts.bxSSHSection->activate();
+    ItmOpts.inSSHName->activate();
+    //ItmOpts.inSSHPassword->activate();  //  <<<--- We can't really do SSH password right now ---<<<
+    ItmOpts.inSSHPort->activate();
+    ItmOpts.inSSHPrvKey->activate();
+    ItmOpts.btnShowPrvKeyChooser->activate();
+    ItmOpts.btnDel->activate();
   }
 
   // focus the first input box and select all text within
-  inName->take_focus();
-  inName->position(0, strlen(inName->value()) + 1);
+  ItmOpts.inName->take_focus();
+  ItmOpts.inName->position(0, strlen(ItmOpts.inName->value()) + 1);
 
   itmOptWin->show();
   Fl::redraw();

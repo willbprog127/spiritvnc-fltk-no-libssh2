@@ -54,7 +54,7 @@ public:
     vncPort(""),
     sshPort(""),
     sshUser(""),
-    sshPass(""),
+    //sshPass(""),
     sshKeyPrivate(""),
     sshLocalPort(0),
     vncPassword(""),
@@ -72,9 +72,9 @@ public:
     showRemoteCursor(false),
     compressLevel(5),
     qualityLevel(5),
-    ignoreInactive(false),
-    centerX(false),
-    centerY(false),
+    //ignoreInactive(false),
+    //centerX(false),
+    //centerY(false),
     isListener(false),
     isConnecting(false),
     isConnected(false),
@@ -82,7 +82,8 @@ public:
     hasCouldntConnect(false),
     hasError(false),
     hasDisconnectRequest(false),
-    hasEnded(false),
+    vncNeedsCleanup(false),
+    initOkay(false),
     icon(NULL),
     lastErrorMessage(""),
     sshWaitTime(5),
@@ -98,7 +99,7 @@ public:
   std::string vncPort;
   std::string sshPort;
   std::string sshUser;
-  std::string sshPass;
+  //std::string sshPass;
   std::string sshKeyPrivate;
   int sshLocalPort;
   std::string vncPassword;
@@ -116,9 +117,9 @@ public:
   bool showRemoteCursor;
   uint8_t compressLevel;
   uint8_t qualityLevel;
-  bool ignoreInactive;
-  bool centerX;
-  bool centerY;
+  //bool ignoreInactive;
+  //bool centerX;
+  //bool centerY;
   //
   bool isListener;
   bool isConnecting;
@@ -127,7 +128,8 @@ public:
   bool hasCouldntConnect;
   bool hasError;
   bool hasDisconnectRequest;
-  bool hasEnded;
+  bool vncNeedsCleanup;
+  bool initOkay;
   Fl_Image * icon;
   std::string lastErrorMessage;
   uint16_t sshWaitTime;

@@ -53,7 +53,7 @@ void VncObject::createVNCListener ()
   itm->scaling = 'f';
   itm->showRemoteCursor = true;
   itm->isListener = true;
-  itm->ignoreInactive = true;
+  //itm->ignoreInactive = true;
 
   // set host list status icon
   itm->icon = app->iconDisconnected;
@@ -68,16 +68,37 @@ void VncObject::createVNCListener ()
 }
 
 
-/* initializes and attempts connection with
- * libvnc client / VncObject object
- * (static method)
- */
+/* do rfbClientCleanup, delete and null VncObject */
+void VncObject::cleanupVNCObject (HostItem * itm)
+{
+  if (itm == NULL)
+    return;
+
+  itm->vncNeedsCleanup = false;
+
+  // clean up client structure
+  if (itm->vnc != NULL)
+  {
+    // do client cleanup first
+    if (itm->vnc->vncClient != NULL && itm->initOkay == true)
+      rfbClientCleanup(itm->vnc->vncClient);
+
+    // delete and null VncObject
+    delete itm->vnc;
+    itm->vnc = NULL;
+  }
+}
+
+
+/*
+  initializes and attempts connection with
+  libvnc client / VncObject object
+  (static method)
+*/
 void VncObject::createVNCObject (HostItem * itm)
 {
   // if itm is null or our viewer is already created, return
-  if (itm == NULL ||
-      itm->isConnected == true ||
-      itm->isConnecting == true)
+  if (itm == NULL || itm->isConnected == true || itm->isConnecting == true)
   {
     fl_beep(FL_BEEP_DEFAULT);
     svMessageWindow("Error: Could not create VNC connection", "SpiritVNC - FLTK");
@@ -87,7 +108,11 @@ void VncObject::createVNCObject (HostItem * itm)
   // if the host type is 'v' or 's', create vnc viewer
   if (itm->hostType == 'v' || itm->hostType == 's')
   {
-    // create new vnc viewer
+    // just in case it wasn't done already
+    if (itm->vncNeedsCleanup == true)
+      VncObject::cleanupVNCObject(itm);
+
+    // create new vnc object
     itm->vnc = new VncObject();
 
     if (itm->vnc == NULL || itm->vnc->vncClient == NULL)
@@ -103,7 +128,8 @@ void VncObject::createVNCObject (HostItem * itm)
     if (itm->isListener == false && itm->hostAddress == "")
     {
       fl_beep(FL_BEEP_DEFAULT);
-      svMessageWindow("Error: Host address is missing", "SpiritVNC - FLTK");
+      std::string strAddErr = itm->name + " - Error: Host address is missing";
+      svMessageWindow(strAddErr.c_str(), "SpiritVNC - FLTK");
       return;
     }
 
@@ -114,9 +140,9 @@ void VncObject::createVNCObject (HostItem * itm)
     itm->hasCouldntConnect = false;
     itm->hasError = false;
     itm->hasDisconnectRequest = false;
-    itm->hasEnded = false;
+    itm->initOkay = false;
     itm->lastErrorMessage = "";
-    app->lastError->value("");
+    app->lastErrorBox->value("");
 
     // store this viewer pointer in libvnc client data
     rfbClientSetClientData(vnc->vncClient, app->libVncVncPointer, vnc);
@@ -176,9 +202,6 @@ void VncObject::createVNCObject (HostItem * itm)
         svMessageWindow("Error: Could not open the private SSH key "
           "file for '" + itm->name + "' - " + itm->hostAddress);
 
-        //if (vnc->vncClient != NULL)
-        VncObject::endAndDeleteViewer(&vnc);
-
         svHandleThreadConnection(itm);
 
         return;
@@ -233,8 +256,7 @@ void VncObject::createVNCObject (HostItem * itm)
       itm->hasCouldntConnect = true;
       itm->hasError = true;
 
-      //if (vnc != NULL && vnc->vncClient != NULL)
-      VncObject::endAndDeleteViewer(&vnc);
+      //vnc->endViewer();
 
       svHandleThreadConnection(itm);
 
@@ -253,9 +275,9 @@ void VncObject::createVNCObject (HostItem * itm)
 
 
 /*
- * ends all vnc objects (usually called right before program quits)
- * (static method)
- */
+  ends all vnc objects (usually called right before program quits)
+  (static method)
+*/
 void VncObject::endAllViewers ()
 {
   HostItem * itm = NULL;
@@ -271,11 +293,12 @@ void VncObject::endAllViewers ()
 
       if (vnc != NULL && (itm->isConnected == true ||
                          itm->isConnecting == true ||
-                         itm->isWaitingForShow == true))
+                         itm->isWaitingForShow == true)
+         )
       {
         itm->hasDisconnectRequest = true;
 
-        VncObject::endAndDeleteViewer(&vnc);
+        vnc->endViewer();
       }
 
       vnc = NULL;
@@ -284,8 +307,10 @@ void VncObject::endAllViewers ()
 }
 
 
-/* set vnc object to disconnect and stop working */
-/* (instance method) */
+/*
+  set vnc object to disconnect and stop working
+  (instance method)
+*/
 void VncObject::endViewer ()
 {
   //this->GONK!
@@ -305,8 +330,7 @@ void VncObject::endViewer ()
       itm->icon = app->iconDisconnectedError;
       Fl::awake(svHandleListItemIconChange);
 
-      svLogToFile("Unexpectedly disconnected from '" + itm->name +
-        "' - " + itm->hostAddress);
+      svLogToFile("Unexpectedly disconnected from '" + itm->name + "' - " + itm->hostAddress);
     }
 
     // we disconnected purposely from host
@@ -318,63 +342,37 @@ void VncObject::endViewer ()
       Fl::awake(svHandleListItemIconChange);
 
       if (app->shuttingDown)
-      {
-        svLogToFile("Automatically disconnecting.  Program is shutting down '" +
-            itm->name + "' - " + itm->hostAddress);
-      }
+        svLogToFile("Automatically disconnecting.  Program is shutting down '" + itm->name +
+          "' - " + itm->hostAddress);
       else
-      {
-        svLogToFile("Manually disconnected from '" + itm->name + "' - " +
-          itm->hostAddress);
-      }
+        svLogToFile("Manually disconnected from '" + itm->name + "' - " + itm->hostAddress);
     }
 
     // decrement our count of created vncObjects so we
     // can check and avoid 'expensive' stuff in masterMessageLoop
     app->createdObjects --;
 
-    // stop this viewer's connection worker thread
-    if (itm->threadRFBRunning == true)
-    {
-      // make sure there's a valid thread before canceling
-      if (itm->threadRFB != 0)
-          pthread_cancel(itm->threadRFB);
-
-      itm->threadRFBRunning = false;
-    }
-
     itm->isConnected = false;
-    itm->isConnecting = false;
+    //itm->isConnecting = false;  <---- move 2023-12-12 to below
     itm->hasDisconnectRequest = false;
-    itm->hasEnded = true;
-
-    // clean up the client
-    if (vncClient != NULL)
-      rfbClientCleanup(vncClient);
 
     // tell ssh to clean up if a ssh/vnc connection
     if (itm->hostType == 's')
       svCloseSSHConnection(itm);
+
+    // set this for cleanup later
+    if (vncClient != NULL && itm->isConnecting == false)
+      itm->vncNeedsCleanup = true;
+
+    itm->isConnecting = false;
   }
 }
 
 
-/* calls endViewer and cleans up associated VncObject * memory */
-/* (static method) */
-void VncObject::endAndDeleteViewer (VncObject ** vnc)
-{
-  if (vnc == NULL)
-      return;
-
-  (*vnc)->endViewer();
-
-  delete *vnc;
-  *vnc = NULL;
-}
-
-
-/* checks to see if vnc client will fit within scroller */
-/* (instance method) */
+/*
+  checks to see if vnc client will fit within scroller
+  (instance method)
+*/
 bool VncObject::fitsScroller ()
 {
   if (app->vncViewer->fullscreen == true)
@@ -397,8 +395,10 @@ bool VncObject::fitsScroller ()
 }
 
 
-/* handle cursor change */
-/* (static method / callback) */
+/*
+  handle cursor change
+  (static method / callback)
+*/
 void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int nWidth,
     int nHeight, int nBytesPerPixel)
 {
@@ -407,7 +407,8 @@ void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int
   if (vnc == NULL ||
       cl == NULL ||
       Fl::belowmouse() != app->vncViewer ||
-      vnc->allowDrawing == false)
+      vnc->allowDrawing == false
+     )
     return;
 
   const int nSSize = nWidth * nHeight * nBytesPerPixel;
@@ -456,7 +457,11 @@ void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int
 }
 
 
-/* (static method) */
+/*
+  redraw VncObject when remote host updates framebuffer
+  if the object is the active one
+  (static method)
+*/
 void VncObject::handleFrameBufferUpdate (rfbClient * cl)
 {
   if (cl == NULL)
@@ -474,10 +479,16 @@ void VncObject::handleFrameBufferUpdate (rfbClient * cl)
 }
 
 
-/* handle copy/cut FROM vnc host */
-/* (static method) */
+/*
+  handle copy/cut FROM vnc host
+  (static method)
+*/
 void VncObject::handleRemoteClipboardProc (rfbClient * cl, const char * text, int textlen)
 {
+  // The selection buffer (source is 0) is used for middle-mouse pastes and
+  // for drag-and-drop selections. The clipboard (source is 1) is used for
+  // copy/cut/paste operations.
+
   VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
 
   if (vnc == NULL)
@@ -504,8 +515,10 @@ void VncObject::handleRemoteClipboardProc (rfbClient * cl, const char * text, in
 }
 
 
-/* set VncViewer object to hide itself */
-/* (static method) */
+/*
+  set VncViewer object to hide itself
+  (static method)
+*/
 void VncObject::hideMainViewer ()
 {
   VncObject * vnc = app->vncViewer->vnc;
@@ -527,25 +540,24 @@ void VncObject::hideMainViewer ()
 }
 
 
-/* initialize and connect to a vnc host/server */
-/* (this is called as a thread because it blocks) */
+/*
+  initialize and connect to a vnc host/server
+  (this is called as a thread because it blocks)
+  (static method)
+*/
 void * VncObject::initVNCConnection (void * data)
 {
   // detach this thread
   pthread_detach(pthread_self());
 
-  char * strParams[2] = {NULL, NULL};
+  char * strParams[2] = {NULL};
 
   Fl::lock();
   HostItem * itm = static_cast<HostItem *>(data);
   Fl::unlock();
 
   if (itm == NULL)
-  {
-    Fl::awake(svHandleThreadConnection, itm);
-
     return SV_RET_VOID;
-  }
 
   itm->threadRFBRunning = true;
 
@@ -564,21 +576,18 @@ void * VncObject::initVNCConnection (void * data)
     return SV_RET_VOID;
   }
 
-  std::string strP;
-
-  // 'program name' parameter
+  // set parameter 0 - 'program name'
   strParams[0] = strdup("SpiritVNCFLTK");
 
+  // set parameter 1
   if (itm->isListener == false)
-  {
-    strP = itm->vncAddressAndPort;
-    strParams[1] = strdup(strP.c_str());
-  }
+    // remote host address and port
+    strParams[1] = strdup(itm->vncAddressAndPort.c_str());
   else
   {
-    strP = "-listennofork";
+    // local listening address
+    strParams[1] = strdup("-listennofork");
     vnc->vncClient->listenAddress = strdup("0.0.0.0");
-    strParams[1] = strdup(strP.c_str());
   }
 
   // if the second parameter is invalid, get out
@@ -598,23 +607,27 @@ void * VncObject::initVNCConnection (void * data)
   // this function blocks, that's why this function runs as a thread
   if (rfbInitClient(vnc->vncClient, &nNumOfParams, strParams) == false)
   {
+    // * connection failed *
+
+    // (rfbClientCleanup should have happened inside rfbInitClient on failure)
+
     int errNum = errno;
 
     VncObject::parseErrorMessages(itm, strerror(errNum));
 
     itm->isConnected = false;
-    itm->isConnecting = false;
     itm->hasCouldntConnect = true;
-    itm->threadRFBRunning = false;
-
-    Fl::awake(svHandleThreadConnection, itm);
-
-    return SV_RET_VOID;
+  }
+  else
+  {
+    // * connection succeeded *
+    itm->isConnected = true;
+    itm->isWaitingForShow = true;
+    itm->initOkay = true;
   }
 
-  itm->isConnected = true;
+  // set flags for either outcome
   itm->isConnecting = false;
-  itm->isWaitingForShow = true;
   itm->threadRFBRunning = false;
 
   // send message to main thread
@@ -624,7 +637,10 @@ void * VncObject::initVNCConnection (void * data)
 }
 
 
-/* check connection errors and inform user, if necessary */
+/*
+  check connection errors and inform user, if necessary
+  (static method)
+*/
 void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
 {
   char strMsg[FL_PATH_MAX] = {0};
@@ -666,11 +682,12 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
 }
 
 
-/* libvnc logging callback */
-/* (static function) */
+/*
+  libvnc logging callback
+  (static method)
+*/
 void VncObject::libVncLogging (const char * format, ...)
 {
-
   if (app->debugMode == true)
   {
     va_list args;
@@ -687,8 +704,10 @@ void VncObject::libVncLogging (const char * format, ...)
 }
 
 
-/* master loop to handle all vnc objects' message checking */
-/* (static function) */
+/*
+  master loop to handle all vnc objects' message checking
+  (static method)
+*/
 void VncObject::masterMessageLoop ()
 {
   VncObject * vnc = NULL;
@@ -705,8 +724,6 @@ void VncObject::masterMessageLoop ()
         VncObject::checkVNCMessages(vnc);
 
       // keep from making too tight a loop
-      //Fl::check();
-      //Fl::wait(0.015);
 
       // 0.034 is ~30 frames-per-second
       // we don't want to lag the computer
@@ -719,26 +736,29 @@ void VncObject::masterMessageLoop ()
     }
     else
       Fl::wait(0.7);
-    //Fl::wait(0.250);
   }
 }
 
 
-/* libvnc send password to host callback */
-/* (static function) */
+/*
+  libvnc send credential to host callback
+  credentials are mostly used by macOS VNC server but probably others too
+  (static function)
+*/
 rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
 {
-  if (credentialType != rfbCredentialTypeUser)
-  {
-    svLogToFile("ERROR - handleCredential: Non-username / password required for authentication");
-
-    return NULL;
-  }
-
   // client is null
   if (cl == NULL)
   {
     svLogToFile("ERROR - handlePassword: vnc->vncClient is null");
+    return NULL;
+  }
+
+  // unsupported credential type
+  if (credentialType != rfbCredentialTypeUser)
+  {
+    svLogToFile("ERROR - handleCredential: Non-username / password required for authentication");
+
     return NULL;
   }
 
@@ -760,7 +780,6 @@ rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
     return NULL;
   }
 
-
   // build and populate credential
   rfbCredential * cred = static_cast<rfbCredential *>(malloc(sizeof(rfbCredential)));
 
@@ -776,8 +795,10 @@ rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
 }
 
 
- /* libvnc send password to host callback */
- /* (static function) */
+/*
+  libvnc send password to host callback
+  (static function)
+*/
 char * VncObject::handlePassword (rfbClient * cl)
 {
   if (cl == NULL)
@@ -802,21 +823,19 @@ char * VncObject::handlePassword (rfbClient * cl)
     return NULL;
   }
 
-  // ------ trying this out due to 'bad password' errors sometimes -------
   char * strPass = static_cast<char *>(malloc(10));
 
   if (strPass != NULL)
     strncpy(strPass, itm->vncPassword.c_str(), 9);
 
   return strPass;
-  // ------ trying this out due to 'bad password' errors sometimes -------
-
-  //return strdup(itm->vncPassword.c_str());  // <<<--- temporarily disabled / testing above
 }
 
 
-/* set vnc object to show itself */
-/* (instance method) */
+/*
+  set vnc object to show itself
+  (instance method)
+*/
 void VncObject::setObjectVisible ()
 {
   if (itm == NULL || vncClient == NULL)
@@ -860,41 +879,16 @@ void VncObject::setObjectVisible ()
 
   app->scroller->scroll_to(nLastScrollX, nLastScrollY);
 
-  // viewer centering (only if not zooming)
-  if (itm->scaling == 's' || (itm->scaling == 'f' && fitsScroller() == true))
-  {
-    // figure out x position for viewer
-    if (itm->centerX == true)
-    {
-      app->scroller->position((app->scroller->w() - vncClient->width) / 2 + leftMargin,
-        app->scroller->y());
-
-      if (app->scroller->x() < 0)
-        app->scroller->position(leftMargin, app->scroller->y());
-    }
-    else
-        app->scroller->position(leftMargin, app->scroller->y());
-
-    // figure out y position for viewer
-    if (itm->centerY == true)
-    {
-        app->scroller->position(app->scroller->x(), (app->scroller->h() - vncClient->height) / 2);
-
-        if (app->scroller->y() < 0)
-          app->scroller->position(app->scroller->x(), 0);
-    }
-    else
-      app->scroller->position(app->scroller->x(), 0);
-  }
-
   allowDrawing = true;
 
   app->scroller->redraw();
 }
 
 
-/* check and act on libvnc host messages */
-/* (static method) */
+/*
+  check and act on libvnc host messages
+  (static method)
+*/
 void VncObject::checkVNCMessages (VncObject * vnc)
 {
   int nMsg = 0;
@@ -907,7 +901,7 @@ void VncObject::checkVNCMessages (VncObject * vnc)
 
   if (nMsg < 0)
   {
-    VncObject::endAndDeleteViewer(&vnc);
+    vnc->endViewer();
     return;
   }
 
@@ -918,7 +912,7 @@ void VncObject::checkVNCMessages (VncObject * vnc)
 
     if (HandleRFBServerMessage(vnc->vncClient) == FALSE)
     {
-      VncObject::endAndDeleteViewer(&vnc);
+      vnc->endViewer();
       return;
     }
     else
@@ -929,13 +923,15 @@ void VncObject::checkVNCMessages (VncObject * vnc)
 
 
 /*
- * ########################################################################################
- * ########################## VNC VIEWER WIDGET ###########################################
- * ########################################################################################
- */
+  ########################################################################################
+  ########################## VNC VIEWER WIDGET ###########################################
+  ########################################################################################
+*/
 
-/* draw event for vnc view widget */
-/* (instance method) */
+/*
+  draw event for vnc view widget
+  (instance method)
+*/
 void VncViewer::draw ()
 {
   VncObject * vnc = app->vncViewer->vnc;
@@ -986,10 +982,8 @@ void VncViewer::draw ()
 
     // if there's an alpha byte, set it to 255
     if (nBytesPerPixel == 2 || nBytesPerPixel == 4)
-    {
       for (int i = (nBytesPerPixel - 1); i < isize; i+= nBytesPerPixel)
           cl->frameBuffer[i] = 255;
-    }
 
     imgZ = new Fl_RGB_Image(cl->frameBuffer, cl->width, cl->height, nBytesPerPixel);
 

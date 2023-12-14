@@ -114,7 +114,6 @@ void svCreateSSHConnection (void * data)
   svLogToFile("check command is: " + sshCheck);
 
   // first check to see if the ssh command is working
-  //int nResult = system(sshCheck.c_str());
   FILE * fResult = popen(sshCheck.c_str(), "w");
 
   //if (nResult != 0)

@@ -78,7 +78,9 @@ public:
     vncClient->GotXCutText = VncObject::handleRemoteClipboardProc;
     vncClient->FinishedFrameBufferUpdate = VncObject::handleFrameBufferUpdate;
 
-    //rfbClientLog = VncObject::libVncLogging;
+    vncClient->connectTimeout = SV_CONNECTION_TIMEOUT_SECS;
+
+    rfbClientLog = VncObject::libVncLogging;
     rfbClientErr = VncObject::libVncLogging;
   }
 
@@ -106,21 +108,22 @@ public:
   //void libVncLogging (const char *, ...);
 
   //  static
-  static void hideMainViewer ();
+  static void checkVNCMessages (VncObject *);
+  static void cleanupVNCObject (HostItem *);
+  static void createVNCObject (HostItem *);
+  static void createVNCListener ();
   static void endAndDeleteViewer (VncObject **);
   static void endAllViewers ();
   static rfbCredential * handleCredential (rfbClient *, int);
-  static char * handlePassword (rfbClient *);
   static void handleCursorShapeChange (rfbClient *, int, int, int, int, int);
-  static void libVncLogging (const char *, ...);
-  static void parseErrorMessages(HostItem *, const char *);
-  static void checkVNCMessages (VncObject *);
-  static void handleRemoteClipboardProc (rfbClient *, const char *, int);
   static void handleFrameBufferUpdate (rfbClient *);
-  static void createVNCObject (HostItem *);
-  static void createVNCListener ();
+  static char * handlePassword (rfbClient *);
+  static void handleRemoteClipboardProc (rfbClient *, const char *, int);
+  static void hideMainViewer ();
   static void * initVNCConnection (void *);
+  static void libVncLogging (const char *, ...);
   static void masterMessageLoop ();
+  static void parseErrorMessages(HostItem *, const char *);
 };
 
 /* vnc viewer widget class */

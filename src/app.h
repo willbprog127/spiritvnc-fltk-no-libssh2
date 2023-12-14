@@ -78,6 +78,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <vector>
 
 #include "base64.h"
 #include "consts_enums.h"
@@ -86,11 +87,11 @@
 #include "vnc.h"
 #include "ssh.h"
 
-
 class SVInput;
 class SVQuickNoteInput;
 class SVQuickNoteBox;
 class SVQuickNotePack;
+class SVItmOpt;
 
 /* global app class */
 class AppVars
@@ -112,9 +113,7 @@ public:
     configPath(""),
     configPathAndFile(""),
     requestedListWidth(170),
-    nConnectionTimeout(SV_CONNECTION_TIMEOUT_SECS),
     nViewersWaiting(0),
-    verboseLogging(false),
     colorBlindIcons(false),
     shuttingDown(false),
     childWindowVisible(false),
@@ -131,9 +130,10 @@ public:
     scanIsRunning(false),
     nCurrentScanItem(0),
     nScanTimeout(2),
-    nDeadTimeout(100),
+    //nDeadTimeout(100),
     nStartingLocalPort(15000),
     showTooltips(true),
+    enableLogToFile(false),
     debugMode(false),
     #ifdef _WIN32
     nAppFontSize(12),
@@ -153,17 +153,16 @@ public:
     savedY(64),
     savedW(800),
     savedH(600),
-    maximized(false),
+    //maximized(false),
     createdObjects(0),
-    msgThread(0),
     strF12ClipVar(""),
     sshCommand("ssh"),
     quickInfoPack(NULL),
     quickInfoLabel(NULL),
     lastConnectedLabel(),
     lastConnected(NULL),
-    lastError(NULL),
-    quickNote(NULL),
+    lastErrorBox(NULL),
+    quickNoteBox(NULL),
     quickNotePack(NULL),
     quickNoteInput(NULL),
     packButtons(NULL)
@@ -233,9 +232,7 @@ public:
   std::string configPath;
   std::string configPathAndFile;
   int requestedListWidth;
-  uint16_t nConnectionTimeout;
   int nViewersWaiting;
-  bool verboseLogging;
   bool colorBlindIcons;
   bool shuttingDown;
   bool childWindowVisible;
@@ -252,9 +249,10 @@ public:
   bool scanIsRunning;
   int nCurrentScanItem;
   uint16_t nScanTimeout;
-  uint16_t nDeadTimeout;
+  //uint16_t nDeadTimeout;
   int nStartingLocalPort;
   bool showTooltips;
+  bool enableLogToFile;
   bool debugMode;
   int nAppFontSize;
   std::string strListFont;
@@ -266,17 +264,16 @@ public:
   int savedY;
   int savedW;
   int savedH;
-  bool maximized;
+  //bool maximized;
   int createdObjects;
-  pthread_t msgThread;
   std::string strF12ClipVar;
   std::string sshCommand;
   Fl_Pack * quickInfoPack;
   Fl_Box * quickInfoLabel;
   Fl_Box * lastConnectedLabel;
   Fl_Box * lastConnected;
-  Fl_Multiline_Output * lastError;
-  SVQuickNoteBox * quickNote;
+  Fl_Multiline_Output * lastErrorBox;
+  SVQuickNoteBox * quickNoteBox;
   SVQuickNotePack * quickNotePack;
   SVQuickNoteInput * quickNoteInput;
   Fl_Pack * packButtons;
@@ -338,7 +335,7 @@ private:
 void svBlinkCursor (void *);
 void svCloseChildWindow (Fl_Widget *, void *);
 void svCloseSSHConnection (void *);
-void svConfigCreateNew ();
+void svConfigCreateNewDir ();
 void svConfigReadCreateHostList ();
 void svConfigWrite ();
 void svConnectionWatcher (void *);
@@ -367,7 +364,6 @@ void svHandleThreadCursorChange (void *);
 void svHideQuickNoteEditWidgets ();
 void svInsertEmptyItem ();
 int svItemNumFromItm (const HostItem *);
-void svItmFromAddress (const std::string&, HostItem *);
 void svItmOptionsChoosePrvKeyBtnCallback (Fl_Widget *, void *);
 void svItmOptionsRadioButtonsCallback (Fl_Widget *, void *);
 void svListeningModeBegin ();
