@@ -2162,7 +2162,11 @@ void svQuickInfoSetLabelAndText (HostItem * itm)
   // set last connected text, if any
   if (itm->lastConnectedTime != "")
   {
-    app->lastConnectedLabel->copy_label("Last connected");
+    if (itm->isListener == false)
+      app->lastConnectedLabel->copy_label("Last connected");
+    else
+      app->lastConnectedLabel->copy_label("Connected");
+    
     app->lastConnected->copy_label(itm->lastConnectedTime.c_str());
   }
   else
