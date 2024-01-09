@@ -38,7 +38,7 @@
 /* constants */
 #define SV_APP_VERSION  "0.6.2"
 
-#define SV_CURRENT_YEAR "2023"
+#define SV_CURRENT_YEAR "2024"
 
 #define SV_CONNECTION_TIMEOUT_SECS  30
 #define SV_ONE_SECOND               1.00
