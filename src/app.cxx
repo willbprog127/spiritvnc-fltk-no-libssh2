@@ -202,7 +202,7 @@ int SVQuickNoteBox::handle (int evt)
   int curLine = app->hostList->value();
 
   // handle quicknote click if an item is selected
-  if (evt == FL_PUSH && curLine > 0)
+  if (evt == FL_PUSH && curLine > 0 && app->scanIsRunning == false)
   {
     // show the editor if there's a selected item
     if (curLine > 0)
