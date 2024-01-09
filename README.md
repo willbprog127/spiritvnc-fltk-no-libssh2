@@ -6,9 +6,6 @@ Because of changes the last year or two with libssh2, I was forced to develop th
 
 Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  On some OSs the child `ssh` processes won't even close properly.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
 
-#### New feature: Fullscreen
-A new feature has been added -- fullscreen.  Pressing the F11 key will put SpiritVNC-FLTK into fullscreen mode when viewing a remote server.  Pressing F11 again will take the app out of fullscreen.  This feature may be rough around the edges, so if any issues, please file a problem report
-
 #### Why FLTK?
 FLTK seems to have the best balance of being lightweight, capable and cross-platform.  While FLTK *does* look fairly dated, that doesn't bother me right now.  Maybe FLTK 1.4 will have some more modern-looking themes...?  The FLTK community and contributors are very helpful, understanding and accommodating while the teams for other toolkits have often been abrasive and unhelpful.
 
@@ -27,7 +24,7 @@ While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK comp
 #### Is it localized for my language?
 Unless your language is English, no.  It is NOT out of disrespect for your particular language, I just don't have the time or resources to maintain different localizations and I feel adding a localization mechanism to SpiritVNC-FLTK would add complexity and increase executable size.  If anyone has any feedback or ideas for _lightweight_ localization, just create an issue.
 
-2016-2023 Will Brokenbourgh
+2016-2024 Will Brokenbourgh
 https://www.pismotek.com/brainout/
 
 To God be the glory! :-D :heart:
@@ -74,7 +71,8 @@ On FreeBSD, OpenBSD, OpenIndiana (GNU make must be installed first):
 ```sh
 $ gmake [debug]
 ```
-ℹ️ Using `make install` or `gmake install` is not recommended on any OS right now.
+> [!IMPORTANT]
+> Using `make install` or `gmake install` is not recommended on any OS right now.
 - - -
 __Usage__
 
@@ -104,54 +102,60 @@ When viewing a remote VNC server:
 * Click the [three control sliders icon] button to adjust program settings
 
 ##### Application settings / options
-* **Scan wait time (seconds)**: The amount of time in seconds the program will wait before switching to the next connected server entry in the list during timed scanning (the wait time is approximate; the program may switch to another server entry sooner than this number)
-* **Starting local SSH port number**: If your operating system is stubborn about which port numbers to use, adjust this number higher
-* **Inactive connection timeout (seconds)**: The amount of time the program will wait before auto-disconnecting a connected server entry due to no activity on the remote VNC server's screen.  Auto-disconnect can be enabled or disabled per-server entry
-* **SSH command**: The full path and command name for your system's installed SSH client program (ie: /usr/bin/ssh)
+|Option|Description|
+|------|-----------|
+|**Scan wait time (seconds)**| The amount of time in seconds the program will wait before switching to the next connected server entry in the list during timed scanning (the wait time is approximate; the program may switch to another server entry sooner than this number)|
+|**Starting local SSH port number**| If your operating system is stubborn about which port numbers to use, adjust this number higher|
+|**Inactive connection timeout (seconds)**| The amount of time the program will wait before auto-disconnecting a connected server entry due to no activity on the remote VNC server's screen.  Auto-disconnect can be enabled or disabled per-server entry|
+|**SSH command**| The full path and command name for your system's installed SSH client program (ie: /usr/bin/ssh)|
+| | |
+|*Appearance Options*|
+|**Application font size**| The font size used for most labels and text-entry boxes|
+|**List font name**| The desired font name (not file name) used to display the server list entries|
+|**List font size**| The size of the font used to display the server list entries.  This could be points or pixels, depending on your OS|
+|**List width**| The desired width of the server list.  This could be pixels or device units, depending on your OS|
+|**Use icons for color-blind users**| Will use uncolored uniquely-shaped connection status icons for those with color-blindness|
+|**Show tooltips**| Shows tooltips on most widgets|
+|**Show reverse connection notification**| When enabled, pops up a dialog box notifying you of an incoming reverse VNC connection|
 
-*Appearance Options*
-* **Application font size**: The font size used for most labels and text-entry boxes
-* **List font name**: The desired font name (not file name) used to display the server list entries
-* **List font size**: The size of the font used to display the server list entries.  This could be points or pixels, depending on your OS
-* **List width**: The desired width of the server list.  This could be pixels or device units, depending on your OS
-* **Use icons for color-blind users**: Will use uncolored uniquely-shaped connection status icons for those with color-blindness
-* **Show tooltips**: Shows tooltips on most widgets
-* **Show reverse connection notification**: When enabled, pops up a dialog box notifying you of an incoming reverse VNC connection
-
-*Be sure to click [Save], then quit and restart SpiritVNC for font or icon changes, because that's how I roll*
+> [!NOTE]
+> Be sure to click [Save], then quit and restart SpiritVNC for font or icon changes, because that's how I roll
 
 ##### Server entry edit help
-* **Connection name**: The unique name you enter to recognize this connection in the list
-* **Connection group**: Use the same group name for all computers in one location (Home, Office, Customer1, etc)
-* **Remote address**: The IPv4 address of the remote VNC or VNC-over-SSH server (IPv6 not supported by libvncclient yet https://github.com/LibVNC/libvncserver/issues/436)
-* **F12 macro**: Press F12 when viewing a remote server to send this text, such as frequently-used phrases, passwords, etc
-* **VNC**: This connection connects directly to a VNC server
-* **VNC through SSH**: This connection connects to a VNC server through SSH port forwarding
-* **VNC port**: The port that the remote VNC server is listening on
-* **VNC password**: The password used to access the remote VNC server (not used with login authentication)
-* **VNC login user name**: If the remote VNC server requires a login username, this is used (ie: macOS, etc)
-* **VNC login password**: If the remote VNC server requires a login password, this is used (ie: macOS, etc)
-* **Compression level**: The amount of desired compression from the remote VNC server, 0 (none) to 9 (full)
-* **Quality level**: The desired image quality from the remote VNC server, 0 (very poor) to 9 (best)
-* **Auto-disconnect when inactive**: This connection will automatically disconnect if there's no activity from the remote VNC server after the time set in program settings (This used to be labeled "Don't auto-disconnect when inactive" which was unclear)
-* **Scale off (scroll)**: The image from the remote VNC server will not be resized to SpiritVNC's viewer but scrolled
-* **Scale up and down**: The image from the remote VNC server will be scaled to fit SpiritVNC's viewer
-* **Scale down only**: The image from the remote VNC server will only be scaled down.  Remote screens slightly equal or smaller than SpiritVNC's viewer will not be scaled up
-
-*VNC through SSH options*
-* **SSH user name**: The name used when authenticating to the remote SSH server
-* ~~**SSH password**: The password, if any, used when authentication to the remote SSH server~~ Currently deprecated and disabled
-* **SSH remote port**: The port used by the remote SSH server (usually 22)
-* **SSH private key**: Private key identity file to use if your account on the remote SSH server requires it.  Use the [...] button to display a file chooser for the desired private key or simply type the full path to it
-
-*Buttons at bottom of window*
-* **[Delete]**: Displays a confirmation if you'd like to delete this server entry
-* **[Cancel]**: Abandons any changes made to this server entry and closes the edit window
-* **[Save]**: Saves any changes made to this server entry and closes the edit window
+|Option|Description|
+|------|-----------|
+|**Connection name**| The unique name you enter to recognize this connection in the list|
+|**Connection group**| Use the same group name for all computers in one location (Home, Office, Customer1, etc)|
+|**Remote address**| The IPv4 address of the remote VNC or VNC-over-SSH server (IPv6 not supported by libvncclient yet https://github.com/LibVNC/libvncserver/issues/436)|
+|**F12 macro**| Press F12 when viewing a remote server to send this text, such as frequently-used phrases, passwords, etc|
+|**VNC**| This connection connects directly to a VNC server|
+|**VNC through SSH**| This connection connects to a VNC server through SSH port forwarding|
+|**VNC port**| The port that the remote VNC server is listening on|
+|**VNC password**| The password used to access the remote VNC server (not used with login authentication)|
+|**VNC login user name**| If the remote VNC server requires a login username, this is used (ie: macOS, etc)|
+|**VNC login password**| If the remote VNC server requires a login password, this is used (ie: macOS, etc)|
+|**Compression level**| The amount of desired compression from the remote VNC server, 0 (none) to 9 (full)|
+|**Quality level**| The desired image quality from the remote VNC server, 0 (very poor) to 9 (best)|
+|**Auto-disconnect when inactive**| This connection will automatically disconnect if there's no activity from the remote VNC server after the time set in program settings (This used to be labeled "Don't auto-disconnect when inactive" which was unclear)|
+|**Scale off (scroll)**| The image from the remote VNC server will not be resized to SpiritVNC's viewer but scrolled|
+|**Scale up and down**| The image from the remote VNC server will be scaled to fit SpiritVNC's viewer|
+|**Scale down only**| The image from the remote VNC server will only be scaled down.  Remote screens slightly equal or smaller than SpiritVNC's viewer will not be scaled up|
+| | |
+|*VNC through SSH options*| |
+|**SSH user name**| The name used when authenticating to the remote SSH server|
+|~~**SSH password**~~| ~~The password, if any, used when authentication to the remote SSH server~~ Currently deprecated and disabled|
+|**SSH remote port**| The port used by the remote SSH server (usually 22)|
+|**SSH private key**| Private key identity file to use if your account on the remote SSH server requires it.  Use the [...] button to display a file chooser for the desired private key or simply type the full path to it|
+| | |
+|*Buttons at bottom of window*| |
+|**[Delete]**| Displays a confirmation if you'd like to delete this server entry|
+|**[Cancel]**| Abandons any changes made to this server entry and closes the edit window|
+|**[Save]**| Saves any changes made to this server entry and closes the edit window|
 
 ##### Other information
 
-* You can only have 65,000 connection entries in the host-list (should be more than enough!)
+> [!NOTE]
+> You can only have 65,000 connection entries in the host-list (should be more than enough!)
 - - -
 
 __Hey!__
