@@ -25,15 +25,15 @@ While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK comp
 Unless your language is English, no.  It is NOT out of disrespect for your particular language, I just don't have the time or resources to maintain different localizations and I feel adding a localization mechanism to SpiritVNC-FLTK would add complexity and increase executable size.  If anyone has any feedback or ideas for _lightweight_ localization, just create an issue.
 
 2016-2024 Will Brokenbourgh
-https://www.pismotek.com/brainout/
+https://www.willbrokenbourgh.com/brainout/
 
 To God be the glory! :-D :heart:
 
 SpiritVNC - FLTK has a 3-Clause BSD License
 
-![SpiritVNC - FLTK screenshot](https://www.pismotek.com/media/spiritvnc-fltk-screenshot-2023-04-07--10-55.png)
+![SpiritVNC - FLTK screenshot](https://www.willbrokenbourgh.com/media/spiritvnc-fltk-screenshot-2023-04-07--10-55.png)
 
-![SpiritVNC - FLTK screenshot on Windows 11](https://www.pismotek.com/media/spiritvnc-fltk-screenshot-windows-2023-08-22.png)
+![SpiritVNC - FLTK screenshot on Windows 11](https://www.willbrokenbourgh.com/media/spiritvnc-fltk-screenshot-windows-2023-08-22.png)
 
 - - - -
 
@@ -46,11 +46,11 @@ You will need both the libraries and development packages of the following:
 - An installed SSH client runable with the `ssh` command or similar (adjustable within program settings)
 - GNU make must be installed on OpenIndiana and FreeBSD
 
-**macOS Intel** - [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.  
+**macOS Intel** - [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.
 
 **macOS Apple Silicon** - I don't have access to an Apple Silicon Mac (M1, M2, etc), so testing is non-existent.
 
-**Windows Intel** - [MSYS2](https://www.msys2.org/) is the recommended way to install dependencies on x86_64 versions of Windows 10 and 11.  libvncclient has some [Windows-specific bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows) that may not get fixed right away.  
+**Windows Intel** - [MSYS2](https://www.msys2.org/) is the recommended way to install dependencies on x86_64 versions of Windows 10 and 11.  libvncclient has some [Windows-specific bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows) that may not get fixed right away.
 
 **Windows ARM** - No Windows ARM machines are available to me, so testing is non-existent.
 
