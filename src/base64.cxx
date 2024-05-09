@@ -1,6 +1,6 @@
 /*
  * base64.cxx - part of SpiritVNC - FLTK
- * 2016-2021 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2021 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  */
 
 /*

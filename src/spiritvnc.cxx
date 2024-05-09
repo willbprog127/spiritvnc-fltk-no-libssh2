@@ -1,6 +1,6 @@
 /*
  * spiritvnc.cxx - part of SpiritVNC - FLTK
- * 2016-2023 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2024 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  *
  * To God be the glory!  In Jesus name! :-D
  *

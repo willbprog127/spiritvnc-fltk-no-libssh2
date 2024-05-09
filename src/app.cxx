@@ -1,6 +1,6 @@
 /*
  * app.cxx - part of SpiritVNC - FLTK
- * 2016-2023 Will Brokenbourgh https://www.pismotek.com/brainout/
+ * 2016-2024 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  */
 
 /*
@@ -2166,7 +2166,7 @@ void svQuickInfoSetLabelAndText (HostItem * itm)
       app->lastConnectedLabel->copy_label("Last connected");
     else
       app->lastConnectedLabel->copy_label("Connected");
-    
+
     app->lastConnected->copy_label(itm->lastConnectedTime.c_str());
   }
   else
@@ -2769,8 +2769,8 @@ void svShowAboutHelp ()
   const char strHelp[] = "<center><font face='sans'><h5>SpiritVNC - FLTK</h5></font></center>"
 
       "<p><center>"
-      "&copy; 2016-" SV_CURRENT_YEAR " Will Brokenbourgh - <a href='https://www.pismotek.com/brainout/'>"
-      "https://www.pismotek.com/brainout/</a>"
+      "&copy; 2016-" SV_CURRENT_YEAR " Will Brokenbourgh - <a href='https://www.willbrokenbourgh.com/brainout/'>"
+      "https://www.willbrokenbourgh.com/brainout/</a>"
       "</center></p>"
       // -
       "<p><center>"
@@ -2810,7 +2810,7 @@ void svShowAboutHelp ()
       // -
       "<p><center>"
       "&nbsp;If you have any questions, need to report a bug or have suggestions, please"
-      " <a href='https://www.pismotek.com/brainout/content/spiritvnc.php'>visit the SpiritVNC page</a>"
+      " <a href='https://www.willbrokenbourgh.com/brainout/content/spiritvnc.php'>visit the SpiritVNC page</a>"
       "&nbsp;"
       "</center></p>"
       // -
