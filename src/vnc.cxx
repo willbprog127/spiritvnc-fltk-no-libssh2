@@ -1294,9 +1294,9 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
 
 
 /* enable fullscreen */
-void VncViewer::setFullScreen ()
+ void VncViewer::setFullScreen ()
 {
-  app->mainWin->fullscreen();
+  //app->mainWin->fullscreen();
   app->vncViewer->fullscreen = true;
 
   app->hostList->resize(-3, app->hostList->y(), 0, app->hostList->h());
@@ -1319,7 +1319,7 @@ void VncViewer::setFullScreen ()
 /* disable fullscreen */
 void VncViewer::unsetFullScreen ()
 {
-  app->mainWin->fullscreen_off();
+  //app->mainWin->fullscreen_off();
   app->vncViewer->fullscreen = false;
 
   app->hostList->resize(0, app->hostList->y(), app->requestedListWidth, app->hostList->h());
