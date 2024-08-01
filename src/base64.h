@@ -37,7 +37,7 @@
 
 #include <iostream>
 
-/* base64 */
+/*  base64  */
 static const std::string base64_chars =
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
              "abcdefghijklmnopqrstuvwxyz"

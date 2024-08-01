@@ -36,8 +36,10 @@
 #include "hostitem.h"
 
 
-/* attempts to close the popen'd ssh process */
-/* (this is called as a thread because it could block) */
+/*
+  attempts to close the popen'd ssh process
+  (this is called as a thread because it could block)
+*/
 void * svSSHCloseHelper (void * itmData)
 {
   // detach this thread
@@ -47,8 +49,6 @@ void * svSSHCloseHelper (void * itmData)
 
   if (itm == NULL || itm->sshCmdStream == NULL)
     return SV_RET_VOID;
-
-  // fprintf(itm->sshCmdStream, "%s\r\n", "exit");  //  <<--- trying different way to close (below) ---<<<
 
   // send 'exit' control-char sequence
   fprintf(itm->sshCmdStream, "\r\n%s", "~.");
@@ -65,7 +65,7 @@ void * svSSHCloseHelper (void * itmData)
 }
 
 
-/* close and clean up ssh connection */
+/*  close and clean up ssh connection  */
 void svCloseSSHConnection (void * itmData)
 {
   HostItem * itm = static_cast<HostItem *>(itmData);
@@ -81,10 +81,6 @@ void svCloseSSHConnection (void * itmData)
     //itm->isConnecting = false;
     itm->hasCouldntConnect = true;
     itm->hasError = true;
-
-    //svHandleThreadConnection(itm);
-
-    //return;
   }
 
   itm->isConnecting = false;

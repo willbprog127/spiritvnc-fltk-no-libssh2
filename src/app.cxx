@@ -34,12 +34,11 @@
 
 #include "app.h"
 
-/* app options controls */
+/*  app options controls  */
 struct AppOptionsControls
 {
   Fl_Spinner * spinScanTimeout;
   Fl_Spinner * spinLocalSSHPort;
-  //Fl_Spinner * spinDeadTimeout;
   SVInput * inSSHCommand;
   Fl_Check_Button * chkLogToFile;
   SVInput * inAppFontSize;
@@ -53,7 +52,7 @@ struct AppOptionsControls
   Fl_Button * btnSave;
 } AppOpts;
 
-/* F8 window controls */
+/*  F8 window controls  */
 struct F8Controls
 {
   Fl_Button * btnCAD;
@@ -65,7 +64,7 @@ struct F8Controls
   Fl_Button * btnCancel;
 } F8Opts;
 
-/* itm option controls */
+/*  itm option controls  */
 struct ItemOptionsControls
 {
   SVInput * inName;
@@ -80,7 +79,6 @@ struct ItemOptionsControls
   SVSecretInput * inVNCLoginPassword;
   SVInput * inVNCCompressLevel;
   SVInput * inVNCQualityLevel;
-  //Fl_Check_Button * chkIgnoreInactive = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
   Fl_Group * grpScaling;
   Fl_Radio_Round_Button * rbScaleOff;
   Fl_Radio_Round_Button * rbScaleZoom;
@@ -100,9 +98,10 @@ struct ItemOptionsControls
 } ItmOpts;
 
 
-/* handle method for SVInput
- * (instance method)
- */
+/*
+  handle method for SVInput
+  (instance method)
+*/
 int SVInput::handle (int evt)
 {
   // handle child window input controls right-click
@@ -117,9 +116,10 @@ int SVInput::handle (int evt)
 }
 
 
-/* handle method for SVSecretInput
- * (instance method)
- */
+/*
+  handle method for SVSecretInput
+  (instance method)
+*/
 int SVSecretInput::handle (int evt)
 {
   // handle child window input controls right-click
@@ -134,9 +134,10 @@ int SVSecretInput::handle (int evt)
 }
 
 
-/* handle method for SVQuickNoteGroup
- * (instance method)
- */
+/*
+  handle method for SVQuickNoteGroup
+  (instance method)
+*/
 int SVQuickNotePack::handle (int evt)
 {
   // we will accept focus by returning non-zero
@@ -147,9 +148,10 @@ int SVQuickNotePack::handle (int evt)
 }
 
 
-/* handle method for SVQuickNoteInput
- * (instance method)
- */
+/*
+  handle method for SVQuickNoteInput
+  (instance method)
+*/
 int SVQuickNoteInput::handle (int evt)
 {
   // handle enter key - save edits
@@ -193,9 +195,10 @@ int SVQuickNoteInput::handle (int evt)
 }
 
 
-/* handle method for SVBox
- * (instance method)
- */
+/*
+  handle method for SVBox
+  (instance method)
+*/
 int SVQuickNoteBox::handle (int evt)
 {
   // get currently selected list item
@@ -204,30 +207,27 @@ int SVQuickNoteBox::handle (int evt)
   // handle quicknote click if an item is selected
   if (evt == FL_PUSH && curLine > 0 && app->scanIsRunning == false)
   {
-    // show the editor if there's a selected item
-    if (curLine > 0)
+  // show the editor if there's a selected item
+    HostItem * itm = static_cast<HostItem *>(app->hostList->data(curLine));
+
+    if (itm != NULL && itm->name != "")
     {
-      HostItem * itm = static_cast<HostItem *>(app->hostList->data(curLine));
+      app->quickNoteInput->value(itm->quickNote.c_str());
 
-      if (itm != NULL && itm->name != "")
-      {
-        app->quickNoteInput->value(itm->quickNote.c_str());
+      // show editor stuff
+      app->quickNotePack->position(app->quickNoteBox->x(), app->quickNoteBox->y());
 
-        // show editor stuff
-        app->quickNotePack->position(app->quickNoteBox->x(), app->quickNoteBox->y());
+      // show the quick note edit widgets (hopefully)
+      app->quickNotePack->show();
+      Fl::check();
+      app->quickNotePack->redraw();
+      Fl::redraw();
 
-        // show the quick note edit widgets (hopefully)
-        app->quickNotePack->show();
-        Fl::check();
-        app->quickNotePack->redraw();
-        Fl::redraw();
+      // set cursor at top left
+      if (app->quickNoteInput->take_focus())
+        app->quickNoteInput->position(0);
 
-        // set cursor at top left
-        if (app->quickNoteInput->take_focus())
-          app->quickNoteInput->position(0);
-
-        Fl::add_timeout(SV_BLINK_TIME, svBlinkCursor, app->quickNoteInput);
-      }
+      Fl::add_timeout(SV_BLINK_TIME, svBlinkCursor, app->quickNoteInput);
     }
   }
 
@@ -235,7 +235,7 @@ int SVQuickNoteBox::handle (int evt)
 }
 
 
-/* emulates cursor blinking */
+/*  emulates cursor blinking  */
 void svBlinkCursor (void * inp)
 {
   // if the passed input widget is null, cancel the timeout and get out
@@ -287,27 +287,32 @@ void svCloseChildWindow (Fl_Widget *, void * data)
 }
 
 
-/* creates new configuration if none is found */
+/*  creates new configuration directory if none is found  */
 void svConfigCreateNewDir ()
 {
   struct stat st;
 
   if (stat(app->configPath.c_str(), &st) == -1)
   {
+    // windows
     #ifdef _WIN32
     if (mkdir(app->configPath.c_str()) == -1)
+    // *nix-like
     #else
     if (mkdir(app->configPath.c_str(), 0700) == -1)
     #endif
     {
-      std::cout << "SpiritVNC ERROR - Cannot create config file directory" << std::endl;
+      std::cout << "SpiritVNC - ERROR - Cannot create config file directory" << std::endl;
       exit(-1);
     }
   }
 }
 
 
-/* read from the config file, set app options and populate host list */
+/*
+  read from the config file, set app
+  options and populate host list
+*/
 void svConfigReadCreateHostList ()
 {
   std::ifstream ifs;
@@ -374,18 +379,6 @@ void svConfigReadCreateHostList ()
           app->nScanTimeout = w;
         }
 
-        //// dead connection timeout in seconds
-        //// **** preserving for possible future use ****
-        //if (strProp == "deadtimeout")
-        //{
-          //int w = atoi(strVal.c_str());
-
-          //if (w < 1)
-              //w = 100;
-
-          //app->nDeadTimeout = w;
-        //}
-
         // ssh command
         if (strProp == "sshcommand")
         {
@@ -424,8 +417,10 @@ void svConfigReadCreateHostList ()
           app->nAppFontSize = atoi(strVal.c_str());
 
           if (app->nAppFontSize < 1)
+            // windows
             #ifdef _WIN32
             app->nAppFontSize = 10;
+            // *nix-like
             #else
             app->nAppFontSize = 12;
             #endif
@@ -444,8 +439,10 @@ void svConfigReadCreateHostList ()
           app->nListFontSize = atoi(strVal.c_str());
 
           if (app->nListFontSize < 1)
+            // windows
             #ifdef _WIN32
             app->nListFontSize = 10;
+            // *nix-like
             #else
             app->nListFontSize = 12;
             #endif
@@ -527,7 +524,7 @@ void svConfigReadCreateHostList ()
           {
             if (addSep == true)
               // add a separator
-              // color 16 (@C16) is supposed to be gray
+              // color 16 (@C16) is supposed to be gray colour
               app->hostList->add("@C16@.· · ·");
             else
             {
@@ -607,9 +604,6 @@ void svConfigReadCreateHostList ()
         {
           itm->compressLevel = atoi(strVal.c_str());
 
-          if (itm->compressLevel < 0)
-            itm->compressLevel = 5;
-
           if (itm->compressLevel > 9)
             itm->compressLevel = 9;
         }
@@ -619,16 +613,9 @@ void svConfigReadCreateHostList ()
         {
           itm->qualityLevel = atoi(strVal.c_str());
 
-          if (itm->qualityLevel < 0)
-            itm->qualityLevel = 5;
-
           if (itm->qualityLevel > 9)
             itm->qualityLevel = 9;
         }
-
-        //// ignore inactive disconnect?
-        //if (strProp == "ignoreinactive")
-          //itm->ignoreInactive = svConvertStringToBoolean(strVal);
 
         //// center x?
         //if (strProp == "centerx")
@@ -666,7 +653,7 @@ void svConfigReadCreateHostList ()
 }
 
 
-/* write config file */
+/*  write config file  */
 void svConfigWrite ()
 {
   static bool inConfigWrite;
@@ -692,6 +679,7 @@ void svConfigWrite ()
 
   // write header
   ofs << "# SpiritVNC-FLTK config file" <<  std::endl;
+  ofs << "# Generated by program version " SV_APP_VERSION << std::endl;
   ofs << "#" << std::endl;
   ofs << "# option names / properties should always be lower-case without spaces" << std::endl;
   ofs << "# host type can be 'v' for vnc and 's' for vnc through ssh" << std::endl;
@@ -710,9 +698,6 @@ void svConfigWrite ()
 
   // scan timeout in seconds
   ofs << "scantimeout=" << app->nScanTimeout << std::endl;
-
-  //// dead connection timeout
-  //ofs << "deadtimeout=" << app->nDeadTimeout << std::endl;
 
   // starting local port number (+99) for ssh connections
   ofs << "startinglocalport=" << app->nStartingLocalPort << std::endl;
@@ -812,14 +797,13 @@ void svConnectionWatcher (void *)
 {
   HostItem * itm = NULL;
   VncObject * vnc = NULL;
-  uint16_t nSize;
 
   // only check if there are waiting viewers
   if (app->nViewersWaiting > 0)
   {
     svDebugLog("svConnectionWatcher - At least one itm ready for processing");
 
-    nSize = app->hostList->size();
+    uint16_t nSize = app->hostList->size();
 
     // iterate through hostlist items
     for (uint16_t i = 0; i <= nSize; i ++)
@@ -849,36 +833,6 @@ void svConnectionWatcher (void *)
     }
   }
 
-  // #### the code below is commented out until further notice.     ####
-  // #### with removal of checking connected but non-visible        ####
-  // #### hosts, the ability to check for unresponsive              ####
-  // #### hosts is now disabled until some other method is found.   ####
-  // #### will leave 'plumbing' in place in case I find a way later ####
-
-  //// do an inactive connection check
-  //nSize = app->hostList->size();
-
-  //// iterate through hostlist items
-  //for (uint16_t i = 0; i <= nSize; i ++)
-  //{
-    //itm = static_cast<HostItem *>(app->hostList->data(i));
-
-    //if (itm == NULL)
-      //continue;
-
-    //vnc = itm->vnc;
-
-    //if (vnc == NULL || itm->isConnected == false)
-      //continue;
-
-    //// check if connection has been inactive, unless this itm is ignoring
-    //if (vnc->inactiveSeconds >= app->nDeadTimeout && itm->ignoreInactive == false)
-      //// remote host hasn't responded in time allotted, disconnect
-      //vnc->endViewer();
-    //else
-      //vnc->inactiveSeconds ++;
-  //}
-
   // set timer to call this function again in 1 second
   // (do NOT change this interval as connection timeout
   // values rely on this being at or near 1 second)
@@ -886,30 +840,34 @@ void svConnectionWatcher (void *)
 }
 
 
-/* convert boolean to string */
+/*  convert boolean to string  */
 std::string svConvertBooleanToString (bool boolIn)
 {
   if (boolIn == true)
     return "true";
-  else
-    return "false";
+
+  return "false";
 }
 
 
-/* convert string to boolean */
+/*  convert string to boolean  */
 bool svConvertStringToBoolean (const std::string& strIn)
 {
-  if (strIn == "TRUE" || strIn == "True" || strIn == "true"
-      || strIn == "1"
-      || strIn == "YES" || strIn == "Yes" || strIn == "yes"
-      || strIn == "ON"  || strIn == "On"  || strIn == "on")
-        return true;
+  std::string strOut;
+
+  // go character by character to build lowercase string
+  for (const char & c : strIn)
+    strOut += std::tolower(c);
+
+  if (strOut == "true" || strOut == "yes"
+      || strOut == "on" || strOut == "1")
+    return true;
 
   return false;
 }
 
 
-/* create icons for app */
+/*  create icons for app  */
 void svCreateAppIcons (const bool fromAppOptions)
 {
   // do app icon first
@@ -961,7 +919,7 @@ void svCreateAppIcons (const bool fromAppOptions)
 }
 
 
-/* create program GUI */
+/*  create program GUI  */
 void svCreateGUI ()
 {
   // widget tooltips are set in svSetTooltips
@@ -1177,7 +1135,7 @@ void svDeleteItem (const int nItem)
 }
 
 
-/* sets all host list items to deselected */
+/*  sets all host list items to deselected  */
 void svDeselectAllItems ()
 {
   uint16_t nSize = app->hostList->size();
@@ -1188,7 +1146,7 @@ void svDeselectAllItems ()
 }
 
 
-/* enable or disable tooltips */
+/*  enable or disable tooltips  */
 void svEnableDisableTooltips ()
 {
   // enable or disable ALL app tooltips
@@ -1199,7 +1157,7 @@ void svEnableDisableTooltips ()
 }
 
 
-/* find unused TCP port in a range */
+/*  find unused TCP port in a range  */
 int svFindFreeTcpPort ()
 {
   int nSock = 0;
@@ -1240,7 +1198,7 @@ int svFindFreeTcpPort ()
 }
 
 
-/* return config property from input */
+/*  return config property from input  */
 std::string svGetConfigProperty (const char * strIn)
 {
   std::string strTemp;
@@ -1257,7 +1215,7 @@ std::string svGetConfigProperty (const char * strIn)
 }
 
 
-/* return config value from input */
+/*  return config value from input  */
 std::string svGetConfigValue (const char * strIn)
 {
   std::string strTemp;
@@ -1317,9 +1275,6 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
 
     // local ssh start port number spinner
     app->nStartingLocalPort = AppOpts.spinLocalSSHPort->value();
-
-    //// inactive connection timeout spinner
-   //app->nDeadTimeout = AppOpts.spinDeadTimeout->value();
 
     // ssh command input
     app->sshCommand = AppOpts.inSSHCommand->value();
@@ -1558,16 +1513,14 @@ void svHandleHostListButtons (Fl_Widget * button, void *)
       {
         vnc = itm->vnc;
 
-        if (vnc != NULL)
+        if (vnc != NULL && itm->isListener == true)
         {
-          if (itm->isListener == true)
-          {
-            svMessageWindow("Only one active listening viewer is allowed");
-            return;
-          }
+          svMessageWindow("Only one active listening viewer is allowed");
+          return;
         }
       }
     }
+
     VncObject::createVNCListener();
   }
 }
@@ -1922,26 +1875,14 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
     // vnc compression level text input
     itm->compressLevel = atoi(ItmOpts.inVNCCompressLevel->value());
 
-    if (itm->compressLevel < 0)
-      itm->compressLevel = 0;
-
     if (itm->compressLevel > 9)
       itm->compressLevel = 9;
 
     // vnc quality level text input
     itm->qualityLevel = atoi(ItmOpts.inVNCQualityLevel->value());
 
-    if (itm->qualityLevel < 0)
-      itm->qualityLevel = 0;
-
     if (itm->qualityLevel > 9)
       itm->qualityLevel = 9;
-
-    //// ignore inactive connection checkbutton
-    //if (static_cast<Fl_Check_Button *>(wid)->value() == 1)
-      //itm->ignoreInactive = false;
-    //else
-      //itm->ignoreInactive = true;
 
     // scroll only / no scaling radio button
     if (ItmOpts.rbScaleOff->value() == 1)
@@ -2082,7 +2023,7 @@ void svHandleMainWindowEvents (Fl_Widget * window, void *)
 }
 
 
-/* hide quick note edit widgets and empty input value */
+/*  hide quick note edit widgets and empty input value  */
 void svHideQuickNoteEditWidgets ()
 {
   // stop the text input cursor blink timer
@@ -2094,7 +2035,7 @@ void svHideQuickNoteEditWidgets ()
 }
 
 
-/* popup edit menu in input widgets and handle choice */
+/*  popup edit menu in input widgets and handle choice  */
 void svPopUpEditMenu (Fl_Input_ * input)
 {
   static bool inMenu;
@@ -2146,7 +2087,7 @@ void svPopUpEditMenu (Fl_Input_ * input)
 }
 
 
-/* set quick note text to current item */
+/*  set quick note text to current item  */
 void svQuickInfoSetLabelAndText (HostItem * itm)
 {
   // create our quick note widgets if they aren't created yet
@@ -2198,7 +2139,7 @@ void svQuickInfoSetLabelAndText (HostItem * itm)
 }
 
 
-/* set quick note to empty / no item */
+/*  set quick note to empty / no item  */
 void svQuickInfoSetToEmpty ()
 {
   // create our quick note widgets if they aren't created yet
@@ -2219,9 +2160,9 @@ void svQuickInfoSetToEmpty ()
 
 
 /*
- * handle app and main window events, such as resize, move, etc
- * and resize gui elements
- */
+  handle app and main window events, such as resize, move, etc
+  and resize gui elements
+*/
 void svPositionWidgets ()
 {
   svDebugLog("svPositionWidgets - Resizing GUI elements");
@@ -2281,7 +2222,7 @@ void svHandleListItemIconChange (void *)
 }
 
 
-/* handle connection changes from child threads */
+/*  handle connection changes from child threads  */
 void svHandleThreadConnection (void * data)
 {
   HostItem * itm = static_cast<HostItem *>(data);
@@ -2309,17 +2250,8 @@ void svHandleThreadConnection (void * data)
     itm->icon = app->iconConnected;
     svHandleListItemIconChange(NULL);
 
-    // build time string for 'last connected'
-    time_t rawtime;
-    struct tm * timeinfo = NULL;
-    char strTimeTemp[80] = {0};
-
-    time(&rawtime);
-    timeinfo = localtime (&rawtime);
-    strftime(strTimeTemp, 80, "%H:%M:%S--%Y-%m-%d", timeinfo);
-
     // store connection time
-    itm->lastConnectedTime = strTimeTemp;
+    itm->lastConnectedTime = svMakeTimeStamp(false);
 
     // only update the quick info if we're on this host item
     if (app->hostList->value() == svItemNumFromItm(itm))
@@ -2382,11 +2314,23 @@ void svHandleThreadConnection (void * data)
 
     svHandleListItemIconChange(NULL);
 
+    // deal with listening items
     if (itm->isListener == true)
     {
+      // output to console and attempt to log error
+      std::string strLErr = svMakeTimeStamp() + " - SpiritVNC-FLTK - Error: Incoming reverse VNC connection failed.  "
+        "Attempting to recover";
+      svLogToFile(strLErr);
+
+      // log to stdout if we're not using LogToFile
+      if (app->enableLogToFile == false)
+        std::cout << strLErr << std::endl;
+
+      // remove item from host list
       app->hostList->remove(svItemNumFromItm(itm));
-      svMessageWindow("Error: Unable to create a listening viewer at this time"
-        "\n\nTry exiting the program, then restarting");
+
+      // try to create another listener
+      VncObject::createVNCListener();
     }
 
     // set cleanup flag so svConnectionWatcher will do the thing
@@ -2423,12 +2367,13 @@ void svHandleThreadCursorChange (void * setToDefault)
     {
       app->mainWin->cursor(vnc->imgCursor, vnc->nCursorXHot, vnc->nCursorYHot);
       Fl::wait();
-    } else
+    }
+    else
       app->mainWin->cursor(FL_CURSOR_DEFAULT);
 }
 
 
-/* create and insert empty listitem if no items were added at startup */
+/*  create and insert empty listitem if no items were added at startup  */
 void svInsertEmptyItem ()
 {
   // make and populate a new itm
@@ -2452,19 +2397,18 @@ void svInsertEmptyItem ()
 }
 
 
-/* return hostlist item (integer) that owns host item 'itm' */
+/*  return hostlist item (integer) that owns host item 'itm'  */
 int svItemNumFromItm (const HostItem * itmIn)
 {
   if (itmIn == NULL)
     return 0;
 
-  HostItem * itm = NULL;
   uint16_t nSize = app->hostList->size();
 
   // go through hostlist and find item owning matching itmIn
   for (uint16_t i = 0; i <= nSize; i ++)
   {
-    itm = NULL;
+    HostItem * itm = NULL;
     itm = static_cast<HostItem *>(app->hostList->data(i));
 
     if (itm != NULL && itm == itmIn)
@@ -2516,13 +2460,11 @@ void svItmOptionsRadioButtonsCallback (Fl_Widget * button, void *)
 }
 
 
-/* send text to log file */
+/*  send text to log file  */
 void svLogToFile (const std::string& strMessage)
 {
   std::ofstream ofs;
   char logFileName[FL_PATH_MAX] = {0};
-  char timeBuf[50] = {0};
-  time_t logClock = 0;
   std::string strLineEnd;
 
   if (app->enableLogToFile == false)
@@ -2530,10 +2472,6 @@ void svLogToFile (const std::string& strMessage)
 
   if (strMessage.size() == 0 || strMessage == "")
     return;
-
-  // build time-stamp
-  time(&logClock);
-  strftime(timeBuf, 50, "%Y-%m-%d %X ", localtime(&logClock));
 
   snprintf(logFileName, FL_PATH_MAX, "%s/spiritvnc-fltk.log", app->configPath.c_str());
 
@@ -2552,13 +2490,39 @@ void svLogToFile (const std::string& strMessage)
     strLineEnd = "\n";
 
   // write time-stamp to log
-  ofs << timeBuf << "- " << strMessage << strLineEnd;
+  ofs << svMakeTimeStamp() << "- " << strMessage << strLineEnd;
 
   ofs.close();
 }
 
 
-/* display a message dialog window */
+/*  return a std::string containing date & time string  */
+std::string svMakeTimeStamp (bool dashSeps)
+{
+  char timeBuf[50] = {0};
+  time_t myClock = 0;
+  char * strFmt = NULL;
+
+  // build time-stamp
+  time(&myClock);
+
+  // dashes optional, ugly in some uses
+  if (dashSeps == true)
+    strFmt = strdup("%Y-%m-%d--%H:%M:%S");
+  else
+    strFmt = strdup("%Y-%m-%d  %H:%M:%S");
+
+  if (strFmt != NULL)
+  {
+    strftime(timeBuf, 50, strFmt, localtime(&myClock));
+    free(strFmt);
+  }
+
+  return std::string(timeBuf);
+}
+
+
+/*  display a message dialog window  */
 void svMessageWindow (const std::string& strMessage, const std::string& strTitle)
 {
   Fl::lock();
@@ -2569,28 +2533,25 @@ void svMessageWindow (const std::string& strMessage, const std::string& strTitle
 }
 
 
-/* return number of connected items (integer) */
+/*  return number of connected items (integer)  */
 bool svThereAreConnectedItems ()
 {
   int nSize = app->hostList->size();
-  HostItem * itm = NULL;
 
   for (uint16_t i = 1; i <= nSize; i ++)
   {
+    HostItem * itm = NULL;
     itm = static_cast<HostItem *>(app->hostList->data(i));
 
-    if (itm != NULL)
-    {
-      if (itm->isConnected == true)
+    if (itm != NULL && itm->isConnected == true)
         return true;
-    }
   }
 
   return false;
 }
 
 
-/* make sure scroller is sized correctly */
+/*  make sure scroller is sized correctly  */
 void svResizeScroller ()
 {
   svDebugLog("svResizeScroller");
@@ -2737,7 +2698,7 @@ void svSetAppTooltips ()
 }
 
 
-/* show About / Help info */
+/*  show About / Help info  */
 void svShowAboutHelp ()
 {
   // check to make sure no other child window is visible
@@ -2761,6 +2722,9 @@ void svShowAboutHelp ()
   winAboutHelp->callback(svCloseChildWindow, winAboutHelp);
 
   Fl_Help_View * hv = new Fl_Help_View(10, 10, nWinWidth - 20, nWinHeight - 70);
+
+  if (hv == NULL)
+    return;
 
   hv->color(FL_BACKGROUND2_COLOR);
   hv->textsize(app->nAppFontSize);
@@ -2834,7 +2798,7 @@ void svShowAboutHelp ()
 }
 
 
-/* show app options */
+/*  show app options  */
 void svShowAppOptions ()
 {
   // check to make sure no other child window is visible
@@ -2864,9 +2828,6 @@ void svShowAppOptions ()
   int nYStep = 32; //31;
   int nYPos = -(nYStep / 2);  //20;
 
-  // widgetName->user_data() is used to assign the widget's name to itself
-  // so it can be easily handled in the callback
-
   // ############ general options ##########################################################
 
   // scan viewer time-out
@@ -2891,18 +2852,6 @@ void svShowAppOptions ()
   AppOpts.spinLocalSSHPort->maximum(200000);
   AppOpts.spinLocalSSHPort->value(app->nStartingLocalPort);
   AppOpts.spinLocalSSHPort->tooltip("This is the first SSH port used locally for VNC-over-SSH connections");
-
-  //// inactive connection timeout
-  //AppOpts.spinDeadTimeout = new Fl_Spinner(nXPos, nYPos += nYStep,
-    //100, 28, "Inactive connection timeout (seconds) ");
-  //AppOpts.spinDeadTimeout->textsize(app->nAppFontSize);
-  //AppOpts.spinDeadTimeout->labelsize(app->nAppFontSize);
-  //AppOpts.spinDeadTimeout->step(1);
-  //AppOpts.spinDeadTimeout->minimum(1);
-  //AppOpts.spinDeadTimeout->maximum(200000);
-  //AppOpts.spinDeadTimeout->value(app->nDeadTimeout);
-  //AppOpts.spinDeadTimeout->tooltip("This is the time, in seconds, SpiritVNC waits before"
-      //" disconnecting a remote host due to inactivity");
 
   // ssh command
   AppOpts.inSSHCommand = new SVInput(nXPos, nYPos += nYStep, 210, 28,
@@ -3067,9 +3016,6 @@ void svShowF8Window ()
   int nYStep = 38;
   int nYPos = -(nYStep / 2);  //10; //20;
 
-  // widgetName->user_data() is used to assign the widget's name to itself
-  // so it can be easily handled in the callback
-
   // =========================
 
   F8Opts.btnCAD = new Fl_Button(nXPos, nYPos += nYStep, 200, 35, "Send Ctrl+Alt+Del");
@@ -3124,7 +3070,7 @@ void svShowF8Window ()
 }
 
 
-/* create / show item options window */
+/*  create / show item options window  */
 void svShowItemOptions (HostItem * im)
 {
   // check to make sure no other child window is visible
@@ -3153,7 +3099,7 @@ void svShowItemOptions (HostItem * im)
 
   // window size
   int nWinWidth = 545;
-  int nWinHeight = 595;
+  int nWinHeight = 605; //625; //595;
 
   // set window position
   int nX = app->hostList->w() + 50;
@@ -3166,27 +3112,20 @@ void svShowItemOptions (HostItem * im)
   itmOptWin->set_modal();
   itmOptWin->callback(svCloseChildWindow, itmOptWin);
 
-  // create scroller
-  Fl_Scroll * itmOptScroller = new Fl_Scroll(0, 0, nWinWidth, nWinHeight - 56);
-  itmOptScroller->type(Fl_Scroll::VERTICAL_ALWAYS);
-
-  // add itm value editors / selectors
   int nXPos = 195;
   int nYStep = 28;
-  int nYPos = -(nYStep / 2);  //-10;
+  int nYPos = -24; //-(nYStep / 2);  //-10;
 
-  // widgetName->user_data() is used to assign the widget's name to itself
-  // so it can be easily handled in the callbacks
+  // add itm value editors / selectors
 
-  // start adding things to the scroller
-  itmOptScroller->begin();
+  // create tab control - each tab is a child Fl_Group within the tab / tab->end()
+  Fl_Tabs * itemTab = new Fl_Tabs(10, nYPos += nYStep, nWinWidth - 20, nWinHeight - 62);
 
-  // spacer needed because scroller 'eats' some of the top margin
-  // when scrolled down, then back up.  Weird.
-  Fl_Box * spacer = new Fl_Box(nXPos, nYPos += nYStep, 5, 5, "");
-  (void)spacer;
+  // vnc options tab
+  Fl_Group * vncGroup = new Fl_Group(0, nYPos += nYStep, nWinWidth - 23, nWinHeight - 20, "VNC options");
 
   // ############ general options ##########################################################
+  nYPos = 16;
 
   // connection name
   ItmOpts.inName = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Connection name ");
@@ -3263,14 +3202,6 @@ void svShowItemOptions (HostItem * im)
   ItmOpts.inVNCQualityLevel->value(std::to_string(itm->qualityLevel).c_str());
   ItmOpts.inVNCQualityLevel->tooltip("The level of image quality, from 0 to 9");
 
-  //// inactive connection auto-disconnect
-  //ItmOpts.chkIgnoreInactive = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
-    //" Auto-disconnect when inactive");
-  //ItmOpts.chkIgnoreInactive->tooltip("Check to auto-disconnect due to remote"
-        //" server inactivity");
-  //if (itm->ignoreInactive == false)
-    //ItmOpts.chkIgnoreInactive->set();
-
   // ##### scaling start #####
 
   // * scaling options group *
@@ -3326,14 +3257,15 @@ void svShowItemOptions (HostItem * im)
   if (itm->showRemoteCursor == true)
     ItmOpts.chkShowRemoteCursor->set();
 
+  // end of vnc options tab
+  vncGroup->end();
+
   // ############ vnc-over-ssh options ##########################################################
+  nYPos = 4; //10; //28;
 
-  // a little extra vertical gap
-  nYPos += 15;
+  Fl_Group * sshGroup = new Fl_Group(0, nYPos += nYStep, nWinWidth - 20, nWinHeight - 20, "SSH options");
 
-  // ssh section label
-  ItmOpts.bxSSHSection = new Fl_Box(nXPos, nYPos += nYStep, 210, 28, "VNC through SSH options");
-  ItmOpts.bxSSHSection->labelfont(1);
+  nYPos = 16;
 
   // name used for ssh login
   ItmOpts.inSSHName = new SVInput(nXPos, nYPos += nYStep, 210, 28, "SSH user name ");
@@ -3368,8 +3300,11 @@ void svShowItemOptions (HostItem * im)
   app->childWindowBeingDisplayed = itmOptWin;
   app->itmBeingEdited = itm;
 
-  // done adding things to the scroller
-  itmOptScroller->end();
+  // end of ssh options tab
+  sshGroup->end();
+
+  // end of tab control
+  itemTab->end();
 
   // ############ bottom buttons ##########################################################
 
@@ -3415,7 +3350,7 @@ void svShowItemOptions (HostItem * im)
     ItmOpts.rbSVNC->deactivate();
     ItmOpts.inVNCPort->deactivate();
     ItmOpts.inVNCPassword->deactivate();
-    ItmOpts.bxSSHSection->deactivate();
+    //ItmOpts.bxSSHSection->deactivate();
     ItmOpts.inSSHName->deactivate();
     //ItmOpts.inSSHPassword->deactivate();  //  <<<--- We can't really do SSH password right now ---<<<
     ItmOpts.inSSHPort->deactivate();
@@ -3432,7 +3367,7 @@ void svShowItemOptions (HostItem * im)
     ItmOpts.rbSVNC->activate();
     ItmOpts.inVNCPort->activate();
     ItmOpts.inVNCPassword->activate();
-    ItmOpts.bxSSHSection->activate();
+    //ItmOpts.bxSSHSection->activate();
     ItmOpts.inSSHName->activate();
     //ItmOpts.inSSHPassword->activate();  //  <<<--- We can't really do SSH password right now ---<<<
     ItmOpts.inSSHPort->activate();
@@ -3453,14 +3388,14 @@ void svShowItemOptions (HostItem * im)
 /* update text on all host items */
 void svUpdateHostListItemText ()
 {
-  HostItem * itm = NULL;
   uint16_t nSize = app->hostList->size();
 
   for (uint16_t i = 0; i <= nSize; i ++)
   {
+    HostItem * itm = NULL;
     itm = static_cast<HostItem *>(app->hostList->data(i));
 
     if (itm != NULL)
-      app->hostList->text(i, strdup(itm->name.c_str()));
+      app->hostList->text(i, itm->name.c_str());
   }
 }

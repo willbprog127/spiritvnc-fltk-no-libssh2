@@ -53,7 +53,6 @@ void VncObject::createVNCListener ()
   itm->scaling = 'f';
   itm->showRemoteCursor = true;
   itm->isListener = true;
-  //itm->ignoreInactive = true;
 
   // set host list status icon
   itm->icon = app->iconDisconnected;
@@ -129,7 +128,7 @@ void VncObject::createVNCObject (HostItem * itm)
     {
       fl_beep(FL_BEEP_DEFAULT);
       std::string strAddErr = itm->name + " - Error: Host address is missing";
-      svMessageWindow(strAddErr.c_str(), "SpiritVNC - FLTK");
+      svMessageWindow(strAddErr, "SpiritVNC - FLTK");
       return;
     }
 
@@ -158,12 +157,6 @@ void VncObject::createVNCObject (HostItem * itm)
       vnc->vncClient->appData.useRemoteCursor = true;
       vnc->vncClient->GotCursorShape = VncObject::handleCursorShapeChange;
     }
-
-    //// inactive timeout  !!!! #### readTimeout doesn't seem to work (sigh) ####
-    //if (itm->ignoreInactive == true)
-      //vnc->vncClient->readTimeout = 0;
-    //else
-      //vnc->vncClient->readTimeout = app->nDeadTimeout;
 
     // set up vnc compression and quality levels
     vnc->vncClient->appData.compressLevel = itm->compressLevel;
@@ -256,8 +249,6 @@ void VncObject::createVNCObject (HostItem * itm)
       itm->hasCouldntConnect = true;
       itm->hasError = true;
 
-      //vnc->endViewer();
-
       svHandleThreadConnection(itm);
 
       return;
@@ -280,28 +271,26 @@ void VncObject::createVNCObject (HostItem * itm)
 */
 void VncObject::endAllViewers ()
 {
-  HostItem * itm = NULL;
-  VncObject * vnc = NULL;
-
   for (uint16_t i = 0; i <= app->hostList->size(); i ++)
   {
+    HostItem * itm = NULL;
     itm = static_cast<HostItem *>(app->hostList->data(i));
 
     if (itm != NULL)
     {
+      VncObject * vnc = NULL;
       vnc = itm->vnc;
 
-      if (vnc != NULL && (itm->isConnected == true ||
-                         itm->isConnecting == true ||
-                         itm->isWaitingForShow == true)
+      if (vnc != NULL && (itm->isConnected == true
+                         || itm->isConnecting == true
+                         || itm->isWaitingForShow == true
+                         )
          )
       {
         itm->hasDisconnectRequest = true;
 
         vnc->endViewer();
       }
-
-      vnc = NULL;
     }
   }
 }
@@ -378,12 +367,12 @@ bool VncObject::fitsScroller ()
   if (app->vncViewer->fullscreen == true)
     return true;
 
-  const HostItem * itm = static_cast<HostItem *>(this->itm);
+  const HostItem * itmm = static_cast<HostItem *>(this->itm);
 
-  if (itm == NULL || itm->vnc == NULL)
+  if (itmm == NULL || itmm->vnc == NULL)
     return false;
 
-  const rfbClient * cl = itm->vnc->vncClient;
+  const rfbClient * cl = itmm->vnc->vncClient;
 
   if (cl == NULL)
     return false;
@@ -404,10 +393,10 @@ void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int
 {
   VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
 
-  if (vnc == NULL ||
-      cl == NULL ||
-      Fl::belowmouse() != app->vncViewer ||
-      vnc->allowDrawing == false
+  if (vnc == NULL
+      || cl == NULL
+      || Fl::belowmouse() != app->vncViewer
+      || vnc->allowDrawing == false
      )
     return;
 
@@ -632,6 +621,13 @@ void * VncObject::initVNCConnection (void * data)
 
   // send message to main thread
   Fl::awake(svHandleThreadConnection, itm);
+
+  // free strdups
+  if (strParams[0] != NULL)
+    free(strParams[0]);
+
+  if (strParams[1] != NULL)
+    free(strParams[1]);
 
   return SV_RET_VOID;
 }
@@ -907,16 +903,12 @@ void VncObject::checkVNCMessages (VncObject * vnc)
 
   if (nMsg)
   {
-    // reset inactive seconds so we don't automatically disconnect
-    //vnc->inactiveSeconds = 0;
-
     if (HandleRFBServerMessage(vnc->vncClient) == FALSE)
     {
       vnc->endViewer();
       return;
     }
     else
-      //Fl::awake();
       Fl::check();
   }
 }
@@ -934,15 +926,15 @@ void VncObject::checkVNCMessages (VncObject * vnc)
 */
 void VncViewer::draw ()
 {
-  VncObject * vnc = app->vncViewer->vnc;
+  VncObject * v = app->vncViewer->vnc;
 
-  if (vnc == NULL ||
-      vnc->allowDrawing == false ||
-      vnc->vncClient == NULL)
+  if (v == NULL ||
+      v->allowDrawing == false ||
+      v->vncClient == NULL)
     return;
 
-  rfbClient * cl = vnc->vncClient;
-  HostItem * itm = static_cast<HostItem *>(vnc->itm);
+  rfbClient * cl = v->vncClient;
+  HostItem * itm = static_cast<HostItem *>(v->itm);
 
   if (itm == NULL || cl->frameBuffer == NULL)
     return;
@@ -954,16 +946,16 @@ void VncViewer::draw ()
     return;
 
   // 's'croll or 'f'it + real size scale mode geometry
-  if (itm->scaling == 's' || (itm->scaling == 'f' && vnc->fitsScroller() == true))
+  if (itm->scaling == 's' || (itm->scaling == 'f' && v->fitsScroller() == true))
   {
-    vnc->nLastScrollX = app->scroller->xposition();
-    vnc->nLastScrollY = app->scroller->yposition();
+    v->nLastScrollX = app->scroller->xposition();
+    v->nLastScrollY = app->scroller->yposition();
 
-    // draw that vnc host!
+    // draw that v host!
     fl_draw_image(
       cl->frameBuffer,
-      app->scroller->x() - vnc->nLastScrollX,
-      app->scroller->y() - vnc->nLastScrollY,
+      app->scroller->x() - v->nLastScrollX,
+      app->scroller->y() - v->nLastScrollY,
       cl->width,
       cl->height,
       nBytesPerPixel,
@@ -973,7 +965,7 @@ void VncViewer::draw ()
   }
 
   // 'z'oom or 'f'it + oversized scale mode geometry
-  if (itm->scaling == 'z' || (itm->scaling == 'f' && vnc->fitsScroller() == false))
+  if (itm->scaling == 'z' || (itm->scaling == 'f' && v->fitsScroller() == false))
   {
     Fl_Image * imgC = NULL;
     Fl_RGB_Image * imgZ = NULL;
@@ -1019,40 +1011,40 @@ int VncViewer::handle (int event)
   if (app->vncViewer == NULL)
     return 0;
 
-  VncObject * vnc = app->vncViewer->vnc;
+  VncObject * v = app->vncViewer->vnc;
 
-  if (vnc == NULL)
+  if (v == NULL)
     return 0;
 
   // bail out if this is not the active vnc object
-  if (vnc->allowDrawing == false)
+  if (v->allowDrawing == false)
     return 0;
 
   float nMouseX = 0;
   float nMouseY = 0;
 
   static int nButtonMask;
-  HostItem * itm = vnc->itm;
+  HostItem * itm = v->itm;
 
   // itm is null
   if (itm == NULL)
     return 0;
 
-  rfbClient * cl = vnc->vncClient;
+  rfbClient * cl = v->vncClient;
 
   // client is null
   if (cl == NULL)
     return 0;
 
   // scrolled / non-scaled sizing
-  if (itm->scaling == 's' || (itm->scaling == 'f' && vnc->fitsScroller() == true))
+  if (itm->scaling == 's' || (itm->scaling == 'f' && v->fitsScroller() == true))
   {
     nMouseX = Fl::event_x() - app->scroller->x() + app->scroller->xposition();
     nMouseY = Fl::event_y() - app->scroller->y() + app->scroller->yposition();
   }
 
   // scaled sizing
-  if (itm->scaling == 'z' || (itm->scaling == 'f' && vnc->fitsScroller() == false))
+  if (itm->scaling == 'z' || (itm->scaling == 'f' && v->fitsScroller() == false))
   {
     float fXAdj = float(app->vncViewer->w()) / float(cl->width);
     float fYAdj = float(app->vncViewer->h()) / float(cl->height);
@@ -1071,8 +1063,8 @@ int VncViewer::handle (int event)
       if (Fl::event_button() == FL_RIGHT_MOUSE)
         nButtonMask |= rfbButton3Mask;
 
-      SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
-      SendIncrementalFramebufferUpdateRequest(vnc->vncClient);
+      SendPointerEvent(v->vncClient, nMouseX, nMouseY, nButtonMask);
+      SendIncrementalFramebufferUpdateRequest(v->vncClient);
 
       app->scanIsRunning = false;
       return 1;
@@ -1083,7 +1075,7 @@ int VncViewer::handle (int event)
         if (Fl::event_button() == FL_LEFT_MOUSE)
         {
           nButtonMask |= rfbButton1Mask;
-          SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
+          SendPointerEvent(v->vncClient, nMouseX, nMouseY, nButtonMask);
           app->scanIsRunning = false;
           return 1;
         }
@@ -1091,7 +1083,7 @@ int VncViewer::handle (int event)
         if (Fl::event_button() == FL_RIGHT_MOUSE)
         {
           nButtonMask |= rfbButton3Mask;
-          SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
+          SendPointerEvent(v->vncClient, nMouseX, nMouseY, nButtonMask);
           app->scanIsRunning = false;
           return 1;
         }
@@ -1103,8 +1095,8 @@ int VncViewer::handle (int event)
         {
           // left mouse click
           nButtonMask &= ~rfbButton1Mask;
-          SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
-          SendIncrementalFramebufferUpdateRequest(vnc->vncClient);
+          SendPointerEvent(v->vncClient, nMouseX, nMouseY, nButtonMask);
+          SendIncrementalFramebufferUpdateRequest(v->vncClient);
           app->scanIsRunning = false;
           return 1;
         }
@@ -1113,8 +1105,8 @@ int VncViewer::handle (int event)
         if (Fl::event_button() == FL_RIGHT_MOUSE)
         {
           nButtonMask &= ~rfbButton3Mask;
-          SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
-          SendIncrementalFramebufferUpdateRequest(vnc->vncClient);
+          SendPointerEvent(v->vncClient, nMouseX, nMouseY, nButtonMask);
+          SendIncrementalFramebufferUpdateRequest(v->vncClient);
           app->scanIsRunning = false;
           return 1;
         }
@@ -1137,19 +1129,19 @@ int VncViewer::handle (int event)
             nYDirection = rfbWheelUpMask;
 
           nButtonMask |= nYDirection;
-          SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
+          SendPointerEvent(v->vncClient, nMouseX, nMouseY, nButtonMask);
 
           nButtonMask &= ~nYDirection;
-          SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
+          SendPointerEvent(v->vncClient, nMouseX, nMouseY, nButtonMask);
 
-          SendIncrementalFramebufferUpdateRequest(vnc->vncClient);
+          SendIncrementalFramebufferUpdateRequest(v->vncClient);
           return 1;
         }
         break;
     }
 
     case FL_MOVE:
-      SendPointerEvent(vnc->vncClient, nMouseX, nMouseY, nButtonMask);
+      SendPointerEvent(v->vncClient, nMouseX, nMouseY, nButtonMask);
       return 1;
       break;
 
@@ -1174,7 +1166,7 @@ int VncViewer::handle (int event)
 
     // ** misc events **
     case FL_ENTER:
-      if (vnc->imgCursor != NULL && itm->showRemoteCursor == true)
+      if (v->imgCursor != NULL && itm->showRemoteCursor == true)
         Fl::awake(svHandleThreadCursorChange, reinterpret_cast<void *>(false));
       return 1;
       break;
@@ -1220,7 +1212,7 @@ int VncViewer::handle (int event)
 
 /*
   fix / convert X11 key codes to rfb key codes
-  (const in not used so parameter name removed)
+  (const int not used so parameter name removed)
 */
 void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem * itm,
   rfbClient * cl, bool downState)
@@ -1242,24 +1234,21 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
   // F11 fullscreen
   if (nK == XK_F11)
   {
-    if (downState == false)
-    {
       // toggle vncViewer's fullscreen state
-      if (app->vncViewer != NULL)
+    if (app->vncViewer != NULL && downState == false)
+    {
+      // we can disable fullscreen no matter what
+      if (app->vncViewer->fullscreen == true)
       {
-        // we can disable fullscreen no matter what
-        if (app->vncViewer->fullscreen == true)
-        {
-          app->vncViewer->unsetFullScreen();
-          return;
-        }
+        app->vncViewer->unsetFullScreen();
+        return;
+      }
 
-        // only enable fullscreen if we're displaying a connection
-        if (app->vncViewer->fullscreen != true && app->vncViewer->vnc != NULL)
-        {
-          app->vncViewer->setFullScreen();
-          return;
-        }
+      // only enable fullscreen if we're displaying a connection
+      if (app->vncViewer->fullscreen != true && app->vncViewer->vnc != NULL)
+      {
+        app->vncViewer->setFullScreen();
+        return;
       }
     }
 
@@ -1296,7 +1285,6 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
 /* enable fullscreen */
  void VncViewer::setFullScreen ()
 {
-  //app->mainWin->fullscreen();
   app->vncViewer->fullscreen = true;
 
   app->hostList->resize(-3, app->hostList->y(), 0, app->hostList->h());

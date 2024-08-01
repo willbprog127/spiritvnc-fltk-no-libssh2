@@ -35,6 +35,7 @@
 #ifndef APP_H
 #define APP_H
 
+/* === windows only === */
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -55,10 +56,12 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Menu_Item.H>
 #include <FL/Fl_Pack.H>
+#include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Radio_Round_Button.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Secret_Input.H>
 #include <FL/Fl_Spinner.H>
+#include <FL/Fl_Tabs.H>
 #include <FL/Fl_Tooltip.H>
 #include <FL/Fl_Multiline_Output.H>
 #include <FL/Fl_Widget.H>
@@ -66,6 +69,7 @@
 
 #include <fstream>
 
+/* === *nix-like only == */
 #ifndef _WIN32
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -78,7 +82,6 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <vector>
 
 #include "base64.h"
 #include "consts_enums.h"
@@ -109,7 +112,7 @@ public:
     iconConnected(NULL),
     iconNoConnect(NULL),
     iconConnecting(NULL),
-    libVncVncPointer((void *)"VncObject"),
+    libVncVncPointer(strdup("VncObject")),
     configPath(""),
     configPathAndFile(""),
     requestedListWidth(170),
@@ -130,7 +133,6 @@ public:
     scanIsRunning(false),
     nCurrentScanItem(0),
     nScanTimeout(2),
-    //nDeadTimeout(100),
     nStartingLocalPort(15000),
     showTooltips(true),
     enableLogToFile(false),
@@ -199,17 +201,17 @@ public:
 
     // set up config file path and file
 
-    // for macOS / OS X
+    // === macOS / OS X ===
     #if defined __APPLE__
     configPath = "/Users/" + userName + "/.spiritvnc/";
-    // Windows 10+
+    // === Windows 10+ ===
     #elif defined _WIN32
     configPath = std::string(getenv("APPDATA")) + "\\SpiritVNC\\";
+    // === solaris or openindiana ===
     #elif defined __sun__
-    // for solaris or openindiana
     configPath = "/export/home/" + userName + "/.spiritvnc/";
+    // === default linux, freebsd, others ===
     #else
-    // default is typical linux, freebsd path
     configPath = "/home/" + userName + "/.spiritvnc/";
     #endif
 
@@ -249,7 +251,6 @@ public:
   bool scanIsRunning;
   int nCurrentScanItem;
   uint16_t nScanTimeout;
-  //uint16_t nDeadTimeout;
   int nStartingLocalPort;
   bool showTooltips;
   bool enableLogToFile;
@@ -286,7 +287,6 @@ class SVInput : public Fl_Input
 public:
   SVInput (int x, int y, int w, int h, const char * label = 0) :
     Fl_Input(x, y, w, h, label) {}
-//private:
   int handle (int event);
 };
 
@@ -369,6 +369,7 @@ void svItmOptionsRadioButtonsCallback (Fl_Widget *, void *);
 void svListeningModeBegin ();
 void svListeningModeEnd ();
 void svLogToFile (const std::string&);
+std::string svMakeTimeStamp (bool dashSeps = true);
 void svMessageWindow (const std::string&, const std::string& = "SpiritVNC");
 bool svThereAreConnectedItems ();
 void svPopUpEditMenu (Fl_Input_ *);

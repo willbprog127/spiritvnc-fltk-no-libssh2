@@ -42,9 +42,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_PNG_Image.H>
+
 #include "app.h"
 #include "consts_enums.h"
 
@@ -52,7 +50,7 @@
 AppVars * app = new AppVars();
 
 
-/* main program */
+/*  main program  */
 int main (int argc, char **argv)
 {
   // tells FLTK we're a multithreaded app
@@ -103,9 +101,8 @@ int main (int argc, char **argv)
   #endif
 
   // start up the connection 'supervisor' timer callback
-  // do NOT change the interval of this timer
-  // because program logic expects this to always be
-  // near 1 second
+  // do NOT change the interval of this timer because program
+  // logic expects this to always be near 1 second
   Fl::add_timeout(SV_ONE_SECOND, svConnectionWatcher);
 
   // start watching the clipboard
