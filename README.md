@@ -46,13 +46,15 @@ You will need both the libraries and development packages of the following:
 - An installed SSH client runable with the `ssh` command or similar (adjustable within program settings)
 - GNU make must be installed on OpenIndiana and FreeBSD
 
-**macOS Intel** - [Homebrew](https://brew.sh/) is now the recommended way to install dependencies on macOS, at least on Intel.  I stopped using MacPorts because too many bugs affected packages I needed.
+**macOS**
+> [!NOTE]
+> I no longer have access to a modern Mac so _you_ will have to test any fixes I make.
+* Intel - [Homebrew](https://brew.sh/) is the recommended way to install dependencies on macOS Intel. 
+* Apple Silicon - I have no access to an Apple Silicon Mac, so your guess is as good as mine _(maybe Homebrew?)_
 
-**macOS Apple Silicon** - I don't have access to an Apple Silicon Mac (M1, M2, etc), so testing is non-existent.
-
-**Windows Intel** - [MSYS2](https://www.msys2.org/) is the recommended way to install dependencies on x86_64 versions of Windows 10 and 11.  libvncclient has some [Windows-specific bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows) that may not get fixed right away.
-
-**Windows ARM** - No Windows ARM machines are available to me, so testing is non-existent.
+**Windows**
+* Intel - [MSYS2](https://www.msys2.org/) is the recommended way to install dependencies on x86_64 versions of Windows 10 and 11.  libvncclient has some [Windows-specific bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows) that may not get fixed right away.
+* ARM - No Windows ARM machines are available to me, so use what's best for you.
 
 - - -
 
@@ -60,7 +62,7 @@ __Building__
 
 SpiritVNC - FLTK requires a compiler that supports C++11.
 
-'cd' into the directory that has the Makefile, then...
+`cd` into the directory that has the Makefile, then...
 
 On most Linux distros, macOS and MSYS2 on Windows (where GNU make is default):
 ```sh
@@ -85,12 +87,12 @@ $ ./spiritvnc-fltk
 * Double-click a disconnected server entry to try to connect to it
 * Single-click a connected server entry to switch to it from another
 * Right-click a connected server entry to close the connection *(except 'Listening' entries)*
-* Right-click a disconnected server entry to display a pop-up menu with various actions you can perform
+* Right-click a disconnected server entry to display a pop-up menu with various actions and custom commands you can perform
 * Click a server entry, then click in the Quick Note box near the bottom left of SpiritVNC's window to enter a brief message.  Press Enter to save or Esc to cancel.  Any notes entered for 'Listening' connections are temporary and will not be saved
 
 When viewing a remote VNC server:
 * Pressing the F8 key will display F8, F11, F12 and common key combinations that can be sent to the remote host
-* Pressing the F11 key will toggle fullscreen mode.  Fullscreen can be *disabled* even when not connected to a remote host
+* Pressing the F11 key will toggle semi-fullscreen mode.  Fullscreen will not work when disconnected from a remote host
 * If the current connection has an F12 macro, pressing the F12 key will send it, otherwise the F12 key itself will be sent
 
 ##### Server entry list buttons
@@ -124,6 +126,7 @@ When viewing a remote VNC server:
 ##### Server entry edit help
 |Option|Description|
 |------|-----------|
+|[VNC options tab]| |
 |**Connection name**| The unique name you enter to recognize this connection in the list|
 |**Connection group**| Use the same group name for all computers in one location (Home, Office, Customer1, etc)|
 |**Remote address**| The IPv4 address of the remote VNC or VNC-over-SSH server (IPv6 not supported by libvncclient yet https://github.com/LibVNC/libvncserver/issues/436)|
@@ -136,18 +139,22 @@ When viewing a remote VNC server:
 |**VNC login password**| If the remote VNC server requires a login password, this is used (ie: macOS, etc)|
 |**Compression level**| The amount of desired compression from the remote VNC server, 0 (none) to 9 (full)|
 |**Quality level**| The desired image quality from the remote VNC server, 0 (very poor) to 9 (best)|
-|**Auto-disconnect when inactive**| This connection will automatically disconnect if there's no activity from the remote VNC server after the time set in program settings (This used to be labeled "Don't auto-disconnect when inactive" which was unclear)|
 |**Scale off (scroll)**| The image from the remote VNC server will not be resized to SpiritVNC's viewer but scrolled|
 |**Scale up and down**| The image from the remote VNC server will be scaled to fit SpiritVNC's viewer|
 |**Scale down only**| The image from the remote VNC server will only be scaled down.  Remote screens slightly equal or smaller than SpiritVNC's viewer will not be scaled up|
 | | |
-|*VNC through SSH options*| |
+|[SSH options tab]| |
 |**SSH user name**| The name used when authenticating to the remote SSH server|
-|~~**SSH password**~~| ~~The password, if any, used when authentication to the remote SSH server~~ Currently deprecated and disabled|
 |**SSH remote port**| The port used by the remote SSH server (usually 22)|
 |**SSH private key**| Private key identity file to use if your account on the remote SSH server requires it.  Use the [...] button to display a file chooser for the desired private key or simply type the full path to it|
 | | |
-|*Buttons at bottom of window*| |
+|[Custom commands tab]| |
+|**Command _n_ enabled**| Put a checkmark in this box to enable and show this command in this item's disconnected right-click menu|
+|_(first text-box)_| This is the command's label which displays in this item's disconnected right-click menu when enabled|
+|_(second text-box)_| This is the command that is run when you click its label in this items's disconnected right-click menu|
+| | Note: Custom commands are run by right-clicking a _disconnected_ connection item, then clicking the custom command(s) toward the bottom of the right-click menu (if it/they are enabled in this item's settings).  If the command entered in this item's settings runs successfully, you will _not_ receive a message about it.  If the command returns a non-zero result (usually an error), a dialog box will display showing which command you attempted to run and the exit code of that failing command|
+| | |
+|[Buttons at bottom of window]| |
 |**[Delete]**| Displays a confirmation if you'd like to delete this server entry|
 |**[Cancel]**| Abandons any changes made to this server entry and closes the edit window|
 |**[Save]**| Saves any changes made to this server entry and closes the edit window|
