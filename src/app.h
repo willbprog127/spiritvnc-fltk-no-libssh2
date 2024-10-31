@@ -377,6 +377,8 @@ void svQuickInfoSetLabelAndText (HostItem *);
 void svQuickInfoSetToEmpty ();
 void svResizeScroller ();
 void svRestoreWindowSizePosition (void *);
+void svRunCommand(const std::string&, const std::string&);
+void * svRunCommandHelper(void *);
 void svScanTimer (void *);
 void svSendKeyStrokesToHost (const std::string&, const VncObject *);
 void svSetAppTooltips ();

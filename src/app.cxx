@@ -85,6 +85,15 @@ struct ItemOptionsControls
   Fl_Radio_Round_Button * rbScaleFit;
   Fl_Check_Button * chkScalingFast;
   Fl_Check_Button * chkShowRemoteCursor;
+  Fl_Check_Button * chkCommand1Enabled;
+  SVInput * inCommand1Label;
+  SVInput * inCommand1;
+  Fl_Check_Button * chkCommand2Enabled;
+  SVInput * inCommand2Label;
+  SVInput * inCommand2;
+  Fl_Check_Button * chkCommand3Enabled;
+  SVInput * inCommand3Label;
+  SVInput * inCommand3;
   Fl_Box * bxSSHSection;
   SVInput * inSSHName;
   //SVSecretInput * inSSHPassword;
@@ -632,6 +641,42 @@ void svConfigReadCreateHostList ()
         // last connected time
         if (strProp == "lastconnecttime")
           itm->lastConnectedTime = strVal;
+
+        // custom command 1 enabled?
+        if (strProp == "customcommand1enabled")
+          itm->customCommand1Enabled = svConvertStringToBoolean(strVal);
+
+        // custom command 1 label
+        if (strProp == "customcommand1label")
+          itm->customCommand1Label = strVal;
+
+        // custom command 1
+        if (strProp == "customcommand1")
+          itm->customCommand1 = strVal;
+
+        // custom command 2 enabled?
+        if (strProp == "customcommand2enabled")
+          itm->customCommand2Enabled = svConvertStringToBoolean(strVal);
+
+        // custom command 2 label
+        if (strProp == "customcommand2label")
+          itm->customCommand2Label = strVal;
+
+        // custom command 2
+        if (strProp == "customcommand2")
+          itm->customCommand2 = strVal;
+
+        // custom command 3 enabled?
+        if (strProp == "customcommand3enabled")
+          itm->customCommand3Enabled = svConvertStringToBoolean(strVal);
+
+        // custom command 3 label
+        if (strProp == "customcommand3label")
+          itm->customCommand3Label = strVal;
+
+        // custom command 3
+        if (strProp == "customcommand3")
+          itm->customCommand3 = strVal;
       }
     }
     else
@@ -775,6 +820,15 @@ void svConfigWrite ()
     ofs << "quicknote=" << base64Encode(reinterpret_cast<const unsigned char *>
       (itm->quickNote.c_str()), itm->quickNote.size()) << std::endl;
     ofs << "lastconnecttime=" << itm->lastConnectedTime << std::endl;
+    ofs << "customcommand1enabled=" << svConvertBooleanToString(itm->customCommand1Enabled) << std::endl;
+    ofs << "customcommand1label=" << itm->customCommand1Label << std::endl;
+    ofs << "customcommand1=" << itm->customCommand1 << std::endl;
+    ofs << "customcommand2enabled=" << svConvertBooleanToString(itm->customCommand2Enabled) << std::endl;
+    ofs << "customcommand2label=" << itm->customCommand2Label << std::endl;
+    ofs << "customcommand2=" << itm->customCommand2 << std::endl;
+    ofs << "customcommand3enabled=" << svConvertBooleanToString(itm->customCommand3Enabled) << std::endl;
+    ofs << "customcommand3label=" << itm->customCommand3Label << std::endl;
+    ofs << "customcommand3=" << itm->customCommand3 << std::endl;
 
     ofs << std::endl;
   }
@@ -1595,8 +1649,12 @@ void svHandleHostListEvents (Fl_Widget *, void *)
   // right-click
   if (Fl::event_button() == FL_RIGHT_MOUSE)
   {
-    int nF12Flags;
-    int nF12Flags2;
+    int nF12Flags = 0;
+    int nF12Flags2 = 0;
+    int nDividerFlag = 0;
+    int nCustCommand1Flags = FL_MENU_INVISIBLE;
+    int nCustCommand2Flags = FL_MENU_INVISIBLE;
+    int nCustCommand3Flags = FL_MENU_INVISIBLE;
 
     if (app->childWindowVisible == true)
       return;
@@ -1620,6 +1678,23 @@ void svHandleHostListEvents (Fl_Widget *, void *)
       return;
     }
 
+    // set custom commands visibility
+    if (itm->customCommand1Enabled == true)
+    {
+      nCustCommand1Flags = 0;
+      nDividerFlag = FL_MENU_DIVIDER;
+    }
+    if (itm->customCommand2Enabled == true)
+    {
+      nCustCommand2Flags = 0;
+      nDividerFlag = FL_MENU_DIVIDER;
+    }
+    if (itm->customCommand3Enabled == true)
+    {
+      nCustCommand3Flags = 0;
+      nDividerFlag = FL_MENU_DIVIDER;
+    }
+
     // show pop-up menu if disconnected and not a listening connection
     if (itm->isConnected == false
         && itm->isConnecting == false
@@ -1630,8 +1705,6 @@ void svHandleHostListEvents (Fl_Widget *, void *)
       // enable / disable 'Copy F12 macro' item in menu
       if (itm->f12Macro == "")
         nF12Flags = FL_MENU_INACTIVE;
-      else
-        nF12Flags = 0;
 
       // create context menu
       // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
@@ -1639,7 +1712,10 @@ void svHandleHostListEvents (Fl_Widget *, void *)
         {"Connect",        0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
         {"Edit",           0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
         {"Copy F12 macro", 0, 0, 0, nF12Flags, 0, FL_HELVETICA, app->nMenuFontSize},
-        {"Delete...",      0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
+        {"Delete...",      0, 0, 0, nDividerFlag, 0, FL_HELVETICA, app->nMenuFontSize},
+        {itm->customCommand1Label.c_str(), 0, 0, 0, nCustCommand1Flags, 0, FL_HELVETICA, app->nMenuFontSize},
+        {itm->customCommand2Label.c_str(), 0, 0, 0, nCustCommand2Flags, 0, FL_HELVETICA, app->nMenuFontSize},
+        {itm->customCommand3Label.c_str(), 0, 0, 0, nCustCommand3Flags, 0, FL_HELVETICA, app->nMenuFontSize},
         {0}
       };
 
@@ -1673,6 +1749,19 @@ void svHandleHostListEvents (Fl_Widget *, void *)
           // delete item (and itm)
           if (strcmp(strRes, "Delete...") == 0)
             svDeleteItem(nHostItemNum);
+
+          // custom commands
+          // command 1
+          if (strcmp(strRes, itm->customCommand1Label.c_str()) == 0)
+            svRunCommand(itm->customCommand1Label, itm->customCommand1);
+
+          // command 2
+          if (strcmp(strRes, itm->customCommand2Label.c_str()) == 0)
+            svRunCommand(itm->customCommand2Label, itm->customCommand2);
+
+          // command 1
+          if (strcmp(strRes, itm->customCommand3Label.c_str()) == 0)
+            svRunCommand(itm->customCommand3Label, itm->customCommand3);
         }
       }
 
@@ -1718,14 +1807,10 @@ void svHandleHostListEvents (Fl_Widget *, void *)
         // enable / disable 'Paste F12 macro' item in menu
         if (app->strF12ClipVar == "")
           nF12Flags = FL_MENU_INACTIVE;
-        else
-          nF12Flags = 0;
 
         // enable / disable 'Clear F12 macro' item in menu
         if (itm->f12Macro == "")
           nF12Flags2 = FL_MENU_INACTIVE;
-        else
-          nF12Flags2 = 0;
 
         // create context menu
         // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
@@ -1840,6 +1925,8 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
   // save button clicked
   if (btn == ItmOpts.btnSave)
   {
+    // #### vnc tab ########################################
+
     // connection name text input
     itm->name = ItmOpts.inName->value();
 
@@ -1908,17 +1995,44 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
     else
       itm->showRemoteCursor = false;
 
+    // #### ssh tab ###########################################
+
     // ssh username
     itm->sshUser = ItmOpts.inSSHName->value();
-
-    // ssh password
-    //itm->sshPass = ItmOpts.inSSHPassword->value();
 
     // ssh port
     itm->sshPort = ItmOpts.inSSHPort->value();
 
     // ssh private key
     itm->sshKeyPrivate = ItmOpts.inSSHPrvKey->value();
+
+    // #### custom commands ####################################
+    // custom command 1
+    if (ItmOpts.chkCommand1Enabled->value() == 1)
+      itm->customCommand1Enabled = true;
+    else
+      itm->customCommand1Enabled = false;
+
+    itm->customCommand1Label = ItmOpts.inCommand1Label->value();
+    itm->customCommand1 = ItmOpts.inCommand1->value();
+
+    // custom command 2
+    if (ItmOpts.chkCommand2Enabled->value() == 1)
+      itm->customCommand2Enabled = true;
+    else
+      itm->customCommand2Enabled = false;
+
+    itm->customCommand2Label = ItmOpts.inCommand2Label->value();
+    itm->customCommand2 = ItmOpts.inCommand2->value();
+
+    // custom command 3
+    if (ItmOpts.chkCommand3Enabled->value() == 1)
+      itm->customCommand3Enabled = true;
+    else
+      itm->customCommand3Enabled = false;
+
+    itm->customCommand3Label = ItmOpts.inCommand3Label->value();
+    itm->customCommand3 = ItmOpts.inCommand3->value();
 
     // add item to host list if new
     if (svItemNumFromItm(itm) == 0 && app->hostList->size() < SV_MAX_HOSTLIST_ENTRIES)
@@ -2576,6 +2690,75 @@ void svRestoreWindowSizePosition (void *)
 {
   app->mainWin->resize(app->savedX, app->savedY, app->savedW, app->savedH);
   app->mainWin->redraw();
+}
+
+
+/*
+  actual command runner
+  (called as thread because it may block)
+*/
+void * svRunCommandHelper(void * strArgsIn)
+{
+  // detach this thread
+  pthread_detach(pthread_self());
+
+  std::string strOops = "Command or command label is NULL";
+
+  // get out if pointer is null
+  if (strArgsIn == NULL)
+  {
+    svMessageWindow(strOops, "SpiritVNC - Custom command");
+    return SV_RET_VOID;
+  }
+
+  // cast void pointer to char * array
+  const char ** strArgs = static_cast<const char **>(strArgsIn);
+
+  // if either of the array elements are null, get out
+  if (strArgs[0] == NULL || strArgs[1] == NULL)
+  {
+    svMessageWindow(strOops, "SpiritVNC - Custom command");
+    return SV_RET_VOID;
+  }
+
+  // run the passed command
+  int nRes = std::system(strArgs[1]);
+
+  // warn if the command returned a non-zero result
+  if (nRes != 0)
+  {
+    char errMsg[1024] = {0};
+    snprintf(errMsg, 1023, "Command failed: '%s'\n\nExit code: %i\n", strArgs[0], nRes);
+    svMessageWindow(errMsg, "SpiritVNC - Custom command");
+  }
+
+  return SV_RET_VOID;
+}
+
+
+/*
+  runs custom command
+  (calls svRunCommandHelper as thread)
+*/
+void svRunCommand(const std::string& label, const std::string& cmd)
+{
+  pthread_t runThread = 0;
+
+  // get out if label or command is empty
+  if (label == "" || cmd == "")
+  {
+    svMessageWindow("Command or command label is empty", "SpiritVNC - Custom command");
+    return;
+  }
+
+  // create char array pointer to pass to thread
+  char * strArgs[] = {strdup(label.c_str()), strdup(cmd.c_str())};
+
+  // create, launch and detach call to svRunCommandHelper
+  if (pthread_create(&runThread, NULL, svRunCommandHelper, strArgs) != 0)
+  {
+    svMessageWindow("Error: Couldn't create custom command thread", "SpiritVNC - Custom command");
+  }
 }
 
 
@@ -3302,6 +3485,56 @@ void svShowItemOptions (HostItem * im)
 
   // end of ssh options tab
   sshGroup->end();
+
+  // ############ custom commands ##########################################################
+  nYPos = 4;
+
+  Fl_Group * customCommandGroup = new Fl_Group(0, nYPos += nYStep, nWinWidth - 20, nWinHeight - 20, "Custom commands");
+
+  nXPos = 15;
+  nYPos = 16;
+
+  // custom command 1
+  ItmOpts.chkCommand1Enabled = new Fl_Check_Button(nXPos, nYPos += nYStep, 175, 28, "Command 1 enabled");
+  ItmOpts.chkCommand1Enabled->tooltip("Check to enable custom command 1");
+
+  if (itm->customCommand1Enabled == true)
+    ItmOpts.chkCommand1Enabled->set();
+
+  ItmOpts.inCommand1Label = new SVInput(nXPos + 180, nYPos, 120, 28);
+  ItmOpts.inCommand1Label->value(itm->customCommand1Label.c_str());
+
+  ItmOpts.inCommand1 = new SVInput(nXPos + 305, nYPos, 200, 28);
+  ItmOpts.inCommand1->value(itm->customCommand1.c_str());
+
+  // custom command 2
+  ItmOpts.chkCommand2Enabled = new Fl_Check_Button(nXPos, nYPos += nYStep, 175, 28, "Command 2 enabled");
+  ItmOpts.chkCommand2Enabled->tooltip("Check to enable custom command 2");
+
+  if (itm->customCommand2Enabled == true)
+    ItmOpts.chkCommand2Enabled->set();
+
+  ItmOpts.inCommand2Label = new SVInput(nXPos + 180, nYPos, 120, 28);
+  ItmOpts.inCommand2Label->value(itm->customCommand2Label.c_str());
+
+  ItmOpts.inCommand2 = new SVInput(nXPos + 305, nYPos, 200, 28);
+  ItmOpts.inCommand2->value(itm->customCommand2.c_str());
+
+  // custom command 3
+  ItmOpts.chkCommand3Enabled = new Fl_Check_Button(nXPos, nYPos += nYStep, 175, 28, "Command 3 enabled");
+  ItmOpts.chkCommand3Enabled->tooltip("Check to enable custom command 3");
+
+  if (itm->customCommand3Enabled == true)
+    ItmOpts.chkCommand3Enabled->set();
+
+  ItmOpts.inCommand3Label = new SVInput(nXPos + 180, nYPos, 120, 28);
+  ItmOpts.inCommand3Label->value(itm->customCommand3Label.c_str());
+
+  ItmOpts.inCommand3 = new SVInput(nXPos + 305, nYPos, 200, 28);
+  ItmOpts.inCommand3->value(itm->customCommand3.c_str());
+
+  // end of custom command tab
+  customCommandGroup->end();
 
   // end of tab control
   itemTab->end();

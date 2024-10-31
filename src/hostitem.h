@@ -90,7 +90,16 @@ public:
     sshCmdStream(NULL),
     sshCloseThread(0),
     quickNote(""),
-    lastConnectedTime("")
+    lastConnectedTime(""),
+    customCommand1Enabled(false),
+    customCommand1Label("Command 1"),
+    customCommand1(""),
+    customCommand2Enabled(false),
+    customCommand2Label("Command 2"),
+    customCommand2(""),
+    customCommand3Enabled(false),
+    customCommand3Label("Command 3"),
+    customCommand3("")
   {}
 
   std::string name;
@@ -137,6 +146,15 @@ public:
   pthread_t sshCloseThread;
   std::string quickNote;
   std::string lastConnectedTime;
+  bool customCommand1Enabled;
+  std::string customCommand1Label;
+  std::string customCommand1;
+  bool customCommand2Enabled;
+  std::string customCommand2Label;
+  std::string customCommand2;
+  bool customCommand3Enabled;
+  std::string customCommand3Label;
+  std::string customCommand3;
 };
 
 #endif
