@@ -38,6 +38,8 @@ SpiritVNC - FLTK has a 3-Clause BSD License
 - - - -
 
 __Dependencies__
+> [!NOTE]
+> The current release of FLTK is 1.4.x.  SpiritVNC-FLTK hasn't been optimized for FLTK 1.4.x yet, so you may see deprecation warnings when building.  Please file an issue if you get errors due to this.
 
 You will need both the libraries and development packages of the following:
 - fltk 1.3.4 or newer
