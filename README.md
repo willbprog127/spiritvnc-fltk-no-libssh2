@@ -1,8 +1,8 @@
 # SpiritVNC - FLTK
-SpiritVNC - FLTK is an FLTK-based multi-view VNC client for most Linux distros, macOS, FreeBSD, OpenIndiana and *experimentally* on Windows 10 and 11.  SpiritVNC features VNC-through-SSH, reverse (listening) VNC connections and timed scanning of connected viewers.  SpiritVNC - FLTK may run on other Unix-like systems using X11, as well.
+SpiritVNC - FLTK is an FLTK-based multi-view VNC client for most Linux distros, macOS, FreeBSD, OpenIndiana and *experimentally* on Windows 10 and 11 (using MSYS2).  SpiritVNC features VNC-through-SSH, reverse (listening) VNC connections and timed scanning of connected viewers.  SpiritVNC - FLTK may run on other Unix-like systems using X11, as well.
 
 #### A note about NOT using libssh2
-Because of changes the last year or two with libssh2, I was forced to develop this non-libssh2 version of SpiritVNC - FLTK.  This version uses the system's built-in or readily-installed SSH client.  Most Linux distros, recent macOS releases and BSDs have the `ssh` command ready for use.  If not, it usually can be installed easily enough.  You can even install a SSH client on Windows 10 and higher.
+Because of unfavorable changes with libssh2, I was forced to develop this non-libssh2 version of SpiritVNC - FLTK.  This version uses a system's built-in or readily-installed SSH client.  Most Linux distros, recent macOS and Windows releases and BSDs have the `ssh` command ready for use.  If not, it usually can be installed easily enough.
 
 Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you may encounter some freezes while connections are closed in the background.  On some OSs the child `ssh` processes won't even close properly.  I keep working and experimenting, and eventually I'll find some better way to do this.  Any suggestions are welcome! 👍
 
@@ -10,21 +10,21 @@ Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you
 FLTK seems to have the best balance of being lightweight, capable and cross-platform.  While FLTK *does* look fairly dated, that doesn't bother me right now.  Maybe FLTK 1.4 will have some more modern-looking themes...?  The FLTK community and contributors are very helpful, understanding and accommodating while the teams for other toolkits have often been abrasive and unhelpful.
 
 #### Why not GTK or Qt?
-I'm not a big fan of how the GNOME and GTK projects are being run, so I have no *immediate* plans to create a GTK version.  This may change if those projects come to their senses.  Qt licensing has always been perplexing to me, so I'd rather not invest a whole bunch of time into a Qt version only to be sued by them for some weird reason.
+I'm not a big fan of how the GNOME and GTK projects are being run, however I am starting work on a GTK 3 version of SpiritVNC.  Qt licensing has always been perplexing to me, so I'd rather not invest a whole bunch of work into a Qt version only to be sued by them for some weird reason.
 
 #### How about a native macOS Cocoa version?
-Just -- no.  Build on macOS as shown below.  I worked tirelessly (quite literally) on a native Cocoa version and, while it was getting there, it didn't meet my standards.  Developing for macOS is like working for a merciless and unrelenting taskmaster.  When macOS development becomes more sane, I'll take a look, but I'm not planning on purchasing any more Apple hardware unless it's donated.
+Just -- no.  Build on macOS as shown below.  I worked tirelessly (quite literally) on a native Cocoa version and, while it was getting there, it didn't meet my standards.  Developing for macOS is like working for a merciless and unrelenting taskmaster.  When macOS development becomes more sane, I'll take a look, but I'm not planning on purchasing any more Apple hardware unless it's donated -- I no longer have a modern Mac.
 
 #### Why C++ and not *(Rust, Go, Lua, Free Pascal, Java, Xojo, Bash, Python, assembly, etc)*
 I only have *half* a brain -- come on! 😉  I did make an earlier private version of SpiritVNC using Python and GObject introspection, but each Linux distro packaged things differently and I grew tired of the GTK project's silliness.
 
 #### Does it work on Windows?
-While testing Windows 11 recently, I *have* been able to get SpiritVNC-FLTK compiling and running on it, although easy inclusion and static compiling of dependencies has been a challenge.  Windows-specific code has just been added, but please note that the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  In addition, SpiritVNC-FLTK will *only* compile and run *under the MSYS2 system* for now.  Double-clicking the compiled exe from Explorer will yield an error because *all* of SpiritVNC-FLTK's dependencies need to be copied to the same folder where `spiritvnc-fltk.exe` is located.  A pre-compiled Windows installer is planned but not yet available.
+Yes.  I use SpiritVNC-FLTK in a production environment on Windows 10 and 11.  Please note, however, that the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  In addition, SpiritVNC-FLTK will *only* compile and run *under the MSYS2 system* for now.  Double-clicking the compiled exe from Explorer will yield an error because *all* of SpiritVNC-FLTK's dependencies need to be copied to the same folder where `spiritvnc-fltk.exe` is located.  A pre-compiled Windows installer is planned but not yet available.
 
 #### Is it localized for my language?
 Unless your language is English, no.  It is NOT out of disrespect for your particular language, I just don't have the time or resources to maintain different localizations and I feel adding a localization mechanism to SpiritVNC-FLTK would add complexity and increase executable size.  If anyone has any feedback or ideas for _lightweight_ localization, just create an issue.
 
-2016-2024 Will Brokenbourgh
+2016-2025 Will Brokenbourgh
 https://www.willbrokenbourgh.com/brainout/
 
 To God be the glory! :-D :heart:
