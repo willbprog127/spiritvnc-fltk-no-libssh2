@@ -19,7 +19,7 @@ Just -- no.  Build on macOS as shown below.  I worked tirelessly (quite literall
 I only have *half* a brain -- come on! 😉  I did make an earlier private version of SpiritVNC using Python and GObject introspection, but each Linux distro packaged things differently and I grew tired of the GTK project's silliness.
 
 #### Does it work on Windows?
-Yes.  I use SpiritVNC-FLTK in a production environment on Windows 10 and 11.  Please note, however, that the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  In addition, SpiritVNC-FLTK will *only* compile and run *under the MSYS2 system* for now.  Double-clicking the compiled exe from Explorer will yield an error because *all* of SpiritVNC-FLTK's dependencies need to be copied to the same folder where `spiritvnc-fltk.exe` is located.  A pre-compiled Windows installer is planned but not yet available.
+Yes.  I use SpiritVNC-FLTK in a production environment on Windows 10 and 11.  Please note, however, that the user experience is far from great; mostly due to terminal windows opening when connecting to VNC-through-SSH servers and [Windows-specific libvncclient bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows).  On Windows, SpiritVNC-FLTK will *only* compile and run *under the MSYS2 system* for now.  Double-clicking the compiled exe from Explorer will yield an error because *all* of SpiritVNC-FLTK's dependencies need to be copied to the same folder where `spiritvnc-fltk.exe` is located.  A pre-compiled Windows installer is planned but not yet available.
 
 #### Is it localized for my language?
 Unless your language is English, no.  It is NOT out of disrespect for your particular language, I just don't have the time or resources to maintain different localizations and I feel adding a localization mechanism to SpiritVNC-FLTK would add complexity and increase executable size.  If anyone has any feedback or ideas for _lightweight_ localization, just create an issue.
@@ -27,7 +27,7 @@ Unless your language is English, no.  It is NOT out of disrespect for your parti
 2016-2025 Will Brokenbourgh
 https://www.willbrokenbourgh.com/brainout/
 
-To God be the glory! :-D :heart:
+To God be the glory! 😀 :heart:
 
 SpiritVNC - FLTK has a 3-Clause BSD License
 
