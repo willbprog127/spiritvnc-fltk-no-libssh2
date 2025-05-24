@@ -1,6 +1,6 @@
 /*
  * consts_enums.h - part of SpiritVNC - FLTK
- * 2016-2024 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
+ * 2016-2025 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  */
 
 /*
@@ -38,7 +38,7 @@
 /* constants */
 #define SV_APP_VERSION  "0.6.5"
 
-#define SV_CURRENT_YEAR "2024"
+#define SV_CURRENT_YEAR "2025"
 
 #define SV_CONNECTION_TIMEOUT_SECS  30
 #define SV_ONE_SECOND               1.00
