@@ -1,6 +1,6 @@
 /*
  * base64.h - part of SpiritVNC - FLTK
- * 2016-2021 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
+ * 2016-2025 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  */
 
 /*
