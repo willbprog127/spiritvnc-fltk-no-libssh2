@@ -1,6 +1,6 @@
 /*
  * vnc.h - part of SpiritVNC - FLTK
- * 2016-2024 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
+ * 2016-2025 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  */
 
 /*
