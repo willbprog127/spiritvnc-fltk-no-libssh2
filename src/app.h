@@ -54,6 +54,7 @@
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Image_Surface.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Int_Input.H>
 #include <FL/Fl_Menu_Item.H>
 #include <FL/Fl_Pack.H>
 #include <FL/Fl_PNG_Image.H>
@@ -287,6 +288,16 @@ class SVInput : public Fl_Input
 public:
   SVInput (int x, int y, int w, int h, const char * label = 0) :
     Fl_Input(x, y, w, h, label) {}
+  int handle (int event);
+};
+
+/* subclassed decimal number input box */
+/* (apparently Fl_Int_Input isn't supported yet?? it's in the FLTK docs though...) */
+class SVIntInput : public Fl_Int_Input
+{
+public:
+  SVIntInput (int x, int y, int w, int h, const char * label = 0) :
+    Fl_Int_Input(x, y, w, h, label) {}
   int handle (int event);
 };
 

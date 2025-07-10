@@ -41,10 +41,10 @@ struct AppOptionsControls
   Fl_Spinner * spinLocalSSHPort;
   SVInput * inSSHCommand;
   Fl_Check_Button * chkLogToFile;
-  SVInput * inAppFontSize;
+  SVIntInput * inAppFontSize;
   SVInput * inListFont;
-  SVInput * inListFontSize;
-  SVInput * inListWidth;
+  SVIntInput * inListFontSize;
+  SVIntInput * inListWidth;
   Fl_Check_Button * chkCBIcons;
   Fl_Check_Button * chkShowTooltips;
   Fl_Check_Button * chkShowReverseConnect;
@@ -73,12 +73,12 @@ struct ItemOptionsControls
   SVInput * inF12Macro;
   Fl_Radio_Round_Button * rbVNC;
   Fl_Radio_Round_Button * rbSVNC;
-  SVInput * inVNCPort;
+  SVIntInput * inVNCPort;
   SVSecretInput * inVNCPassword;
   SVInput * inVNCLoginUser;
   SVSecretInput * inVNCLoginPassword;
-  SVInput * inVNCCompressLevel;
-  SVInput * inVNCQualityLevel;
+  SVIntInput * inVNCCompressLevel;
+  SVIntInput * inVNCQualityLevel;
   Fl_Group * grpScaling;
   Fl_Radio_Round_Button * rbScaleOff;
   Fl_Radio_Round_Button * rbScaleZoom;
@@ -97,7 +97,7 @@ struct ItemOptionsControls
   Fl_Box * bxSSHSection;
   SVInput * inSSHName;
   //SVSecretInput * inSSHPassword;
-  SVInput * inSSHPort;
+  SVIntInput * inSSHPort;
   SVInput * inSSHPrvKey;
   Fl_Button * btnShowPrvKeyChooser;
   // 'Delete' button
@@ -122,6 +122,25 @@ int SVInput::handle (int evt)
   }
 
   return Fl_Input::handle(evt);
+}
+
+
+/*
+  handle method for SVIntInput
+  (instance method)
+*/
+int SVIntInput::handle (int evt)
+{
+  // handle child window input controls right-click
+  if (evt == FL_PUSH && Fl::event_button3() != 0)
+  {
+    svPopUpEditMenu(this);
+
+    return 1;
+  }
+
+  /* (apparently Fl_Int_Input isn't supported yet?? it's in the FLTK docs though...) */
+  return Fl_Int_Input::handle(evt);
 }
 
 
@@ -3064,7 +3083,7 @@ void svShowAppOptions ()
   lblSep01->labelfont(1);
 
   // app font size
-  AppOpts.inAppFontSize = new SVInput(nXPos, nYPos += nYStep, 42, 28, "Application font size ");
+  AppOpts.inAppFontSize = new SVIntInput(nXPos, nYPos += nYStep, 42, 28, "Application font size ");
   AppOpts.inAppFontSize->textsize(app->nAppFontSize);
   AppOpts.inAppFontSize->labelsize(app->nAppFontSize);
   AppOpts.inAppFontSize->value(std::to_string(app->nAppFontSize).c_str());
@@ -3081,7 +3100,7 @@ void svShowAppOptions ()
       " see any changes");
 
   // list font size
-  AppOpts.inListFontSize = new SVInput(nXPos + 260, nYPos, 42, 28, "Size:");
+  AppOpts.inListFontSize = new SVIntInput(nXPos + 260, nYPos, 42, 28, "Size:");
   AppOpts.inListFontSize->textsize(app->nAppFontSize);
   AppOpts.inListFontSize->labelsize(app->nAppFontSize);
   AppOpts.inListFontSize->value(std::to_string(app->nListFontSize).c_str());
@@ -3089,7 +3108,7 @@ void svShowAppOptions ()
       " see any changes");
 
   // list width
-  AppOpts.inListWidth = new SVInput(nXPos, nYPos += nYStep, 210, 28, "List width ");
+  AppOpts.inListWidth = new SVIntInput(nXPos, nYPos += nYStep, 210, 28, "List width ");
   AppOpts.inListWidth->textsize(app->nAppFontSize);
   AppOpts.inListWidth->labelsize(app->nAppFontSize);
   AppOpts.inListWidth->value(std::to_string(app->requestedListWidth).c_str());
@@ -3285,7 +3304,7 @@ void svShowItemOptions (HostItem * im)
 
   // window size
   int nWinWidth = 545;
-  int nWinHeight = 605; //625; //595;
+  int nWinHeight = 605;
 
   // set window position
   int nX = app->hostList->w() + 50;
@@ -3300,7 +3319,7 @@ void svShowItemOptions (HostItem * im)
 
   int nXPos = 195;
   int nYStep = 28;
-  int nYPos = -24; //-(nYStep / 2);  //-10;
+  int nYPos = -24;
 
   // add itm value editors / selectors
 
@@ -3355,7 +3374,7 @@ void svShowItemOptions (HostItem * im)
     ItmOpts.rbSVNC->set();
 
   // vnc port
-  ItmOpts.inVNCPort = new SVInput(nXPos, nYPos += nYStep, 100, 28, "VNC port ");
+  ItmOpts.inVNCPort = new SVIntInput(nXPos, nYPos += nYStep, 100, 28, "VNC port ");
   ItmOpts.inVNCPort->value(itm->vncPort.c_str());
   ItmOpts.inVNCPort->tooltip("The VNC port/display number of the host.  Defaults to 5900");
 
@@ -3378,13 +3397,13 @@ void svShowItemOptions (HostItem * im)
   ItmOpts.inVNCLoginPassword->tooltip("The VNC login password for the host");
 
   // vnc compression level
-  ItmOpts.inVNCCompressLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28,
+  ItmOpts.inVNCCompressLevel = new SVIntInput(nXPos, nYPos += nYStep, 48, 28,
     "Compression level (0-9) ");
   ItmOpts.inVNCCompressLevel->value(std::to_string(itm->compressLevel).c_str());
   ItmOpts.inVNCCompressLevel->tooltip("The level of compression, from 0 to 9");
 
   // vnc quality level
-  ItmOpts.inVNCQualityLevel = new SVInput(nXPos, nYPos += nYStep, 48, 28, "Quality level (0-9) ");
+  ItmOpts.inVNCQualityLevel = new SVIntInput(nXPos, nYPos += nYStep, 48, 28, "Quality level (0-9) ");
   ItmOpts.inVNCQualityLevel->value(std::to_string(itm->qualityLevel).c_str());
   ItmOpts.inVNCQualityLevel->tooltip("The level of image quality, from 0 to 9");
 
@@ -3467,7 +3486,7 @@ void svShowItemOptions (HostItem * im)
   //ItmOpts.inSSHPassword->deactivate();  //  <<<--- We can't really do SSH password right now ---<<<
 
   // ssh port (on the remote host)
-  ItmOpts.inSSHPort = new SVInput(nXPos, nYPos += nYStep, 100, 28, "SSH remote port ");
+  ItmOpts.inSSHPort = new SVIntInput(nXPos, nYPos += nYStep, 100, 28, "SSH remote port ");
   ItmOpts.inSSHPort->value(itm->sshPort.c_str());
   ItmOpts.inSSHPort->tooltip("The remote host's port number");
 

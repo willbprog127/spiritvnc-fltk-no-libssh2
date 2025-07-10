@@ -126,7 +126,6 @@ int main (int argc, char **argv)
   #endif
 
   // maximize window if last state was maximized
-  // (I guess FLTK can't do 'maximize' yet!?)
   if (app->maximized)
     app->mainWin->maximize();
 
