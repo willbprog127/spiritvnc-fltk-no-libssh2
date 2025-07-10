@@ -112,7 +112,7 @@ When viewing a remote VNC server:
 |------|-----------|
 |**Scan wait time (seconds)**| The amount of time in seconds the program will wait before switching to the next connected server entry in the list during timed scanning (the wait time is approximate; the program may switch to another server entry sooner than this number)|
 |**Starting local SSH port number**| If your operating system is stubborn about which port numbers to use, adjust this number higher|
-|**Inactive connection timeout (seconds)**| The amount of time the program will wait before auto-disconnecting a connected server entry due to no activity on the remote VNC server's screen.  Auto-disconnect can be enabled or disabled per-server entry|
+|~~**Inactive connection timeout (seconds)**~~| ~~The amount of time the program will wait before auto-disconnecting a connected server entry due to no activity on the remote VNC server's screen.  Auto-disconnect can be enabled or disabled per-server entry~~|
 |**SSH command**| The full path and command name for your system's installed SSH client program (ie: /usr/bin/ssh)|
 | | |
 |*Appearance Options*|
