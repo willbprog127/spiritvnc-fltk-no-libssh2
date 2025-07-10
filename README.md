@@ -8,9 +8,6 @@ Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you
 
 Ultimately libssh2 isn't used anymore because it cannot reliably use *only* a local private key.  Even when a public *and* private key are provided, libssh2 still doesn't work properly.  I'm unsure how anyone else is successfully using local private keys with libssh2.
 
-#### Why not libssh?
-Based on testing, libssh (not 'libssh2') does not work properly in the threads that are used in this project. 🤷‍♂️
-
 #### Why FLTK?
 FLTK seems to have the best balance of being lightweight, capable and cross-platform.  While FLTK *does* look fairly dated, that doesn't bother me right now.  Maybe FLTK 1.4 will have some more modern-looking themes...?  The FLTK community and contributors are very helpful, understanding and accommodating while the teams for other toolkits have often been abrasive and unhelpful.
 
@@ -44,18 +41,18 @@ SpiritVNC - FLTK has a 3-Clause BSD License
 
 __Dependencies__
 > [!NOTE]
-> The current release of FLTK is 1.4.x.  SpiritVNC-FLTK hasn't been optimized for FLTK 1.4.x yet, so you may see deprecation warnings when building.  Please file an issue if you get errors due to this.
+> The current release of FLTK is 1.4.x.  The main branch of SpiritVNC-FLTK is being optimized for FLTK 1.4.x.  There is the `fltk_1.3` branch for those who still are using FLTK 1.3.x.
 
 You will need both the libraries and development packages of the following:
-- fltk 1.3.4 or newer
+- fltk 1.4.x or newer
 - libvncserver / libvncclient (if separate, you only need libvncclient)
 - pkg-config program must be installed unless you want to specify locations for includes and libs manually in the Makefile
 - An installed SSH client runable with the `ssh` command or similar (adjustable within program settings)
-- GNU make must be installed on OpenIndiana and FreeBSD
+- GNU `make` must be installed on OpenIndiana and FreeBSD
 
 **macOS**
 > [!NOTE]
-> I no longer have access to a modern Mac so _you_ will have to test any fixes I make.
+> I no longer have access to a modern Mac so please file an issue and I will do the best I can to work with you.
 * Intel - [Homebrew](https://brew.sh/) is the recommended way to install dependencies on macOS Intel. 
 * Apple Silicon - I have no access to an Apple Silicon Mac, so your guess is as good as mine _(maybe Homebrew?)_
 
