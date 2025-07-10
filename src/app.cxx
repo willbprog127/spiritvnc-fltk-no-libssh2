@@ -2934,9 +2934,12 @@ void svShowAboutHelp ()
   hv->color(FL_BACKGROUND2_COLOR);
   hv->textsize(app->nAppFontSize);
   hv->textfont(0);
+  
+  char flVersion[20] = {};
+  
+  snprintf(flVersion, 19, "%i.%i.%i", FL_MAJOR_VERSION, FL_MINOR_VERSION, FL_PATCH_VERSION);
 
-  const char strHelp[] = "<center><font face='sans'><h5>SpiritVNC - FLTK</h5></font></center>"
-
+  std::string strHelp = "<center><font face='sans'><h5>SpiritVNC - FLTK</h5></font></center>"
       "<p><center>"
       "&copy; 2016-" SV_CURRENT_YEAR " Will Brokenbourgh - <a href='https://www.willbrokenbourgh.com/brainout/'>"
       "https://www.willbrokenbourgh.com/brainout/</a>"
@@ -2944,7 +2947,8 @@ void svShowAboutHelp ()
       // -
       "<p><center>"
       "Version " SV_APP_VERSION "&nbsp;&bull;&nbsp;"
-      "Built " __DATE__ "&nbsp;&bull;&nbsp;" __TIME__
+      "Built " __DATE__ "&nbsp;&bull;&nbsp;" __TIME__ "<br>"
+      "FLTK version " + std::string(flVersion) +
       "</center></p>"
       // -
       "<p><center>"
@@ -2953,7 +2957,6 @@ void svShowAboutHelp ()
       " connections and automatic timed scanning of each connected viewer."
       "</center></p>"
       // ---
-      "<p><center><font color='gray'>- - -</font></center></p>"
       "<p><center><strong>Instructions</strong></center><br>"
       // -
       "<ul>"
@@ -2968,17 +2971,17 @@ void svShowAboutHelp ()
       "<li>To disconnect, edit or 'paste' a F12 macro to a 'listening' connection, right-click it while connected</li>"
       "<li>To change application options, click the settings button (looks like three control sliders)</li>"
       "<li>To perform remote actions, press F8 when a remote host is being displayed</li>"
-      "<li>See the README file for more detailed instructions</li>"
+      "<li>See the README.md file for more detailed instructions</li>"
       "</ul>"
       // ---
-      "<p><center><font color='gray'>- - -</font></center></p>"
       "<p><center>"
       "Many thanks to the <em>FLTK</em> and <em>libvncserver</em> projects for their libraries "
       "and example code."
       "</center></p>"
       // -
       "<p><center>"
-      "&nbsp;If you have any questions, need to report a bug or have suggestions, please"
+      "&nbsp;If you have any questions, need to report a bug or have suggestions, please create an issue on "
+      "github or "
       " <a href='https://www.willbrokenbourgh.com/brainout/content/spiritvnc.php'>visit the SpiritVNC page</a>"
       "&nbsp;"
       "</center></p>"
@@ -2986,7 +2989,7 @@ void svShowAboutHelp ()
       "<p><center><strong>To God be the glory! :-D</strong></center></p>";
 
   // set helpview's text
-  hv->value(strHelp);
+  hv->value(strHelp.c_str());
 
   // 'OK' button
   Fl_Button * btnOK = new Fl_Button((nWinWidth - 100 - 10), nWinHeight - (35 + 10), 100, 35, "OK");
