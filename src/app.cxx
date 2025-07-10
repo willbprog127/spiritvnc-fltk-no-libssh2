@@ -234,7 +234,7 @@ int SVQuickNoteBox::handle (int evt)
 
       // set cursor at top left
       if (app->quickNoteInput->take_focus())
-        app->quickNoteInput->position(0);
+        app->quickNoteInput->insert_position(0);
 
       Fl::add_timeout(SV_BLINK_TIME, svBlinkCursor, app->quickNoteInput);
     }
@@ -497,9 +497,9 @@ void svConfigReadCreateHostList ()
         if (strProp == "showreverseconnect")
           app->showReverseConnect = svConvertStringToBoolean(strVal);
 
-        //// maximize if last window state was maximized
-        //if (strProp == "maximized")
-          //app->maximized = svConvertStringToBoolean(strVal);
+        // maximize if last window state was maximized
+        if (strProp == "maximized")
+          app->maximized = svConvertStringToBoolean(strVal);
 
         // #############################################################################
         // ######## per-connection options #############################################
@@ -775,7 +775,7 @@ void svConfigWrite ()
   ofs << "savedw=" << app->savedW << std::endl;
   ofs << "savedh=" << app->savedH << std::endl;
 
-  //ofs << "maximized=" << app->maximized << std::endl;
+  ofs << "maximized=" << app->maximized << std::endl;
 
   // blank line
   ofs << std::endl;
@@ -2126,6 +2126,9 @@ void svHandleMainWindowEvents (Fl_Widget * window, void *)
     app->savedW = app->mainWin->w();
     app->savedH = app->mainWin->h();
 
+    // check if we're maximized
+    app->maximized = app->mainWin->maximize_active();
+
     svConfigWrite();
 
     // finish up any queued events
@@ -3163,7 +3166,7 @@ void svShowAppOptions ()
   Fl_Input_ * inTemp = static_cast<Fl_Input_ *>(AppOpts.spinScanTimeout->child(0));
 
   if (inTemp != NULL && inTemp->type() == FL_INT_INPUT)
-    inTemp->position(0, 1000);
+    inTemp->insert_position(0, 1000);
 
   Fl::redraw();
 }
@@ -3611,7 +3614,7 @@ void svShowItemOptions (HostItem * im)
 
   // focus the first input box and select all text within
   ItmOpts.inName->take_focus();
-  ItmOpts.inName->position(0, strlen(ItmOpts.inName->value()) + 1);
+  ItmOpts.inName->insert_position(0, strlen(ItmOpts.inName->value()) + 1);
 
   itmOptWin->show();
   Fl::redraw();

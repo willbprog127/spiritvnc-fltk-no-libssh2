@@ -155,7 +155,7 @@ public:
     savedY(64),
     savedW(800),
     savedH(600),
-    //maximized(false),
+    maximized(false),
     createdObjects(0),
     strF12ClipVar(""),
     sshCommand("ssh"),
@@ -265,7 +265,7 @@ public:
   int savedY;
   int savedW;
   int savedH;
-  //bool maximized;
+  bool maximized;
   int createdObjects;
   std::string strF12ClipVar;
   std::string sshCommand;
