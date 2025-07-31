@@ -86,17 +86,25 @@ $ ./spiritvnc-fltk
 ```
 **Making an app bundle on 'modern' macOS versions**
 
-* After compiling SpiritVNC-FLTK, right-click the `spiritvnc-fltk` executable and choose 'Copy'
-* Create a folder in the same folder as the compiled executable named `SpiritVNC-FLTK.app`
-* Right-click the folder you just created _(which is now an empty app bundle)_ and choose 'Show Package Contents'
-* Create a new folder named `Contents` and open it _(mind the capitalisation)_
-* Create a new folder named `MacOS` and open it _(mind the capitalisation)_
+* After compiling SpiritVNC-FLTK, in the Finder, go to the folder where the newly-created `spiritvnc-fltk` executable is
+* Right-click the `spiritvnc-fltk` executable and choose 'Copy'
+* Right-click the `SpiritVNC-FLTK` app bundle included with the project and choose 'Show Package Contents'
+* Double-click `Contents`
+* Double-click `MacOS`
 * Paste `spiritvnc-fltk` that you copied earlier
-* Rename the executable `SpiritVNC-FLTK` _(mind the capitalisation)_
+* Rename the executable you just pasted _exactly_ `SpiritVNC-FLTK` _(mind the capitalisation - this must precisely match the name portion of the app bundle)_
+* (optional) Set the `SpiritVNC-FLTK` app bundle's app icon
+  * Open the `spiritvnc.png` file included in the project with the Preview app
+  * Click the 'Edit' menu then 'Select All'
+  * Click the 'Edit' menu then 'Copy'
+  * Right-click the `SpiritVNC-FLTK` app bundle and choose 'Get Info`
+  * Click the small default icon near the top left of the info window
+  * Paste the image into it by clicking the 'Edit' menu then 'Paste'
+  * Close the info window
 
 For newer versions of macOS (Sequoia and newer):
 * Open Terminal (or the terminal emulator of your choice)
-* `cd` to the folder that contains the `SpiritVNC-FLTK.app` folder
+* `cd` to the folder that contains the `SpiritVNC-FLTK` app bundle
 * Do `xattr -cr SpiritVNC-FLTK.app`
 * Then do `codesign -s - --deep --force SpiritVNC-FLTK.app`
 
