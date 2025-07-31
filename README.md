@@ -51,10 +51,8 @@ You will need both the libraries and development packages of the following:
 - GNU `make` must be installed on OpenIndiana and FreeBSD
 
 **macOS**
-> [!NOTE]
-> I no longer have access to a modern Mac so please file an issue and I will do the best I can to work with you.
 * Intel - [Homebrew](https://brew.sh/) is the recommended way to install dependencies on macOS Intel. 
-* Apple Silicon - I have no access to an Apple Silicon Mac, so your guess is as good as mine _(maybe Homebrew?)_
+* Apple Silicon - I have no access to an Apple Silicon Mac, but it looks like Homebrew is available for Apple Silicon and has the necessary libraries
 
 **Windows**
 * Intel - [MSYS2](https://www.msys2.org/) is the recommended way to install dependencies on x86_64 versions of Windows 10 and 11.  libvncclient has some [Windows-specific bugs](https://github.com/LibVNC/libvncserver/issues?q=is%3Aissue+is%3Aopen+windows) that may not get fixed right away.
@@ -86,6 +84,21 @@ __Usage__
 ```sh
 $ ./spiritvnc-fltk
 ```
+**Making an app bundle on 'modern' macOS versions**
+
+* After compiling SpiritVNC-FLTK, right-click the `spiritvnc-fltk` executable and choose 'Copy'
+* Create a folder in the same folder as the compiled executable named `SpiritVNC-FLTK.app`
+* Right-click the folder you just created _(which is now an empty app bundle)_ and choose 'Show Package Contents'
+* Create a new folder named `Contents` and open it _(mind the capitalisation)_
+* Create a new folder named `MacOS` and open it _(mind the capitalisation)_
+* Paste `spiritvnc-fltk` that you copied earlier
+* Rename the executable `SpiritVNC-FLTK` _(mind the capitalisation)_
+
+For newer versions of macOS (Sequoia and newer):
+* Open Terminal (or the terminal emulator of your choice)
+* `cd` to the folder that contains the `SpiritVNC-FLTK.app` folder
+* Do `xattr -cr SpiritVNC-FLTK.app`
+* Then do `codesign -s - --deep --force SpiritVNC-FLTK.app`
 
 ##### Basic usage
 * Double-click a disconnected server entry to try to connect to it
