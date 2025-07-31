@@ -133,7 +133,6 @@ When viewing a remote VNC server:
 |------|-----------|
 |**Scan wait time (seconds)**| The amount of time in seconds the program will wait before switching to the next connected server entry in the list during timed scanning (the wait time is approximate; the program may switch to another server entry sooner than this number)|
 |**Starting local SSH port number**| If your operating system is stubborn about which port numbers to use, adjust this number higher|
-|~~**Inactive connection timeout (seconds)**~~| ~~The amount of time the program will wait before auto-disconnecting a connected server entry due to no activity on the remote VNC server's screen.  Auto-disconnect can be enabled or disabled per-server entry~~|
 |**SSH command**| The full path and command name for your system's installed SSH client program (ie: /usr/bin/ssh)|
 | | |
 |*Appearance Options*|
@@ -154,7 +153,7 @@ When viewing a remote VNC server:
 |[VNC options tab]| |
 |**Connection name**| The unique name you enter to recognize this connection in the list|
 |**Connection group**| Use the same group name for all computers in one location (Home, Office, Customer1, etc)|
-|**Remote address**| The IPv4 address of the remote VNC or VNC-over-SSH server (IPv6 not supported by libvncclient yet https://github.com/LibVNC/libvncserver/issues/436)|
+|**Remote address**| The IPv4 address of the remote VNC or VNC-over-SSH server _(IPv6 is still not supported by libvncclient yet - https://github.com/LibVNC/libvncserver/issues/436)_ Local network computer names are also allowed as long as the client computer can resolve them|
 |**F12 macro**| Press F12 when viewing a remote server to send this text, such as frequently-used phrases, passwords, etc|
 |**VNC**| This connection connects directly to a VNC server|
 |**VNC through SSH**| This connection connects to a VNC server through SSH port forwarding|
