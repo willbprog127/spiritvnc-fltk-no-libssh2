@@ -342,7 +342,6 @@ void VncObject::endViewer ()
     app->createdObjects --;
 
     itm->isConnected = false;
-    //itm->isConnecting = false;  <---- move 2023-12-12 to below
     itm->hasDisconnectRequest = false;
 
     // tell ssh to clean up if a ssh/vnc connection
@@ -667,9 +666,9 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
   if (strMessage.find("Operation now in progress") != std::string::npos)
   {
     if (itm->hostType == 's' && itm->sshReady == false)
-        itm->lastErrorMessage = "Unable to connect to host's SSH server";
+      itm->lastErrorMessage = "Unable to connect to host's SSH server";
     else
-        itm->lastErrorMessage = "Unable to connect to VNC server";
+      itm->lastErrorMessage = "Unable to connect to VNC server";
 
     return;
   }
@@ -721,16 +720,14 @@ void VncObject::masterMessageLoop ()
 
       // keep from making too tight a loop
 
-      // 0.034 is ~30 frames-per-second
-      // we don't want to lag the computer
-      // with a faster rate
-      Fl::wait(0.034);
-
-      // ## checking messages of connected but non-visible ##
-      // ## items has been removed -- wasn't working       ##
-      // ## the way I intended all this time.  Whoops!     ##
+      // message loop waiting time - set by user now
+      // the lower the number, faster drawing, but also more CPU usage
+      // higher the number, slower drawing, less CPU usage
+      //Fl::wait(0.034);
+      Fl::wait(app->messageLoopWaitTime);
     }
     else
+      // slower looping since nothing is connected right now
       Fl::wait(0.7);
   }
 }
@@ -1030,6 +1027,10 @@ int VncViewer::handle (int event)
   if (itm == NULL)
     return 0;
 
+  // don't handle events if view only
+  if (itm->viewOnly == true)
+    return 0;
+
   rfbClient * cl = v->vncClient;
 
   // client is null
@@ -1190,13 +1191,11 @@ int VncViewer::handle (int event)
 
         if (intClipLen > 0)
         {
-          char strClipText[intClipLen];
-
-          strncpy(strClipText, Fl::event_text(), intClipLen);
+          std::string strClipText = Fl::event_text();
 
           // send clipboard text to remote server
           SendClientCutText(app->vncViewer->vnc->vncClient,
-            const_cast<char *>(strClipText), intClipLen);
+            const_cast<char *>(strClipText.c_str()), intClipLen);
       }
       return 1;
 
@@ -1307,7 +1306,6 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
 /* disable fullscreen */
 void VncViewer::unsetFullScreen ()
 {
-  //app->mainWin->fullscreen_off();
   app->vncViewer->fullscreen = false;
 
   app->hostList->resize(0, app->hostList->y(), app->requestedListWidth, app->hostList->h());

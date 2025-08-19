@@ -37,6 +37,7 @@
 /*  app options controls  */
 struct AppOptionsControls
 {
+  Fl_Spinner * messageLoopSpeed;
   Fl_Spinner * spinScanTimeout;
   Fl_Spinner * spinLocalSSHPort;
   SVInput * inSSHCommand;
@@ -85,6 +86,7 @@ struct ItemOptionsControls
   Fl_Radio_Round_Button * rbScaleFit;
   Fl_Check_Button * chkScalingFast;
   Fl_Check_Button * chkShowRemoteCursor;
+  Fl_Check_Button * chkViewOnly;
   Fl_Check_Button * chkCommand1Enabled;
   SVInput * inCommand1Label;
   SVInput * inCommand1;
@@ -520,6 +522,14 @@ void svConfigReadCreateHostList ()
         if (strProp == "maximized")
           app->maximized = svConvertStringToBoolean(strVal);
 
+        // message loop wait time
+        if (strProp == "msgloopspeed")
+        {
+          app->messageLoopSpeed = atoi(strVal.c_str());
+
+          svValidateAndSetMessageLoopSpeed();
+        }
+
         // #############################################################################
         // ######## per-connection options #############################################
         // #############################################################################
@@ -661,6 +671,10 @@ void svConfigReadCreateHostList ()
         if (strProp == "lastconnecttime")
           itm->lastConnectedTime = strVal;
 
+        // view only
+        if (strProp == "viewonly")
+          itm->viewOnly= svConvertStringToBoolean(strVal);
+
         // custom command 1 enabled?
         if (strProp == "customcommand1enabled")
           itm->customCommand1Enabled = svConvertStringToBoolean(strVal);
@@ -796,6 +810,9 @@ void svConfigWrite ()
 
   ofs << "maximized=" << app->maximized << std::endl;
 
+  // vnc message loop wait time
+  ofs << "msgloopspeed=" << app->messageLoopSpeed << std::endl;
+
   // blank line
   ofs << std::endl;
 
@@ -839,6 +856,7 @@ void svConfigWrite ()
     ofs << "quicknote=" << base64Encode(reinterpret_cast<const unsigned char *>
       (itm->quickNote.c_str()), itm->quickNote.size()) << std::endl;
     ofs << "lastconnecttime=" << itm->lastConnectedTime << std::endl;
+    ofs << "viewonly=" << svConvertBooleanToString(itm->viewOnly) << std::endl;
     ofs << "customcommand1enabled=" << svConvertBooleanToString(itm->customCommand1Enabled) << std::endl;
     ofs << "customcommand1label=" << itm->customCommand1Label << std::endl;
     ofs << "customcommand1=" << itm->customCommand1 << std::endl;
@@ -1316,6 +1334,53 @@ std::string svGetConfigValue (const char * strIn)
 }
 
 
+/* validate vnc message loop speed */
+void svValidateAndSetMessageLoopSpeed ()
+{
+  if (app->messageLoopSpeed < 0)
+    app->messageLoopSpeed = 0;
+
+  if (app->messageLoopSpeed > 9)
+    app->messageLoopSpeed = 9;
+
+  switch (app->messageLoopSpeed)
+  {
+    case 0:
+      app->messageLoopWaitTime = 0.100;
+      break;
+    case 1:
+      app->messageLoopWaitTime = 0.070;
+      break;
+    case 2:
+      app->messageLoopWaitTime = 0.055;
+      break;
+    case 3:
+      app->messageLoopWaitTime = 0.045;
+      break;
+    case 4:
+      app->messageLoopWaitTime = 0.040;
+      break;
+    case 5:
+      app->messageLoopWaitTime = 0.030;
+      break;
+    case 6:
+      app->messageLoopWaitTime = 0.025;
+      break;
+    case 7:
+      app->messageLoopWaitTime = 0.020;
+      break;
+    case 8:
+      app->messageLoopWaitTime = 0.010;
+      break;
+    case 9:
+      app->messageLoopWaitTime = 0.005;
+      break;
+    default:
+      app->messageLoopWaitTime = 0.030;
+  }
+}
+
+
 /*
   handle app options buttons
   (void * not used so parameter name removed)
@@ -1343,6 +1408,11 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
   // save button clicked
   if (btn == AppOpts.btnSave)
   {
+    // vnc message loop speed / wait time
+    app->messageLoopSpeed = AppOpts.messageLoopSpeed->value();
+
+    svValidateAndSetMessageLoopSpeed();
+
     // scan timeout spinner
     app->nScanTimeout = AppOpts.spinScanTimeout->value();
 
@@ -1353,7 +1423,7 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
     app->sshCommand = AppOpts.inSSHCommand->value();
 
     // app font size input
-    app->nAppFontSize = atoi(AppOpts.inAppFontSize->value());
+    app->nAppFontSize = AppOpts.inAppFontSize->ivalue(); //atoi(AppOpts.inAppFontSize->value());
 
     // hostlist font name input
     app->strListFont = AppOpts.inListFont->value();
@@ -1362,7 +1432,7 @@ void svHandleAppOptionsButtons (Fl_Widget * widget, void *)
     app->nListFontSize = atoi(AppOpts.inListFontSize->value());
 
     // hostlist requested width input
-    app->requestedListWidth = atoi(AppOpts.inListWidth->value());
+    app->requestedListWidth = AppOpts.inListWidth->ivalue();  //atoi(AppOpts.inListWidth->value());
     svPositionWidgets();
 
     // user color-blind icons checkbutton
@@ -2013,6 +2083,12 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
       itm->showRemoteCursor = true;
     else
       itm->showRemoteCursor = false;
+
+    // view only
+    if (ItmOpts.chkViewOnly->value() == 1)
+      itm->viewOnly = true;
+    else
+      itm->viewOnly = false;
 
     // #### ssh tab ###########################################
 
@@ -2934,9 +3010,9 @@ void svShowAboutHelp ()
   hv->color(FL_BACKGROUND2_COLOR);
   hv->textsize(app->nAppFontSize);
   hv->textfont(0);
-  
+
   char flVersion[20] = {};
-  
+
   snprintf(flVersion, 19, "%i.%i.%i", FL_MAJOR_VERSION, FL_MINOR_VERSION, FL_PATCH_VERSION);
 
   std::string strHelp = "<center><font face='sans'><h5>SpiritVNC - FLTK</h5></font></center>"
@@ -3018,7 +3094,7 @@ void svShowAppOptions ()
 
   // window size
   int nWinWidth = 650;
-  int nWinHeight = 550;
+  int nWinHeight = 585;
 
   // set window position
   int nX = app->hostList->w() + 50;
@@ -3048,11 +3124,10 @@ void svShowAppOptions ()
   AppOpts.spinScanTimeout->maximum(200000);
   AppOpts.spinScanTimeout->value(app->nScanTimeout);
   AppOpts.spinScanTimeout->tooltip("When scanning, this is how long SpiritVNC waits before moving"
-      " to the next connected host item");
+    " to the next connected host item");
 
   // starting local ssh port number
-  AppOpts.spinLocalSSHPort = new Fl_Spinner(nXPos, nYPos += nYStep,
-    100, 28, "Starting local SSH port number ");
+  AppOpts.spinLocalSSHPort = new Fl_Spinner(nXPos, nYPos += nYStep, 100, 28, "Starting local SSH port number ");
   AppOpts.spinLocalSSHPort->textsize(app->nAppFontSize);
   AppOpts.spinLocalSSHPort->labelsize(app->nAppFontSize);
   AppOpts.spinLocalSSHPort->step(1);
@@ -3062,27 +3137,48 @@ void svShowAppOptions ()
   AppOpts.spinLocalSSHPort->tooltip("This is the first SSH port used locally for VNC-over-SSH connections");
 
   // ssh command
-  AppOpts.inSSHCommand = new SVInput(nXPos, nYPos += nYStep, 210, 28,
-    "SSH command (eg: ssh or /usr/bin/ssh) ");
+  AppOpts.inSSHCommand = new SVInput(nXPos, nYPos += nYStep, 210, 28, "SSH command (eg: ssh or /usr/bin/ssh) ");
   AppOpts.inSSHCommand->textsize(app->nAppFontSize);
   AppOpts.inSSHCommand->labelsize(app->nAppFontSize);
   AppOpts.inSSHCommand->value(app->sshCommand.c_str());
   AppOpts.inSSHCommand->tooltip("This is the command to start the SSH client on your system");
 
   // log app events to file?
-  AppOpts.chkLogToFile = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
-    " Log app events to a file");
+  AppOpts.chkLogToFile = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28, " Log app events to a file");
   AppOpts.chkLogToFile->labelsize(app->nAppFontSize);
   AppOpts.chkLogToFile->tooltip("Check this to log app events to a file");
   if (app->enableLogToFile == true)
     AppOpts.chkLogToFile->set();
+
+  // adjust message loop wait time
+  AppOpts.messageLoopSpeed = new Fl_Spinner(nXPos, nYPos += nYStep, 100, 28, "VNC message loop speed");
+  AppOpts.messageLoopSpeed->textsize(app->nAppFontSize);
+  AppOpts.messageLoopSpeed->labelsize(app->nAppFontSize);
+  AppOpts.messageLoopSpeed->step(1);
+  AppOpts.messageLoopSpeed->minimum(0);
+  AppOpts.messageLoopSpeed->maximum(9);
+  AppOpts.messageLoopSpeed->value(app->messageLoopSpeed); //std::to_string(app->messageLoopWaitTime).c_str());
+  AppOpts.messageLoopSpeed->tooltip("This is the speed setting that the VNC message loop will run when"
+    " checking for a new VNC message from the displayed remote host");
+
+  // blurb about message loop wait time
+  Fl_Box * msgLoopWaitTimeLabel = new Fl_Box(nXPos - 175, nYPos += nYStep, 465, 55, "Higher speeds draw the "
+    "remote host faster but use more CPU\n0 is slowest, 9 is fastest");
+  msgLoopWaitTimeLabel->labelsize(app->nAppFontSize);
+  msgLoopWaitTimeLabel->labelcolor(fl_rgb_color(40, 64, 0));
+  msgLoopWaitTimeLabel->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+  msgLoopWaitTimeLabel->box(FL_NO_BOX);
+  msgLoopWaitTimeLabel->labelfont(2);
+
+  nYPos += 10;
 
   // ############ appearance options section ##########################################################
 
   // appearance options label
   Fl_Box * lblSep01 = new Fl_Box(nXPos, nYPos += nYStep + 14, 100, 28, "Appearance Options");
   lblSep01->labelsize(app->nAppFontSize);
-  lblSep01->align(FL_ALIGN_CENTER);
+  lblSep01->align(FL_ALIGN_INSIDE | FL_ALIGN_CENTER);
+  lblSep01->box(FL_NO_BOX);
   lblSep01->labelfont(1);
 
   // app font size
@@ -3091,16 +3187,15 @@ void svShowAppOptions ()
   AppOpts.inAppFontSize->labelsize(app->nAppFontSize);
   AppOpts.inAppFontSize->value(std::to_string(app->nAppFontSize).c_str());
   AppOpts.inAppFontSize->tooltip("This is the font size used throughout SpiritVNC.  Restart the app to"
-      " see any changes");
+    " see any changes");
 
   // list font
-  AppOpts.inListFont = new SVInput(nXPos, nYPos += nYStep, 210, 28,
-    "List font name (eg: Lucida Sans) ");
+  AppOpts.inListFont = new SVInput(nXPos, nYPos += nYStep, 210, 28, "Host list font name (eg: Lucida Sans) ");
   AppOpts.inListFont->textsize(app->nAppFontSize);
   AppOpts.inListFont->labelsize(app->nAppFontSize);
   AppOpts.inListFont->value(app->strListFont.c_str());
   AppOpts.inListFont->tooltip("This is the font used for the host list.  Restart the app to"
-      " see any changes");
+    " see any changes");
 
   // list font size
   AppOpts.inListFontSize = new SVIntInput(nXPos + 260, nYPos, 42, 28, "Size:");
@@ -3108,7 +3203,7 @@ void svShowAppOptions ()
   AppOpts.inListFontSize->labelsize(app->nAppFontSize);
   AppOpts.inListFontSize->value(std::to_string(app->nListFontSize).c_str());
   AppOpts.inListFontSize->tooltip("This is the font size used for the host list.  Restart the app to"
-      " see any changes");
+    " see any changes");
 
   // list width
   AppOpts.inListWidth = new SVIntInput(nXPos, nYPos += nYStep, 210, 28, "List width ");
@@ -3118,17 +3213,15 @@ void svShowAppOptions ()
   AppOpts.inListWidth->tooltip("Width of the host list.  Restart the app to see any changes");
 
   // use color-blind icons?
-  AppOpts.chkCBIcons = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
-    " Use icons for color-blind users");
+  AppOpts.chkCBIcons = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28, " Use icons for color-blind users");
   AppOpts.chkCBIcons->labelsize(app->nAppFontSize);
   AppOpts.chkCBIcons->tooltip("Check this to enable color-blind-friendly icons in the host list."
-      " Restart the app to see any changes");
+    " Restart the app to see any changes");
   if (app->colorBlindIcons == true)
     AppOpts.chkCBIcons->set();
 
   // show tooltips?
-  AppOpts.chkShowTooltips = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28,
-    " Show tooltips");
+  AppOpts.chkShowTooltips = new Fl_Check_Button(nXPos, nYPos += nYStep, 210, 28, " Show tooltips");
   AppOpts.chkShowTooltips->labelsize(app->nAppFontSize);
   AppOpts.chkShowTooltips->tooltip("Check this to enable tooltips in SpiritVNC.");
   if (app->showTooltips == true)
@@ -3139,7 +3232,7 @@ void svShowAppOptions ()
     " Show reverse connection notification");
   AppOpts.chkShowReverseConnect->labelsize(app->nAppFontSize);
   AppOpts.chkShowReverseConnect->tooltip("Check this to show a message window when a reverse"
-      " connection happens.");
+    " connection happens.");
   if (app->showReverseConnect == true)
     AppOpts.chkShowReverseConnect->set();
 
@@ -3152,14 +3245,15 @@ void svShowAppOptions ()
   Fl_Box * boxFontLabel = new Fl_Box(nXPos, nYPos += nYStep, 210, 28,
     "Restart SpiritVNC for font or icon changes");
   boxFontLabel->labelsize(app->nAppFontSize);
-  boxFontLabel->align(FL_ALIGN_CENTER);
+  boxFontLabel->align(FL_ALIGN_INSIDE | FL_ALIGN_CENTER);
+  boxFontLabel->box(FL_NO_BOX);
+  boxFontLabel->labelcolor(fl_rgb_color(40, 64, 0));
   boxFontLabel->labelfont(2);
 
   // ############ bottom buttons ##########################################################
 
   // 'Cancel' button
-  AppOpts.btnCancel = new Fl_Button((nWinWidth - 210 - 10), nWinHeight - (35 + 10), 100, 35,
-    "Cancel");
+  AppOpts.btnCancel = new Fl_Button((nWinWidth - 210 - 10), nWinHeight - (35 + 10), 100, 35, "Cancel");
   AppOpts.btnCancel->labelsize(app->nAppFontSize);
   AppOpts.btnCancel->box(FL_GTK_UP_BOX);
   AppOpts.btnCancel->shortcut(FL_Escape);
@@ -3167,8 +3261,7 @@ void svShowAppOptions ()
   AppOpts.btnCancel->tooltip("Click to abandon any edits and close this window");
 
   // 'Save' button
-  AppOpts.btnSave = new Fl_Button((nWinWidth - 100 - 10), nWinHeight - (35 + 10), 100, 35,
-    "Save");
+  AppOpts.btnSave = new Fl_Button((nWinWidth - 100 - 10), nWinHeight - (35 + 10), 100, 35, "Save");
   AppOpts.btnSave->labelsize(app->nAppFontSize);
   AppOpts.btnSave->box(FL_GTK_UP_BOX);
   AppOpts.btnSave->shortcut(FL_Enter);
@@ -3307,7 +3400,7 @@ void svShowItemOptions (HostItem * im)
 
   // window size
   int nWinWidth = 545;
-  int nWinHeight = 605;
+  int nWinHeight = 635;
 
   // set window position
   int nX = app->hostList->w() + 50;
@@ -3457,13 +3550,20 @@ void svShowItemOptions (HostItem * im)
   // ##### scaling end #####
 
   // show the host's native cursor under our local static cursor
-  ItmOpts.chkShowRemoteCursor = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28,
-    " Use remote cursor locally");
+  ItmOpts.chkShowRemoteCursor = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28, " Use remote cursor locally");
   ItmOpts.chkShowRemoteCursor->tooltip("Check to show remote locally");
 
   // set current value
   if (itm->showRemoteCursor == true)
     ItmOpts.chkShowRemoteCursor->set();
+
+  // view only
+  ItmOpts.chkViewOnly = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28, " View only");
+  ItmOpts.chkViewOnly->tooltip("Connects view only, preventing any remote input");
+
+  // set current value
+  if (itm->viewOnly == true)
+    ItmOpts.chkViewOnly->set();
 
   // end of vnc options tab
   vncGroup->end();

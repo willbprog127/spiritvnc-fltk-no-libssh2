@@ -48,6 +48,7 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_File_Chooser.H>
+#include <FL/Fl_Float_Input.H>
 #include <FL/filename.H>
 #include <FL/Fl_Help_View.H>
 #include <FL/Fl_Hold_Browser.H>
@@ -168,7 +169,9 @@ public:
     quickNoteBox(NULL),
     quickNotePack(NULL),
     quickNoteInput(NULL),
-    packButtons(NULL)
+    packButtons(NULL),
+    messageLoopSpeed(5),
+    messageLoopWaitTime(0.03)
   {
     std::string userName = "";
 
@@ -279,6 +282,8 @@ public:
   SVQuickNotePack * quickNotePack;
   SVQuickNoteInput * quickNoteInput;
   Fl_Pack * packButtons;
+  int messageLoopSpeed;
+  float messageLoopWaitTime;
 } extern * app;
 
 
@@ -398,5 +403,6 @@ void svShowAppOptions ();
 void svShowF8Window ();
 void svShowItemOptions (HostItem *);
 void svUpdateHostListItemText ();
+void svValidateAndSetMessageLoopSpeed ();
 
 #endif

@@ -91,6 +91,7 @@ public:
     sshCloseThread(0),
     quickNote(""),
     lastConnectedTime(""),
+    viewOnly(false),
     customCommand1Enabled(false),
     customCommand1Label("Command 1"),
     customCommand1(""),
@@ -146,6 +147,7 @@ public:
   pthread_t sshCloseThread;
   std::string quickNote;
   std::string lastConnectedTime;
+  bool viewOnly;
   bool customCommand1Enabled;
   std::string customCommand1Label;
   std::string customCommand1;
