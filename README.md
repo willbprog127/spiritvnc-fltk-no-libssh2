@@ -15,7 +15,7 @@ FLTK seems to have the best balance of being lightweight, capable and cross-plat
 I'm not a big fan of how the GNOME and GTK projects are being run, however [I am working on a GTK version](https://github.com/willbprog127/spiritvnc-gtk).  Qt licensing has always been perplexing to me, so I'd rather not invest a whole bunch of work into a Qt version only to be sued by them for some weird reason.
 
 #### How about a native macOS Cocoa version?
-Just -- no.  Build on macOS as shown below.  I worked tirelessly (quite literally) on a native Cocoa version and, while it was getting there, it didn't meet my standards.  Developing for macOS is like working for a merciless and unrelenting taskmaster.  When macOS development becomes more sane, I'll take a look, but I'm not planning on purchasing any more Apple hardware unless it's donated -- I no longer have a modern Mac.
+Just -- no.  Build on macOS as shown below.  I worked tirelessly (quite literally) on a native Cocoa version and, while it was getting there, it didn't meet my standards.  Developing for macOS is like working for a merciless and unrelenting taskmaster.  When macOS development becomes more sane, I'll take a look. I only have an Intel Mac currently running Sequoia so testing on Apple Silicon is a no-go right now.
 
 #### Why C++ and not *(Rust, Go, Lua, Free Pascal, Java, Xojo, Bash, Python, assembly, etc)*
 I only have *half* a brain -- come on! 😉  I did make an earlier private version of SpiritVNC using Python and GObject introspection, but each Linux distro packaged things differently and I grew tired of the GTK project's silliness.
