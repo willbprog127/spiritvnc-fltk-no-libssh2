@@ -86,7 +86,6 @@ struct ItemOptionsControls
   Fl_Radio_Round_Button * rbScaleFit;
   Fl_Check_Button * chkScalingFast;
   Fl_Check_Button * chkShowRemoteCursor;
-  Fl_Check_Button * chkViewOnly;
   Fl_Check_Button * chkCommand1Enabled;
   SVInput * inCommand1Label;
   SVInput * inCommand1;
@@ -1741,6 +1740,7 @@ void svHandleHostListEvents (Fl_Widget *, void *)
     int nF12Flags = 0;
     int nF12Flags2 = 0;
     int nDividerFlag = 0;
+    int nViewOnlyFlag = 0;
     int nCustCommand1Flags = FL_MENU_INVISIBLE;
     int nCustCommand2Flags = FL_MENU_INVISIBLE;
     int nCustCommand3Flags = FL_MENU_INVISIBLE;
@@ -1767,6 +1767,14 @@ void svHandleHostListEvents (Fl_Widget *, void *)
       return;
     }
 
+    // enable / disable 'Copy F12 macro' item in menu
+    if (itm->f12Macro == "")
+      nF12Flags = FL_MENU_INACTIVE;
+
+    // set viewonly checkbox
+    if (itm->viewOnly == true)
+      nViewOnlyFlag = FL_MENU_VALUE;
+
     // set custom commands visibility
     if (itm->customCommand1Enabled == true)
     {
@@ -1791,17 +1799,14 @@ void svHandleHostListEvents (Fl_Widget *, void *)
         && itm->isListener == false
         && menuUp == false)
     {
-      // enable / disable 'Copy F12 macro' item in menu
-      if (itm->f12Macro == "")
-        nF12Flags = FL_MENU_INACTIVE;
-
       // create context menu
       // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
       const Fl_Menu_Item miMain[] = {
         {"Connect",        0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
         {"Edit",           0, 0, 0, 0,         0, FL_HELVETICA, app->nMenuFontSize},
         {"Copy F12 macro", 0, 0, 0, nF12Flags, 0, FL_HELVETICA, app->nMenuFontSize},
-        {"Delete...",      0, 0, 0, nDividerFlag, 0, FL_HELVETICA, app->nMenuFontSize},
+        {"Delete...",      0, 0, 0, FL_MENU_DIVIDER, 0, FL_HELVETICA, app->nMenuFontSize},
+        {"View only",      0, 0, 0, FL_MENU_TOGGLE | nViewOnlyFlag | nDividerFlag, 0, FL_HELVETICA, app->nMenuFontSize},
         {itm->customCommand1Label.c_str(), 0, 0, 0, nCustCommand1Flags, 0, FL_HELVETICA, app->nMenuFontSize},
         {itm->customCommand2Label.c_str(), 0, 0, 0, nCustCommand2Flags, 0, FL_HELVETICA, app->nMenuFontSize},
         {itm->customCommand3Label.c_str(), 0, 0, 0, nCustCommand3Flags, 0, FL_HELVETICA, app->nMenuFontSize},
@@ -1838,6 +1843,10 @@ void svHandleHostListEvents (Fl_Widget *, void *)
           // delete item (and itm)
           if (strcmp(strRes, "Delete...") == 0)
             svDeleteItem(nHostItemNum);
+
+          // view only
+          if (strcmp(strRes, "View only") == 0)
+            itm->viewOnly = !itm->viewOnly;
 
           // custom commands
           // command 1
@@ -2083,12 +2092,6 @@ void svHandleItmOptionsButtons (Fl_Widget * widget, void *)
       itm->showRemoteCursor = true;
     else
       itm->showRemoteCursor = false;
-
-    // view only
-    if (ItmOpts.chkViewOnly->value() == 1)
-      itm->viewOnly = true;
-    else
-      itm->viewOnly = false;
 
     // #### ssh tab ###########################################
 
@@ -2793,30 +2796,23 @@ void svRestoreWindowSizePosition (void *)
 
 /*
   actual command runner
-  (called as thread because it may block)
 */
-void * svRunCommandHelper(void * strArgsIn)
+void svRunCommandHelper(char ** strArgs)
 {
-  // detach this thread
-  pthread_detach(pthread_self());
-
   std::string strOops = "Command or command label is NULL";
 
   // get out if pointer is null
-  if (strArgsIn == NULL)
+  if (strArgs == NULL)
   {
     svMessageWindow(strOops, "SpiritVNC - Custom command");
-    return SV_RET_VOID;
+    return;
   }
-
-  // cast void pointer to char * array
-  const char ** strArgs = static_cast<const char **>(strArgsIn);
 
   // if either of the array elements are null, get out
   if (strArgs[0] == NULL || strArgs[1] == NULL)
   {
     svMessageWindow(strOops, "SpiritVNC - Custom command");
-    return SV_RET_VOID;
+    return;
   }
 
   // run the passed command
@@ -2830,7 +2826,7 @@ void * svRunCommandHelper(void * strArgsIn)
     svMessageWindow(errMsg, "SpiritVNC - Custom command");
   }
 
-  return SV_RET_VOID;
+  return;
 }
 
 
@@ -2840,8 +2836,6 @@ void * svRunCommandHelper(void * strArgsIn)
 */
 void svRunCommand(const std::string& label, const std::string& cmd)
 {
-  pthread_t runThread = 0;
-
   // get out if label or command is empty
   if (label == "" || cmd == "")
   {
@@ -2852,11 +2846,8 @@ void svRunCommand(const std::string& label, const std::string& cmd)
   // create char array pointer to pass to thread
   char * strArgs[] = {strdup(label.c_str()), strdup(cmd.c_str())};
 
-  // create, launch and detach call to svRunCommandHelper
-  if (pthread_create(&runThread, NULL, svRunCommandHelper, strArgs) != 0)
-  {
-    svMessageWindow("Error: Couldn't create custom command thread", "SpiritVNC - Custom command");
-  }
+  // launch svRunCommandHelper
+  svRunCommandHelper(strArgs);
 }
 
 
@@ -3400,7 +3391,7 @@ void svShowItemOptions (HostItem * im)
 
   // window size
   int nWinWidth = 545;
-  int nWinHeight = 635;
+  int nWinHeight = 600;
 
   // set window position
   int nX = app->hostList->w() + 50;
@@ -3556,14 +3547,6 @@ void svShowItemOptions (HostItem * im)
   // set current value
   if (itm->showRemoteCursor == true)
     ItmOpts.chkShowRemoteCursor->set();
-
-  // view only
-  ItmOpts.chkViewOnly = new Fl_Check_Button(nXPos, nYPos += nYStep, 100, 28, " View only");
-  ItmOpts.chkViewOnly->tooltip("Connects view only, preventing any remote input");
-
-  // set current value
-  if (itm->viewOnly == true)
-    ItmOpts.chkViewOnly->set();
 
   // end of vnc options tab
   vncGroup->end();
