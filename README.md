@@ -71,12 +71,12 @@ SpiritVNC - FLTK requires a compiler that supports C++11.
 
 On most Linux distros, macOS and MSYS2 on Windows (where GNU make is default):
 ```sh
-$ make [debug]
+make [debug]
 ```
 
 On FreeBSD, OpenBSD, OpenIndiana (GNU make must be installed first):
 ```sh
-$ gmake [debug]
+gmake [debug]
 ```
 > [!IMPORTANT]
 > Using `make install` or `gmake install` is not recommended on any OS right now.
