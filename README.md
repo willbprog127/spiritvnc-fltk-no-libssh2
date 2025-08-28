@@ -115,7 +115,7 @@ For newer versions of macOS (Sequoia and newer):
 * Double-click a disconnected server entry to try to connect to it
 * Single-click a connected server entry to switch to it from another
 * Right-click a connected server entry to close the connection *(except 'Listening' entries)*
-* Right-click a disconnected server entry to display a pop-up menu with various actions and custom commands you can perform
+* Right-click a disconnected server entry to display a pop-up menu with various actions and custom commands you can perform. The 'View only' setting is also available in this menu
 * Click a server entry, then click in the Quick Note box near the bottom left of SpiritVNC's window to enter a brief message.  Press Enter to save or Esc to cancel.  Any notes entered for 'Listening' connections are temporary and will not be saved
 
 When viewing a remote VNC server:
@@ -171,7 +171,6 @@ When viewing a remote VNC server:
 |**Scale off (scroll)**| The image from the remote VNC server will not be resized to SpiritVNC's viewer but scrolled|
 |**Scale up and down**| The image from the remote VNC server will be scaled to fit SpiritVNC's viewer|
 |**Scale down only**| The image from the remote VNC server will only be scaled down.  Remote screens slightly equal or smaller than SpiritVNC's viewer will not be scaled up|
-|**View only**| Disables mouse and keyboard events when connected to the remote VNC server|
 | | |
 |[SSH options tab]| |
 |**SSH user name**| The name used when authenticating to the remote SSH server|
