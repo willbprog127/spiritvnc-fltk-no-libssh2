@@ -12,7 +12,7 @@ Ultimately libssh2 isn't used anymore because it cannot reliably use *only* a lo
 FLTK seems to have the best balance of being lightweight, capable and cross-platform.  While FLTK *does* look fairly dated, that doesn't bother me right now.  Maybe FLTK 1.4 will have some more modern-looking themes...?  The FLTK community and contributors are very helpful, understanding and accommodating while the teams for other toolkits have often been abrasive and unhelpful.
 
 #### Why not GTK or Qt?
-I'm not a big fan of how the GNOME and GTK projects are being run, however [I am working on a GTK version](https://github.com/willbprog127/spiritvnc-gtk).  Qt licensing has always been perplexing to me, so I'd rather not invest a whole bunch of work into a Qt version only to be sued by them for some weird reason.
+I'm not a big fan of how the GNOME and GTK projects are being run, however [I tried working on a GTK version](https://github.com/willbprog127/spiritvnc-gtk) but archived it because gtk-vnc and msys2 maintainers either are sleeping or ghosting me.  Qt licensing has always been perplexing to me, so I'd rather not invest a whole bunch of work into a Qt version only to be sued by them for some weird reason.
 
 #### How about a native macOS Cocoa version?
 Just -- no.  Build on macOS as shown below.  I worked tirelessly (quite literally) on a native Cocoa version and, while it was getting there, it didn't meet my standards.  Developing for macOS is like working for a merciless and unrelenting taskmaster.  When macOS development becomes more sane, I'll take a look. I only have an Intel Mac currently running Sequoia so testing on Apple Silicon is a no-go right now.
