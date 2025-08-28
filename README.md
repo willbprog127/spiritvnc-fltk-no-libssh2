@@ -9,7 +9,7 @@ Using the system's SSH client with SpiritVNC is NOT an elegant solution, and you
 Ultimately libssh2 isn't used anymore because it cannot reliably use *only* a local private key.  Even when a public *and* private key are provided, libssh2 still doesn't work properly.  I'm unsure how anyone else is successfully using local private keys with libssh2.
 
 #### Why FLTK?
-FLTK seems to have the best balance of being lightweight, capable and cross-platform.  While FLTK *does* look fairly dated, that doesn't bother me right now.  Maybe FLTK 1.4 will have some more modern-looking themes...?  The FLTK community and contributors are very helpful, understanding and accommodating while the teams for other toolkits have often been abrasive and unhelpful.
+FLTK seems to have the best balance of being lightweight, capable and cross-platform.  While FLTK *does* look fairly dated, that doesn't bother me right now.  ~~Maybe FLTK 1.4 will have some more modern-looking themes...?~~ (lol, no).  The FLTK community and contributors are very helpful, understanding and accommodating while the teams for other toolkits have often been abrasive and unhelpful.
 
 #### Why not GTK or Qt?
 I'm not a big fan of how the GNOME and GTK projects are being run, however [I tried working on a GTK version](https://github.com/willbprog127/spiritvnc-gtk) but archived it because gtk-vnc and msys2 maintainers either are sleeping or ghosting me.  Qt licensing has always been perplexing to me, so I'd rather not invest a whole bunch of work into a Qt version only to be sued by them for some weird reason.
@@ -85,7 +85,7 @@ __Usage__
 
 `cd` to the directory where `spiritvnc-fltk` was built, then...
 ```sh
-$ ./spiritvnc-fltk
+./spiritvnc-fltk
 ```
 **Making an app bundle on 'modern' macOS versions**
 
@@ -96,6 +96,14 @@ $ ./spiritvnc-fltk
 * Double-click `MacOS`
 * Paste `spiritvnc-fltk` that you copied earlier
 * Rename the executable you just pasted _exactly_ `SpiritVNC-FLTK` _(mind the capitalisation - this must precisely match the name portion of the app bundle)_
+
+For newer versions of macOS (Sequoia and newer):
+* Open Terminal (or the terminal emulator of your choice)
+* `cd` to the folder that contains the `SpiritVNC-FLTK` app bundle
+* Do `xattr -cr SpiritVNC-FLTK.app`
+* Then do `codesign -s - --deep --force SpiritVNC-FLTK.app`
+* If you get `unsealed contents present in the bundle root` error, make sure there are no `Icon?` or `.DS_Store` files within the app bundle (use `ls -lah` or `find` commands to check)
+
 * (optional) Set the `SpiritVNC-FLTK` app bundle's app icon
   * Open the `spiritvnc.png` file included in the project with the Preview app
   * Click the 'Edit' menu then 'Select All'
@@ -104,13 +112,7 @@ $ ./spiritvnc-fltk
   * Click the small default icon near the top left of the info window
   * Paste the image into it by clicking the 'Edit' menu then 'Paste'
   * Close the info window
-
-For newer versions of macOS (Sequoia and newer):
-* Open Terminal (or the terminal emulator of your choice)
-* `cd` to the folder that contains the `SpiritVNC-FLTK` app bundle
-* Do `xattr -cr SpiritVNC-FLTK.app`
-* Then do `codesign -s - --deep --force SpiritVNC-FLTK.app`
-
+    
 ##### Basic usage
 * Double-click a disconnected server entry to try to connect to it
 * Single-click a connected server entry to switch to it from another
