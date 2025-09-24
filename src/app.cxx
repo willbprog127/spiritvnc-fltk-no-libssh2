@@ -1905,10 +1905,14 @@ void svHandleHostListEvents (Fl_Widget *, void *)
         // enable / disable 'Paste F12 macro' item in menu
         if (app->strF12ClipVar == "")
           nF12Flags = FL_MENU_INACTIVE;
+        else
+          nF12Flags = 0;
 
         // enable / disable 'Clear F12 macro' item in menu
         if (itm->f12Macro == "")
           nF12Flags2 = FL_MENU_INACTIVE;
+        else
+          nF12Flags2 = 0;
 
         // create context menu
         // text,shortcut,callback,user_data,flags,labeltype,labelfont,labelsize
