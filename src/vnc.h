@@ -54,16 +54,16 @@ public:
     itm(NULL),
     allowDrawing(false),
     waitTime(0),
-    nLastClientWidth(0),
-    nLastClientHeight(0),
+    //nLastClientWidth(0),
+    //nLastClientHeight(0),
     imgCursor(NULL),
     nCursorXHot(0),
     nCursorYHot(0),
     //inactiveSeconds(0),
     nLastScrollX(0),
-    nLastScrollY(0),
-    centeredX(0),
-    centeredY(0)
+    nLastScrollY(0)
+    //centeredX(0),
+    //centeredY(0)
   {
     // client and general rfb options
     vncClient->canHandleNewFBSize = true;
@@ -89,16 +89,16 @@ public:
   HostItem * itm;
   bool allowDrawing;
   uint16_t waitTime;
-  int nLastClientWidth;
-  int nLastClientHeight;
+  //int nLastClientWidth;
+  //int nLastClientHeight;
   Fl_RGB_Image * imgCursor;
   int nCursorXHot;
   int nCursorYHot;
   //uint16_t inactiveSeconds;
   int nLastScrollX;
   int nLastScrollY;
-  int centeredX;
-  int centeredY;
+  //int centeredX;
+  //int centeredY;
 
   // public methods
   //  instance
@@ -144,10 +144,9 @@ public:
   void unsetFullScreen ();
 
 private:
-  int handle (int);
-  void draw ();
-  void sendCorrectedKeyEvent (const char *, const int, HostItem *, rfbClient *, bool);
-  void drawMessageBar ();
+  int handle (int) override;
+  void draw () override;
+  void sendCorrectedKeyEvent (const char *, const int, bool);
 };
 
 #endif

@@ -1,13 +1,8 @@
 /*
  * spiritvnc.cxx - part of SpiritVNC - FLTK
- * 2016-2025 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
+ * 2016-2026 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  *
  * To God be the glory!  In Jesus name! :-D
- *
- * I don't typically use 'shortcuts' when checking for NULL or 0
- * i.e.: if (variable) or if (!variable)
- * because I want people to better understand what's
- * going on in the code
  *
  * Some code comes from examples provided by the
  * libvncserver project
@@ -46,53 +41,27 @@
 #include "app.h"
 #include "consts_enums.h"
 
-
 AppVars * app = new AppVars();
 
 
 /*  main program  */
-int main (int argc, char **argv)
+int main (int argc, char ** argv)
 {
+  // store arguments for show() later
+  app->argc = argc;
+  app->argv = argv;
+
   // tells FLTK we're a multithreaded app
   Fl::lock();
 
   // set graphics / display options
   Fl::visual(FL_DOUBLE | FL_RGB);
 
-  // create program UI
-  svCreateGUI();
-
   // read config file, set app options and populate host list
-  svConfigReadCreateHostList();
+  svConfigRead();
 
-  // set app tooltips
-  svSetAppTooltips();
-
-  // add default empty host list item if no items added from config file
-  if (app->hostList->size() == 0)
-  {
-    svInsertEmptyItem();
-    app->hostList->size(170, app->hostList->h());
-  }
-
-  // set host list font face and size
-  Fl::set_font(SV_LIST_FONT_ID, app->strListFont.c_str());
-  app->hostList->textfont(SV_LIST_FONT_ID);
-  app->hostList->textsize(app->nListFontSize);
-  app->nMenuFontSize = app->nListFontSize;
-
-  // set app icons
-  svCreateAppIcons();
-
-  // manually trigger misc events callback
-  svPositionWidgets();
-
-  // end widget adding and show app window
-  app->mainWin->end();
-  app->mainWin->show(argc, argv);
-
-  Fl::focus(app->hostList);
-  app->hostList->take_focus();
+  // create gui, load list, etc.
+  svDoStartupTasks();
 
   // ignore SIGPIPE from libvncclient socket calls
   // (not sure if this does anything...?)
@@ -119,7 +88,7 @@ int main (int argc, char **argv)
   Fl::redraw();
   Fl::wait();
 
-  // restore main window saved postition and size
+  // restore main window saved position and size
   #if !defined __APPLE__ && !defined _WIN32
   // x11 window managers usually need delayed repositioning
   Fl::add_timeout(0.7, svRestoreWindowSizePosition);
@@ -129,6 +98,7 @@ int main (int argc, char **argv)
   if (app->maximized)
     app->mainWin->maximize();
 
+  // start the main vnc message processing loop
   VncObject::masterMessageLoop();
 
   return Fl::run();

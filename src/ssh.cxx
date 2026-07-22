@@ -1,6 +1,6 @@
 /*
  * ssh.cxx - part of SpiritVNC - FLTK
- * 2016-2025 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
+ * 2016-2026 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  */
 
 /*
@@ -47,14 +47,16 @@ void * svSSHCloseHelper (void * itmData)
 
   HostItem * itm = static_cast<HostItem *>(itmData);
 
-  if (itm == NULL || itm->sshCmdStream == NULL)
+  if (!itm || !itm->sshCmdStream)
     return SV_RET_VOID;
 
   // send 'exit' control-char sequence
-  fprintf(itm->sshCmdStream, "\r\n%s", "~.");
+  //fprintf(itm->sshCmdStream, "\r\n%s", "~.");
+  fwrite("\r\n~.", sizeof(char), strlen("\r\n~."), itm->sshCmdStream);
 
   // send extra CRLF, just for fun
-  fprintf(itm->sshCmdStream, "\r\n");
+  //fprintf(itm->sshCmdStream, "\r\n");
+  fwrite("\r\n", sizeof(char), strlen("\r\n"), itm->sshCmdStream);
 
   // close the ssh process stream
   pclose(itm->sshCmdStream);
@@ -70,7 +72,7 @@ void svCloseSSHConnection (void * itmData)
 {
   HostItem * itm = static_cast<HostItem *>(itmData);
 
-  if (itm == NULL || itm->sshCmdStream == NULL)
+  if (!itm || !itm->sshCmdStream)
     return;
 
   // create, launch and detach call to create our vnc connection
@@ -95,7 +97,7 @@ void svCreateSSHConnection (void * data)
 
   HostItem * itm = static_cast<HostItem *>(data);
 
-  if (itm == NULL)
+  if (!itm)
     return;
 
   #ifdef _WIN32
@@ -110,10 +112,10 @@ void svCreateSSHConnection (void * data)
   svLogToFile("check command is: " + sshCheck);
 
   // first check to see if the ssh command is working
-  FILE * fResult = popen(sshCheck.c_str(), "w");
+  const FILE * fResult = popen(sshCheck.c_str(), "w");
 
   //if (nResult != 0)
-  if (fResult == NULL)
+  if (!fResult)
   {
     int nResult = errno;
 
@@ -143,7 +145,7 @@ void svCreateSSHConnection (void * data)
   // call the system's ssh client, if available and open write stream
   itm->sshCmdStream = popen(sshCommandLine.c_str(), "w");
 
-  if (itm->sshCmdStream != NULL)
+  if (itm->sshCmdStream)
     // ssh started okay
     itm->sshReady = true;
   else

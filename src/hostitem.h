@@ -100,7 +100,8 @@ public:
     customCommand2(""),
     customCommand3Enabled(false),
     customCommand3Label("Command 3"),
-    customCommand3("")
+    customCommand3(""),
+    clipboard("")
   {}
 
   std::string name;
@@ -157,6 +158,7 @@ public:
   bool customCommand3Enabled;
   std::string customCommand3Label;
   std::string customCommand3;
+  std::string clipboard;
 };
 
 #endif

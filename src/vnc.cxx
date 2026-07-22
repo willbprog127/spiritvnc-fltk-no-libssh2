@@ -1,6 +1,6 @@
 /*
  * vnc.cxx - part of SpiritVNC - FLTK
- * 2016-2025 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
+ * 2016-2026 Will Brokenbourgh https://www.willbrokenbourgh.com/brainout/
  */
 
 /*
@@ -36,13 +36,16 @@
 #include "consts_enums.h"
 #include "vnc.h"
 
+/* pointer for libvncclient's setclientdata and getclientdata */
+void * m_vncObjPtr = reinterpret_cast<void *>(0x777);
+
 
 /* create a listening vnc obect */
+/* (static method) */
 void VncObject::createVNCListener ()
 {
   HostItem * itm = new HostItem();
-
-  if (itm == NULL)
+  if (!itm)
   {
     fl_beep(FL_BEEP_DEFAULT);
     svMessageWindow("Error: Could not create listening VNC connection", "SpiritVNC - FLTK");
@@ -68,18 +71,19 @@ void VncObject::createVNCListener ()
 
 
 /* do rfbClientCleanup, delete and null VncObject */
+/* (static method) */
 void VncObject::cleanupVNCObject (HostItem * itm)
 {
-  if (itm == NULL)
+  if (!itm)
     return;
 
   itm->vncNeedsCleanup = false;
 
   // clean up client structure
-  if (itm->vnc != NULL)
+  if (itm->vnc)
   {
     // do client cleanup first
-    if (itm->vnc->vncClient != NULL && itm->initOkay == true)
+    if (itm->vnc->vncClient && itm->initOkay)
       rfbClientCleanup(itm->vnc->vncClient);
 
     // delete and null VncObject
@@ -97,7 +101,7 @@ void VncObject::cleanupVNCObject (HostItem * itm)
 void VncObject::createVNCObject (HostItem * itm)
 {
   // if itm is null or our viewer is already created, return
-  if (itm == NULL || itm->isConnected == true || itm->isConnecting == true)
+  if (!itm || itm->isConnected || itm->isConnecting)
   {
     fl_beep(FL_BEEP_DEFAULT);
     svMessageWindow("Error: Could not create VNC connection", "SpiritVNC - FLTK");
@@ -108,23 +112,23 @@ void VncObject::createVNCObject (HostItem * itm)
   if (itm->hostType == 'v' || itm->hostType == 's')
   {
     // just in case it wasn't done already
-    if (itm->vncNeedsCleanup == true)
+    if (itm->vncNeedsCleanup)
       VncObject::cleanupVNCObject(itm);
 
     // create new vnc object
     itm->vnc = new VncObject();
-
-    if (itm->vnc == NULL || itm->vnc->vncClient == NULL)
+    if (!itm->vnc || !itm->vnc->vncClient)
     {
       fl_beep(FL_BEEP_DEFAULT);
       return;
     }
 
+    // no, this isn't confusing at all! :-P
     VncObject * vnc = itm->vnc;
     vnc->itm = itm;
 
-    // address is missing on non-listening itm's
-    if (itm->isListener == false && itm->hostAddress == "")
+    // address is missing on non-listening itm
+    if (!itm->isListener && itm->hostAddress.empty())
     {
       fl_beep(FL_BEEP_DEFAULT);
       std::string strAddErr = itm->name + " - Error: Host address is missing";
@@ -141,13 +145,12 @@ void VncObject::createVNCObject (HostItem * itm)
     itm->hasDisconnectRequest = false;
     itm->initOkay = false;
     itm->lastErrorMessage = "";
-    app->lastErrorBox->value("");
 
     // store this viewer pointer in libvnc client data
-    rfbClientSetClientData(vnc->vncClient, app->libVncVncPointer, vnc);
+    rfbClientSetClientData(vnc->vncClient, m_vncObjPtr, vnc);
 
     // set up remote / local cursor
-    if (itm->showRemoteCursor == false)
+    if (!itm->showRemoteCursor)
     {
       vnc->vncClient->appData.useRemoteCursor = false;
       vnc->vncClient->GotCursorShape = NULL;
@@ -161,15 +164,14 @@ void VncObject::createVNCObject (HostItem * itm)
     // set up vnc compression and quality levels
     vnc->vncClient->appData.compressLevel = itm->compressLevel;
     vnc->vncClient->appData.qualityLevel = itm->qualityLevel;
-    vnc->vncClient->appData.encodingsString = strdup("tight copyrect hextile");
+    vnc->vncClient->appData.encodingsString = "tight copyrect hextile";
 
     itm->vncAddressAndPort = itm->hostAddress + ":" + itm->vncPort;
 
     // add to viewers waiting ref count
     app->nViewersWaiting ++;
 
-    svLogToFile("Attempting to connect to '" + itm->name + "' - " +
-      itm->hostAddress);
+    svLogToFile("Attempting to connect to '" + itm->name + "' - " + itm->hostAddress);
 
     // set host list item status icon
     itm->icon = app->iconConnecting;
@@ -182,10 +184,9 @@ void VncObject::createVNCObject (HostItem * itm)
     {
       svDebugLog("svCreateVNCObject - Host is 'SVNC'");
 
-      struct stat structStat;
-
-      // oops, can't open ssh key file
-      if (stat(itm->sshKeyPrivate.c_str(), &structStat) != 0)
+      // check if we can access ssh key file
+      std::ifstream keyStream(itm->sshKeyPrivate);
+      if (!keyStream.is_open())
       {
         itm->isConnecting = false;
         itm->hasCouldntConnect = true;
@@ -215,16 +216,16 @@ void VncObject::createVNCObject (HostItem * itm)
 
       // loop until the ssh connection is ready
       // or exit if ssh times out
-      while (1)
+      while (!app->shuttingDown)
       {
-        if (time(NULL) >= sshDelay || itm->hasError == true)
+        if (time(NULL) >= sshDelay || itm->hasError)
           break;
 
         Fl::check();
       }
 
       // exit if sshReady is false
-      if (itm->sshReady == false)
+      if (!itm->sshReady)
       {
         itm->isConnecting = false;
         itm->hasCouldntConnect = true;
@@ -243,8 +244,7 @@ void VncObject::createVNCObject (HostItem * itm)
     {
       itm->threadRFBRunning = false;
 
-      svLogToFile("ERROR - Couldn't create RFB thread for '" + itm->name +
-            "' - " + itm->hostAddress);
+      svLogToFile("ERROR - Couldn't create RFB thread for '" + itm->name + "' - " + itm->hostAddress);
       itm->isConnecting = false;
       itm->hasCouldntConnect = true;
       itm->hasError = true;
@@ -273,19 +273,12 @@ void VncObject::endAllViewers ()
 {
   for (uint16_t i = 0; i <= app->hostList->size(); i ++)
   {
-    HostItem * itm = NULL;
-    itm = static_cast<HostItem *>(app->hostList->data(i));
-
-    if (itm != NULL)
+    HostItem * itm = static_cast<HostItem *>(app->hostList->data(i));
+    if (itm)
     {
-      VncObject * vnc = NULL;
-      vnc = itm->vnc;
+      VncObject * vnc = itm->vnc;
 
-      if (vnc != NULL && (itm->isConnected == true
-                         || itm->isConnecting == true
-                         || itm->isWaitingForShow == true
-                         )
-         )
+      if (vnc && (itm->isConnected || itm->isConnecting || itm->isWaitingForShow))
       {
         itm->hasDisconnectRequest = true;
 
@@ -304,55 +297,56 @@ void VncObject::endViewer ()
 {
   //this->GONK!
 
-  if (itm != NULL && itm->vnc != NULL)
+  if (this->itm && this->itm->vnc)
   {
     // only hide main viewer if this is the currently-displayed itm
-    if (app->vncViewer->vnc != NULL && itm == app->vncViewer->vnc->itm)
+    if (app->vncViewer->vnc && this->itm == app->vncViewer->vnc->itm)
     {
       app->vncViewer->unsetFullScreen();
       hideMainViewer();
     }
 
     // host disconnected unexpectedly / interrupted connection
-    if (itm->isConnected == true && itm->hasDisconnectRequest == false)
+    if (this->itm->isConnected && !this->itm->hasDisconnectRequest)
     {
-      itm->icon = app->iconDisconnectedError;
+      this->itm->icon = app->iconDisconnectedError;
       Fl::awake(svHandleListItemIconChange);
 
-      svLogToFile("Unexpectedly disconnected from '" + itm->name + "' - " + itm->hostAddress);
+      svLogToFile("Unexpectedly disconnected from '" + this->itm->name + "' - " + this->itm->hostAddress);
     }
 
     // we disconnected purposely from host
-    if ((itm->isConnected == true || itm->isConnecting == true) &&
-        itm->hasDisconnectRequest == true)
+    if ((this->itm->isConnected || this->itm->isConnecting) && this->itm->hasDisconnectRequest)
     {
       // set host list item status icon
-      itm->icon = app->iconDisconnected;
+      this->itm->icon = app->iconDisconnected;
       Fl::awake(svHandleListItemIconChange);
 
       if (app->shuttingDown)
-        svLogToFile("Automatically disconnecting.  Program is shutting down '" + itm->name +
+        svLogToFile("Automatically disconnecting.  Program is shutting down '" + this->itm->name +
           "' - " + itm->hostAddress);
       else
-        svLogToFile("Manually disconnected from '" + itm->name + "' - " + itm->hostAddress);
+        svLogToFile("Manually disconnected from '" + this->itm->name + "' - " + this->itm->hostAddress);
     }
 
     // decrement our count of created vncObjects so we
     // can check and avoid 'expensive' stuff in masterMessageLoop
     app->createdObjects --;
 
-    itm->isConnected = false;
-    itm->hasDisconnectRequest = false;
+    this->itm->isConnected = false;
+    this->itm->hasDisconnectRequest = false;
 
     // tell ssh to clean up if a ssh/vnc connection
-    if (itm->hostType == 's')
+    if (this->itm->hostType == 's')
       svCloseSSHConnection(itm);
 
     // set this for cleanup later
-    if (vncClient != NULL && itm->isConnecting == false)
-      itm->vncNeedsCleanup = true;
+    if (this->vncClient && !this->itm->isConnecting)
+      this->itm->vncNeedsCleanup = true;
 
-    itm->isConnecting = false;
+    this->itm->isConnecting = false;
+
+    this->itm->clipboard.clear();
   }
 }
 
@@ -363,23 +357,20 @@ void VncObject::endViewer ()
 */
 bool VncObject::fitsScroller ()
 {
-  if (app->vncViewer->fullscreen == true)
+  if (app->vncViewer->fullscreen)
     return true;
 
-  const HostItem * itmm = static_cast<HostItem *>(this->itm);
-
-  if (itmm == NULL || itmm->vnc == NULL)
+  if (!this->itm || !this->itm->vnc)
     return false;
 
-  const rfbClient * cl = itmm->vnc->vncClient;
-
-  if (cl == NULL)
+  const rfbClient * cl = this->itm->vnc->vncClient;
+  if (!cl)
     return false;
 
   if (cl->width <= app->scroller->w() && cl->height <= app->scroller->h())
     return true;
-  else
-    return false;
+
+  return false;
 }
 
 
@@ -387,16 +378,12 @@ bool VncObject::fitsScroller ()
   handle cursor change
   (static method / callback)
 */
-void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int nWidth,
-    int nHeight, int nBytesPerPixel)
+void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int nWidth, int nHeight,
+  int nBytesPerPixel)
 {
-  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
+  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, m_vncObjPtr));
 
-  if (vnc == NULL
-      || cl == NULL
-      || Fl::belowmouse() != app->vncViewer
-      || vnc->allowDrawing == false
-     )
+  if (!vnc || !cl || !vnc->allowDrawing || Fl::belowmouse() != app->vncViewer)
     return;
 
   const int nSSize = nWidth * nHeight * nBytesPerPixel;
@@ -405,14 +392,13 @@ void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int
   if (nBytesPerPixel == 2 || nBytesPerPixel == 4)
   {
     int nM = 0;
-    int nMV;
 
     for (int i = (nBytesPerPixel - 1); i < nSSize; i += nBytesPerPixel)
     {
-      nMV = cl->rcMask[nM];
+      int nMV = cl->rcMask[nM];
 
       if (nMV > 0)
-          nMV = 255;
+        nMV = 255;
 
       cl->rcSource[i] = nMV;
 
@@ -423,17 +409,17 @@ void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int
   // create rgb image from raw data
   Fl_RGB_Image * img = new Fl_RGB_Image(cl->rcSource, nWidth, nHeight, nBytesPerPixel);
 
-  if (img == NULL)
+  if (!img)
     return;
 
   // delete previous copy, if any
-  if (vnc->imgCursor != NULL)
+  if (vnc->imgCursor)
     delete vnc->imgCursor;
 
   // copy rgb image to vncViewer and set x+y hotspots
   vnc->imgCursor = static_cast<Fl_RGB_Image *>(img->copy());
 
-  if (vnc->imgCursor == NULL)
+  if (!vnc->imgCursor)
     return;
 
   vnc->nCursorXHot = xHot;
@@ -452,17 +438,14 @@ void VncObject::handleCursorShapeChange (rfbClient * cl, int xHot, int yHot, int
 */
 void VncObject::handleFrameBufferUpdate (rfbClient * cl)
 {
-  if (cl == NULL)
+  if (!cl)
     return;
 
-  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
-
-  if (vnc == NULL)
+  const VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, m_vncObjPtr));
+  if (!vnc)
     return;
 
-  //vnc->inactiveSeconds = 0;
-
-  if (vnc->allowDrawing == true)
+  if (vnc->allowDrawing)
     app->vncViewer->redraw();
 }
 
@@ -477,29 +460,16 @@ void VncObject::handleRemoteClipboardProc (rfbClient * cl, const char * text, in
   // for drag-and-drop selections. The clipboard (source is 1) is used for
   // copy/cut/paste operations.
 
-  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
-
-  if (vnc == NULL)
+  const VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, m_vncObjPtr));
+  if (!vnc)
     return;
 
-  VncObject * vnc2 = app->vncViewer->vnc;
-
-  if (vnc2 == NULL)
+  HostItem * itm = vnc->itm;
+  if (!itm)
     return;
 
-  if (vnc2 == vnc && text != NULL && textlen > 0)
-  {
-    app->blockLocalClipboardHandling = true;
-
-    Fl::copy(text, textlen, 1);
-
-    SendFramebufferUpdateRequest(cl, 0, 0, cl->width, cl->height, false);
-
-    app->blockLocalClipboardHandling = false;
-
-    app->vncViewer->redraw();
-    Fl::awake();
-  }
+  if (textlen > 0)
+    itm->clipboard = text;
 }
 
 
@@ -510,8 +480,7 @@ void VncObject::handleRemoteClipboardProc (rfbClient * cl, const char * text, in
 void VncObject::hideMainViewer ()
 {
   VncObject * vnc = app->vncViewer->vnc;
-
-  if (vnc == NULL)
+  if (!vnc)
     return;
 
   vnc->allowDrawing = false;
@@ -520,7 +489,6 @@ void VncObject::hideMainViewer ()
 
   Fl::lock();
   app->vncViewer->vnc = NULL;
-  app->vncViewer->size(0, 0);
   app->scroller->scroll_to(0, 0);
   app->scroller->type(0);
   app->scroller->redraw();
@@ -539,20 +507,19 @@ void * VncObject::initVNCConnection (void * data)
   pthread_detach(pthread_self());
 
   char * strParams[2] = {NULL};
+  int nNumOfParams = 2;
 
   Fl::lock();
   HostItem * itm = static_cast<HostItem *>(data);
   Fl::unlock();
 
-  if (itm == NULL)
+  if (!itm)
     return SV_RET_VOID;
 
   itm->threadRFBRunning = true;
 
-  int nNumOfParams = 2;
   VncObject * vnc = itm->vnc;
-
-  if (vnc == NULL)
+  if (!vnc)
   {
     itm->isConnected = false;
     itm->isConnecting = false;
@@ -568,18 +535,18 @@ void * VncObject::initVNCConnection (void * data)
   strParams[0] = strdup("SpiritVNCFLTK");
 
   // set parameter 1
-  if (itm->isListener == false)
+  if (!itm->isListener)
     // remote host address and port
     strParams[1] = strdup(itm->vncAddressAndPort.c_str());
   else
   {
     // local listening address
     strParams[1] = strdup("-listennofork");
-    vnc->vncClient->listenAddress = strdup("0.0.0.0");
+    vnc->vncClient->listenAddress = app->listenAddressStr;
   }
 
   // if the second parameter is invalid, get out
-  if (strParams[1] == NULL || strlen(strParams[1]) < 7)
+  if (!strParams[1] || strlen(strParams[1]) < 7)
   {
     itm->isConnected = false;
     itm->isConnecting = false;
@@ -593,7 +560,7 @@ void * VncObject::initVNCConnection (void * data)
 
   // libvnc - attempt to connect to host
   // this function blocks, that's why this function runs as a thread
-  if (rfbInitClient(vnc->vncClient, &nNumOfParams, strParams) == false)
+  if (!rfbInitClient(vnc->vncClient, &nNumOfParams, strParams))
   {
     // * connection failed *
 
@@ -622,11 +589,8 @@ void * VncObject::initVNCConnection (void * data)
   Fl::awake(svHandleThreadConnection, itm);
 
   // free strdups
-  if (strParams[0] != NULL)
-    free(strParams[0]);
-
-  if (strParams[1] != NULL)
-    free(strParams[1]);
+  free(strParams[0]);
+  free(strParams[1]);
 
   return SV_RET_VOID;
 }
@@ -640,7 +604,7 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
 {
   char strMsg[FL_PATH_MAX] = {0};
 
-  if (itm == NULL || strMessageIn == NULL)
+  if (!itm || !strMessageIn)
     return;
 
   // format for log file
@@ -665,7 +629,7 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
   // fix dumb Operation now in progress error
   if (strMessage.find("Operation now in progress") != std::string::npos)
   {
-    if (itm->hostType == 's' && itm->sshReady == false)
+    if (itm->hostType == 's' && !itm->sshReady)
       itm->lastErrorMessage = "Unable to connect to host's SSH server";
     else
       itm->lastErrorMessage = "Unable to connect to VNC server";
@@ -683,14 +647,14 @@ void VncObject::parseErrorMessages (HostItem * itm, const char * strMessageIn)
 */
 void VncObject::libVncLogging (const char * format, ...)
 {
-  if (app->debugMode == true)
+  if (app->debugMode)
   {
     va_list args;
-    char msgBuf[FL_PATH_MAX] = {0};
+    char msgBuf[SV_MAX_BUF_LEN] = {0};
 
     // combine format string and args into nowBuff
     va_start(args, format);
-    vsnprintf(msgBuf, FL_PATH_MAX, format, args);
+    vsnprintf(msgBuf, SV_MAX_BUF_LEN, format, args);
     va_end(args);
 
     // log to file
@@ -705,17 +669,15 @@ void VncObject::libVncLogging (const char * format, ...)
 */
 void VncObject::masterMessageLoop ()
 {
-  VncObject * vnc = NULL;
-
   // run until it's time to shut down
-  while (app->shuttingDown == false)
+  while (!app->shuttingDown)
   {
     // only loop if there are objects alive
     if (app->createdObjects != 0)
     {
-      vnc = app->vncViewer->vnc;
+      VncObject * vnc = app->vncViewer->vnc;
 
-      if (vnc != NULL && vnc->itm != NULL)
+      if (vnc && vnc->itm)
         VncObject::checkVNCMessages(vnc);
 
       // keep from making too tight a loop
@@ -723,7 +685,6 @@ void VncObject::masterMessageLoop ()
       // message loop waiting time - set by user now
       // the lower the number, faster drawing, but also more CPU usage
       // higher the number, slower drawing, less CPU usage
-      //Fl::wait(0.034);
       Fl::wait(app->messageLoopWaitTime);
     }
     else
@@ -741,7 +702,7 @@ void VncObject::masterMessageLoop ()
 rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
 {
   // client is null
-  if (cl == NULL)
+  if (!cl)
   {
     svLogToFile("ERROR - handlePassword: vnc->vncClient is null");
     return NULL;
@@ -755,19 +716,17 @@ rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
     return NULL;
   }
 
-  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
-
+  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, m_vncObjPtr));
   // vnc object is null
-  if (vnc == NULL)
+  if (!vnc)
   {
     svLogToFile("ERROR - handlePassword: vnc is null");
     return NULL;
   }
 
   HostItem * itm = vnc->itm;
-
   // itm is null
-  if (itm == NULL)
+  if (!itm)
   {
     svLogToFile("ERROR - handlePassword: itm is null");
     return NULL;
@@ -775,14 +734,26 @@ rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
 
   // build and populate credential
   rfbCredential * cred = static_cast<rfbCredential *>(malloc(sizeof(rfbCredential)));
+  // get out if we can't allocate memory
+  if (!cred)
+    return NULL;
 
   // allocate memory for username / password
   cred->userCredential.username = static_cast<char *>(malloc(RFB_BUF_SIZE));
   cred->userCredential.password = static_cast<char *>(malloc(RFB_BUF_SIZE));
 
+  // get out if we can't allocate memory
+  if (!cred->userCredential.username || !cred->userCredential.password)
+  {
+    free(cred->userCredential.username);
+    free(cred->userCredential.password);
+    free(cred);
+    return NULL;
+  }
+
   // set username / password
   strncpy(cred->userCredential.username, itm->vncLoginUser.c_str(), (RFB_BUF_SIZE - 1));
-  strncpy(cred->userCredential.password, itm->vncLoginPassword.c_str(), (RFB_BUF_SIZE - 1));
+  strncpy(cred->userCredential.password, base64Decode(itm->vncLoginPassword).c_str(), (RFB_BUF_SIZE - 1));
 
   return cred;
 }
@@ -794,32 +765,47 @@ rfbCredential * VncObject::handleCredential (rfbClient * cl, int credentialType)
 */
 char * VncObject::handlePassword (rfbClient * cl)
 {
-  if (cl == NULL)
+  // check if client is non-null
+  if (!cl)
   {
     svLogToFile("ERROR - handlePassword: vnc->vncClient is null");
     return NULL;
   }
 
-  VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, app->libVncVncPointer));
-
-  if (vnc == NULL)
+  // check if vncObj is non-null
+  const VncObject * vnc = static_cast<VncObject *>(rfbClientGetClientData(cl, m_vncObjPtr));
+  if (!vnc)
   {
     svLogToFile("ERROR - handlePassword: vnc is null");
     return NULL;
   }
 
-  HostItem * itm = vnc->itm;
-
-  if (itm == NULL)
+  // check if itm is non-null
+  const HostItem * itm = vnc->itm;
+  if (!itm)
   {
     svLogToFile("ERROR - handlePassword: itm is null");
     return NULL;
   }
 
+  // malloc a char * that will be freed by libvncclient after use
   char * strPass = static_cast<char *>(malloc(10));
+  if (!strPass)
+    return NULL;
 
-  if (strPass != NULL)
-    strncpy(strPass, itm->vncPassword.c_str(), 9);
+  // make a char * from the output of the base64Decode
+  char * decodedPassword = strdup(base64Decode(itm->vncPassword).c_str());
+  if (!decodedPassword)
+  {
+    free(strPass);
+    return NULL;
+  }
+
+  // copy the vnc password to the malloc'd char *
+  strncpy(strPass, decodedPassword, 9);
+
+  // free our decoded char *
+  free(decodedPassword);
 
   return strPass;
 }
@@ -831,30 +817,32 @@ char * VncObject::handlePassword (rfbClient * cl)
 */
 void VncObject::setObjectVisible ()
 {
-  if (itm == NULL || vncClient == NULL)
+  if (!this->itm || !this->vncClient)
       return;
 
   app->vncViewer->vnc = this;
 
-  SendFramebufferUpdateRequest(vncClient, 0, 0, vncClient->width, vncClient->height, false);
+  SendFramebufferUpdateRequest(this->vncClient, 0, 0, this->vncClient->width, this->vncClient->height, false);
 
-  int leftMargin = (app->hostList->x() + app->hostList->w() + 3);
+  //int leftMargin = app->flexLeftSide->w(); // + 3; //(app->hostList->x() + app->hostList->w() + 3);
 
   // scale off / scroll if host screen is too big
-  if (itm->scaling == 's' || (itm->scaling == 'f' && fitsScroller() == true))
+  if (this->itm->scaling == 's' || (this->itm->scaling == 'f' && this->fitsScroller()))
   {
     app->scroller->type(Fl_Scroll::BOTH);
-    app->vncViewer->size(vncClient->width, vncClient->height);
+    app->vncViewer->size(this->vncClient->width, this->vncClient->height);
   }
 
   // scale 'zoom' or 'fit'
-  if (itm->scaling == 'z' || (itm->scaling == 'f' && fitsScroller() == false))
+  if (this->itm->scaling == 'z' || (this->itm->scaling == 'f' && !this->fitsScroller()))
   {
     // maximize vnc viewer size
-    app->vncViewer->size(app->mainWin->w() - leftMargin, app->mainWin->h());
+    //app->vncViewer->size(app->mainWin->w() - leftMargin, app->mainWin->h());
+
+    app->vncViewer->size(app->scroller->w(), app->scroller->h());
 
     // calculate host screen ratio
-    float dRatio = static_cast<float>(vncClient->width) / static_cast<float>(vncClient->height);
+    float dRatio = static_cast<float>(this->vncClient->width) / static_cast<float>(this->vncClient->height);
 
     // set height of image to max height and check if resulting width is less than max width,
     // otherwise set width of image to max width and calculate new height
@@ -867,12 +855,12 @@ void VncObject::setObjectVisible ()
   }
 
   // only use when not in fullscreen
-  if (app->vncViewer->fullscreen != true)
+  if (!app->vncViewer->fullscreen)
     svResizeScroller();
 
-  app->scroller->scroll_to(nLastScrollX, nLastScrollY);
+  app->scroller->scroll_to(this->nLastScrollX, this->nLastScrollY);
 
-  allowDrawing = true;
+  this->allowDrawing = true;
 
   app->scroller->redraw();
 }
@@ -886,7 +874,7 @@ void VncObject::checkVNCMessages (VncObject * vnc)
 {
   int nMsg = 0;
 
-  if (vnc == NULL || vnc->vncClient == NULL)
+  if (!vnc || !vnc->vncClient)
       return;
 
   // below modified to '0' based on select() docs suggestion
@@ -900,7 +888,7 @@ void VncObject::checkVNCMessages (VncObject * vnc)
 
   if (nMsg)
   {
-    if (HandleRFBServerMessage(vnc->vncClient) == FALSE)
+    if (!HandleRFBServerMessage(vnc->vncClient))
     {
       vnc->endViewer();
       return;
@@ -923,17 +911,17 @@ void VncObject::checkVNCMessages (VncObject * vnc)
 */
 void VncViewer::draw ()
 {
-  VncObject * v = app->vncViewer->vnc;
+  VncObject * v = this->vnc;
 
-  if (v == NULL ||
-      v->allowDrawing == false ||
-      v->vncClient == NULL)
+  if (!v || !v->allowDrawing || !v->vncClient)
     return;
 
   rfbClient * cl = v->vncClient;
-  HostItem * itm = static_cast<HostItem *>(v->itm);
+  if (!cl->frameBuffer)
+    return;
 
-  if (itm == NULL || cl->frameBuffer == NULL)
+  const HostItem * itm = v->itm;
+  if (!itm)
     return;
 
   int nBytesPerPixel = cl->format.bitsPerPixel / 8;
@@ -943,7 +931,7 @@ void VncViewer::draw ()
     return;
 
   // 's'croll or 'f'it + real size scale mode geometry
-  if (itm->scaling == 's' || (itm->scaling == 'f' && v->fitsScroller() == true))
+  if (itm->scaling == 's' || (itm->scaling == 'f' && v->fitsScroller()))
   {
     v->nLastScrollX = app->scroller->xposition();
     v->nLastScrollY = app->scroller->yposition();
@@ -962,11 +950,8 @@ void VncViewer::draw ()
   }
 
   // 'z'oom or 'f'it + oversized scale mode geometry
-  if (itm->scaling == 'z' || (itm->scaling == 'f' && v->fitsScroller() == false))
+  if (itm->scaling == 'z' || (itm->scaling == 'f' && !v->fitsScroller()))
   {
-    Fl_Image * imgC = NULL;
-    Fl_RGB_Image * imgZ = NULL;
-
     int isize = cl->width * cl->height * nBytesPerPixel;
 
     // if there's an alpha byte, set it to 255
@@ -974,29 +959,22 @@ void VncViewer::draw ()
       for (int i = (nBytesPerPixel - 1); i < isize; i+= nBytesPerPixel)
           cl->frameBuffer[i] = 255;
 
-    imgZ = new Fl_RGB_Image(cl->frameBuffer, cl->width, cl->height, nBytesPerPixel);
-
-    if (imgZ != NULL)
+    // create an RGB image from libvncclient's framebuffer
+    Fl_RGB_Image * imgRGB = new Fl_RGB_Image(cl->frameBuffer, cl->width, cl->height, nBytesPerPixel);
+    if (imgRGB)
     {
       // set appropriate scale quality
-      if (itm->scalingFast == true)
-        imgZ->RGB_scaling(FL_RGB_SCALING_NEAREST);
+      if (itm->scalingFast)
+        imgRGB->RGB_scaling(FL_RGB_SCALING_NEAREST);
       else
-        imgZ->RGB_scaling(FL_RGB_SCALING_BILINEAR);
+        imgRGB->RGB_scaling(FL_RGB_SCALING_BILINEAR);
 
-      // scale down imgZ image to imgC
-      imgC = imgZ->copy(app->vncViewer->w(), app->vncViewer->h());
+      //// scale down imgRGB image to imgFinal
+      imgRGB->scale(app->vncViewer->w(), app->vncViewer->h());
+      imgRGB->draw(this->x(), this->y());
 
-      // draw scaled image onto screen
-      if (imgC != NULL)
-        imgC->draw(app->vncViewer->x(), app->vncViewer->y());
+      delete imgRGB;
     }
-
-    if (imgC != NULL)
-      delete imgC;
-
-    if (imgZ != NULL)
-      delete imgZ;
   }
 }
 
@@ -1005,47 +983,43 @@ void VncViewer::draw ()
 /* (instance method) */
 int VncViewer::handle (int event)
 {
-  if (app->vncViewer == NULL)
+  if (!app->vncViewer)
     return 0;
 
-  VncObject * v = app->vncViewer->vnc;
-
-  if (v == NULL)
+  VncObject * v = this->vnc;
+  if (!v)
     return 0;
 
   // bail out if this is not the active vnc object
-  if (v->allowDrawing == false)
+  if (!v->allowDrawing)
     return 0;
 
   float nMouseX = 0;
   float nMouseY = 0;
 
   static int nButtonMask;
-  HostItem * itm = v->itm;
 
-  // itm is null
-  if (itm == NULL)
+  const HostItem * itm = v->itm;
+  if (!itm)
     return 0;
 
   // don't handle events if view only
-  if (itm->viewOnly == true)
+  if (itm->viewOnly)
     return 0;
 
-  rfbClient * cl = v->vncClient;
-
-  // client is null
-  if (cl == NULL)
+  const rfbClient * cl = v->vncClient;
+  if (!cl)
     return 0;
 
   // scrolled / non-scaled sizing
-  if (itm->scaling == 's' || (itm->scaling == 'f' && v->fitsScroller() == true))
+  if (itm->scaling == 's' || (itm->scaling == 'f' && v->fitsScroller()))
   {
     nMouseX = Fl::event_x() - app->scroller->x() + app->scroller->xposition();
     nMouseY = Fl::event_y() - app->scroller->y() + app->scroller->yposition();
   }
 
   // scaled sizing
-  if (itm->scaling == 'z' || (itm->scaling == 'f' && v->fitsScroller() == false))
+  if (itm->scaling == 'z' || (itm->scaling == 'f' && !v->fitsScroller()))
   {
     float fXAdj = float(app->vncViewer->w()) / float(cl->width);
     float fYAdj = float(app->vncViewer->h()) / float(cl->height);
@@ -1148,26 +1122,26 @@ int VncViewer::handle (int event)
 
     // ** keyboard events **
     case FL_KEYDOWN:
-      sendCorrectedKeyEvent(Fl::event_text(), Fl::event_key(), itm, cl, true);
+      sendCorrectedKeyEvent(Fl::event_text(), Fl::event_key(), true);
       app->scanIsRunning = false;
       return 1;
       break;
 
     case FL_SHORTCUT:
-      sendCorrectedKeyEvent(Fl::event_text(), Fl::event_key(), itm, cl, true);
+      sendCorrectedKeyEvent(Fl::event_text(), Fl::event_key(), true);
       app->scanIsRunning = false;
       return 1;
       break;
 
     case FL_KEYUP:
-      sendCorrectedKeyEvent(Fl::event_text(), Fl::event_key(), itm, cl, false);
+      sendCorrectedKeyEvent(Fl::event_text(), Fl::event_key(), false);
       app->scanIsRunning = false;
       return 1;
       break;
 
     // ** misc events **
     case FL_ENTER:
-      if (v->imgCursor != NULL && itm->showRemoteCursor == true)
+      if (v->imgCursor && itm->showRemoteCursor)
         Fl::awake(svHandleThreadCursorChange, reinterpret_cast<void *>(false));
       return 1;
       break;
@@ -1213,18 +1187,25 @@ int VncViewer::handle (int event)
   fix / convert X11 key codes to rfb key codes
   (const int not used so parameter name removed)
 */
-void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem * itm,
-  rfbClient * cl, bool downState)
+/* (instance method) */
+void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int nK, bool downState)
 {
-  int nK = Fl::event_key();
+  VncObject * v = this->vnc;
+  if (!v)
+    return;
 
-  if (cl == NULL || itm == NULL)
+  HostItem * itm = v->itm;
+  if (!itm)
+    return;
+
+  rfbClient * cl = v->vncClient;
+  if (!cl)
     return;
 
   // F8 window
   if (nK == XK_F8)
   {
-    if (downState == false)
+    if (!downState)
       svShowF8Window();
 
     return;
@@ -1234,19 +1215,19 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
   if (nK == XK_F11)
   {
       // toggle vncViewer's fullscreen state
-    if (app->vncViewer != NULL && downState == false)
+    if (!downState)
     {
       // we can disable fullscreen no matter what
-      if (app->vncViewer->fullscreen == true)
+      if (this->fullscreen)
       {
-        app->vncViewer->unsetFullScreen();
+        this->unsetFullScreen();
         return;
       }
 
       // only enable fullscreen if we're displaying a connection
-      if (app->vncViewer->fullscreen != true && app->vncViewer->vnc != NULL)
+      if (!this->fullscreen && v)
       {
-        app->vncViewer->setFullScreen();
+        this->setFullScreen();
         return;
       }
     }
@@ -1257,16 +1238,16 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
   // F12 macro
   if (nK == XK_F12)
   {
-    if (downState == false)
+    if (!downState)
     {
       // send the F12 macro for this connection, if any,
       // if there isn't an F12 macro, send the F12 key itself
-      if (itm->f12Macro != "")
-        svSendKeyStrokesToHost(itm->f12Macro, vnc);
+      if (!itm->f12Macro.empty())
+        svSendKeyStrokesToHost(itm->f12Macro, v);
       else
       {
-        SendKeyEvent(vnc->vncClient, XK_F12, true);
-        SendKeyEvent(vnc->vncClient, XK_F12, false);
+        SendKeyEvent(v->vncClient, XK_F12, true);
+        SendKeyEvent(v->vncClient, XK_F12, false);
       }
     }
 
@@ -1282,21 +1263,25 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
 
 
 /* enable fullscreen */
- void VncViewer::setFullScreen ()
+/* (instance method) */
+void VncViewer::setFullScreen ()
 {
-  app->vncViewer->fullscreen = true;
+  this->fullscreen = true;
 
-  app->hostList->resize(-3, app->hostList->y(), 0, app->hostList->h());
-  app->hostList->redraw();
+  // hide the left flex container
+  app->flexLeftSide->hide();
 
+  // set scroller stuff
   app->scroller->position(0, 0);
   app->scroller->size(app->mainWin->w(), app->mainWin->h());
   app->scroller->redraw();
 
-  app->vncViewer->size(app->scroller->w(), app->scroller->h());
-  app->vncViewer->vnc->setObjectVisible();
+  this->size(app->scroller->w(), app->scroller->h());
 
-  app->vncViewer->set_visible_focus();
+  if (this->vnc)
+    this->vnc->setObjectVisible();
+
+  this->set_visible_focus();
 
   Fl::redraw();
   Fl::check();
@@ -1304,21 +1289,25 @@ void VncViewer::sendCorrectedKeyEvent (const char * strIn, const int, HostItem *
 
 
 /* disable fullscreen */
+/* (instance method) */
 void VncViewer::unsetFullScreen ()
 {
-  app->vncViewer->fullscreen = false;
+  this->fullscreen = false;
 
-  app->hostList->resize(0, app->hostList->y(), app->requestedListWidth, app->hostList->h());
-  app->hostList->redraw();
+  // show the left flex container
+  app->flexLeftSide->show();
+  app->flexLeftSide->redraw();
 
+  // set scroller stuff
   app->scroller->position(app->hostList->x() + app->hostList->w() + 3, app->scroller->y());
   app->scroller->size(app->mainWin->w(), app->mainWin->h());
   app->scroller->redraw();
   svResizeScroller();
 
-  app->vncViewer->vnc->setObjectVisible();
+  if (this->vnc)
+    this->vnc->setObjectVisible();
 
-  app->vncViewer->set_visible_focus();
+  this->set_visible_focus();
 
   Fl::redraw();
   Fl::check();

@@ -36,19 +36,26 @@
 #define CONSTS_H
 
 /* constants */
-#define SV_APP_VERSION  "0.7.2"
+#define SV_APP_VERSION  "0.8.0"
 
-#define SV_CURRENT_YEAR "2025"
+#define SV_CURRENT_YEAR "2026"
 
 #define SV_CONNECTION_TIMEOUT_SECS  30
 #define SV_ONE_SECOND               1.00
-#define SV_PROP_LINE_MAX            4096
+#define SV_MAX_PROP_LINE_LEN        4096
 #define SV_MAX_PROP_LEN             1024
+#define SV_MAX_BUF_LEN              4096
 #define SV_MAX_HOSTLIST_ENTRIES     65000
+#define SV_CHOICE_BTN_1             0
+#define SV_CHOICE_BTN_2             1
 #define SV_CHOICE_BTN_3             2
-#define SV_LIST_FONT_ID             31
+#define SV_LIST_FONT_ID             200  //31
 #define SV_BLINK_TIME               0.6
 #define SV_QUICK_INFO_FG_COLOR      25
+#define SV_APP_FONT_SIZE_MIN        8
+#define SV_APP_FONT_SIZE_MAX        24
+#define SV_LIST_FONT_SIZE_MIN       8
+#define SV_LIST_FONT_SIZE_MAX       24
 
 // return type for threads
 #define SV_RET_VOID         static_cast<void *>(NULL)
