@@ -1,3 +1,6 @@
+> [!NOTE]
+> If FLTK is not your thing, there is a [GTK version of SpiritVNC](https://github.com/willbprog127/spiritvnc-gtk)
+
 # SpiritVNC - FLTK
 SpiritVNC - FLTK is an FLTK-based multi-view VNC client for most Linux distros, macOS, FreeBSD, OpenIndiana and *experimentally* on Windows 10 and 11 (using [MSYS2](https://www.msys2.org/)).  SpiritVNC features VNC-through-SSH, reverse (listening) VNC connections and timed scanning of connected viewers.  SpiritVNC - FLTK may run on other Unix-like systems using X11, as well.
 
